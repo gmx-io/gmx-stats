@@ -1,0 +1,13 @@
+.Home {
+  line-height: 1.15;
+  padding: 0 20px;
+}
+
+h3, h2 {
+  margin: 3rem 0 1.5rem;
+}
+
+.stats {
+  font-size: 1rem;
+  margin: 2rem 0;
+}
