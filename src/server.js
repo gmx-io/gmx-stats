@@ -140,24 +140,33 @@ function retrieveLogsFactory({ decoder, address, tableName, getAnchorNumber, nam
     }
 
     const logResults = await queryProviderLogs({ provider, fromBlock, toBlock, address, backwards })
-    console.log(`retrieved ${logResults.length} results`)
+    console.log('retrieved %s results', logResults.length)
 
+    console.log('insert data into db')
     for (const logResult of logResults) {
       const logData = decoder.parseLog(logResult)
-      await dbRun(`INSERT OR IGNORE INTO ${tableName}
-        (blockNumber, blockHash, txHash, name, args, logIndex)
-        VALUES (?, ?, ?, ?, ?, ?) 
-      `, [
-        logResult.blockNumber,
-        logResult.blockHash,
-        logResult.transactionHash,
-        logData.name,
-        JSON.stringify(logData.args),
-        logResult.logIndex
-      ])
-      await dbRun(`INSERT OR IGNORE INTO blocksQueue (number) VALUES (?)`, [logResult.blockNumber])
-      await dbRun(`INSERT OR IGNORE INTO transactionsQueue (hash) VALUES (?)`, [logResult.transactionHash])
+      try {
+        await dbRun('BEGIN')
+        await dbRun(`INSERT OR IGNORE INTO blocksQueue (number) VALUES (?)`, [logResult.blockNumber])
+        await dbRun(`INSERT OR IGNORE INTO transactionsQueue (hash) VALUES (?)`, [logResult.transactionHash])
+        await dbRun(`INSERT OR IGNORE INTO ${tableName}
+          (blockNumber, blockHash, txHash, name, args, logIndex)
+          VALUES (?, ?, ?, ?, ?, ?) 
+        `, [
+          logResult.blockNumber,
+          logResult.blockHash,
+          logResult.transactionHash,
+          logData.name,
+          JSON.stringify(logData.args),
+          logResult.logIndex
+        ])
+        await dbRun('COMMIT')
+      } catch (ex) {
+        await dbRun('ROLLBACK')
+        throw ex
+      }
     }
+    console.log('insertion done')
   } 
 }
 
@@ -356,7 +365,7 @@ async function calculatePoolStats({ backwards = false } = {}) {
   console.log('done')
 }
 
-async function calculateUsdgSupply(backwards = false) {
+async function calculateUsdgSupply({ backwards = false } = {}) {
   console.log('Calculate usdg supply based on logs')
   const anchor = UsdgSupplyRecord(await dbGet(`
     SELECT supply, blockNumber
@@ -460,7 +469,7 @@ async function dbGet(query, ...args) {
   })
 }
 
-async function retrieveQueueTransactions({ tableName }) {
+async function retrieveQueuedTransactions({ tableName }) {
   console.log('retrieve transactions for logs tableName=%s...', tableName)
 
   const txHashes = (await dbAll(`
@@ -510,7 +519,7 @@ function getBlocks(numbers) {
   return Promise.all(numbers.map(getBlock))
 }
 
-async function retrieveQueueBlocks({ tableName }) {
+async function retrieveQueuedBlocks({ tableName }) {
   console.log('retrieve blocks for logs tableName=%s...', tableName)
 
   const blockNumbers = (await dbAll(`
@@ -556,8 +565,8 @@ async function schedulePoolStatsJob() {
 async function scheduleVaultLogsJob() {
   const backwards = false
   await retrieveVaultLogs({ backwards })
-  await retrieveQueueBlocks({ tableName: 'vaultLogs' })
-  await retrieveQueueTransactions({ tableName: 'vaultLogs' })
+  await retrieveQueuedBlocks({ tableName: 'vaultLogs' })
+  await retrieveQueuedTransactions({ tableName: 'vaultLogs' })
 
   setTimeout(() => {
     scheduleVaultLogsJob()
@@ -567,8 +576,8 @@ async function scheduleVaultLogsJob() {
 async function scheduleUsdgLogsJob() {
   const backwards = false
   await retrieveUsdgLogs({ backwards })
-  await retrieveQueueBlocks({ tableName: 'usdgLogs' })
-  await retrieveQueueTransactions({ tableName: 'usdgLogs' })
+  await retrieveQueuedBlocks({ tableName: 'usdgLogs' })
+  await retrieveQueuedTransactions({ tableName: 'usdgLogs' })
 
   setTimeout(() => {
     scheduleUsdgLogsJob()
@@ -576,7 +585,8 @@ async function scheduleUsdgLogsJob() {
 }
 
 async function scheduleUsdgSupplyJob() {
-  await calculateUsdgSupply(true)
+  const backwards = false
+  await calculateUsdgSupply({ backwards })
 
   setTimeout(() => {
     scheduleUsdgSupplyJob()
@@ -1075,19 +1085,19 @@ if (require.main) {
 
   // loadPrices()
 
-  // schedulePricesJob()
-  // schedulePoolStatsJob()
+  schedulePricesJob()
+  schedulePoolStatsJob()
   scheduleVaultLogsJob()
-  // scheduleUsdgLogsJob()
-  // scheduleUsdgSupplyJob()
+  scheduleUsdgLogsJob()
+  scheduleUsdgSupplyJob()
 
   // (async function () {
   //   console.log(1)
-  //   await retrieveQueueBlocks({ tableName: 'vaultLogs' })
-  //   await retrieveQueueTransactions({ tableName: 'vaultLogs' })
+  //   await retrieveQueuedBlocks({ tableName: 'vaultLogs' })
+  //   await retrieveQueuedTransactions({ tableName: 'vaultLogs' })
     
-  //   await retrieveQueueBlocks({ tableName: 'usdgLogs' })
-  //   await retrieveQueueTransactions({ tableName: 'usdgLogs' })
+  //   await retrieveQueuedBlocks({ tableName: 'usdgLogs' })
+  //   await retrieveQueuedTransactions({ tableName: 'usdgLogs' })
   // })()
 }
 

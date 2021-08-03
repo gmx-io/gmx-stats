@@ -5,7 +5,7 @@
 }
 
 h3, h2 {
-  color: #666;
+  color: #444;
   margin: 1rem 0 1.5rem;
 }
 
@@ -43,5 +43,9 @@ h2 {
   gap: 2rem; 
 }
 
-.chart-cell {
+@media all and (max-width: 1200px) {
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+  }
 }

@@ -21,7 +21,9 @@ import {
   Legend,
   ResponsiveContainer,
   LabelList,
-  ReferenceLine
+  ReferenceLine,
+  Area,
+  AreaChart
 } from 'recharts';
 const data = [
   {
@@ -64,11 +66,7 @@ const formatUsdValue = value => {
 }
 
 function Home() {
-  const INTERVAL = 86400
-  const SECONDS_PER_DAY = 86400
-  const from = Math.floor(+new Date(2021, 8, 25) / SECONDS_PER_DAY)
-
-  const usdgSupplyData = useRequest(`/api/usdgSupply?from=${from}`, [])
+  const usdgSupplyData = useRequest(`/api/usdgSupply`, [])
   const usdgSupplyChartData = usdgSupplyData.map(item => {
     const supply = BigNumber.from(item.supply.hex)
     return {
@@ -315,7 +313,7 @@ function Home() {
         <div className="chart-cell">
           <h2>USDG Supply</h2>
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <LineChart
+            <AreaChart
               data={usdgSupplyChartData}
               syncId="syncId"
             >
@@ -329,8 +327,8 @@ function Home() {
               />
               <ooltip />
               <Legend />
-              <Line type="monotone" dataKey="value" name="USDG Supply" stroke="#9984d8" strokeWidth={2} />
-            </LineChart>
+              <Area type="monotone" dataKey="value" name="USDG Supply" stroke="#9984d8" fillOpacity={0.5} fill="#8884d8" strokeWidth={2} />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
 
