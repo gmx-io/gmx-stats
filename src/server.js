@@ -11,7 +11,7 @@ import got from 'got'
 import Vault from '../abis/v1/Vault'
 import Token from '../abis/v1/Token'
 import App from './App';
-import { findNearest } from './helpers'
+import { findNearest, queryProviderLogs, callWithRetry } from './helpers'
 
 const vaultAbi = Vault.abi
 const tokenAbi = Token.abi
@@ -24,7 +24,12 @@ const CHAIN_ID = 56
 const addresses = {
     Vault: "0xc73A8DcAc88498FD4b4B1b2AaA37b0a2614Ff67B",
     Router: "0xD46B23D042E976F8666F554E928e0Dc7478a8E1f",
-    USDG: "0x85E76cbf4893c1fbcB34dCF1239A91CE2A4CF5a7"
+    USDG: "0x85E76cbf4893c1fbcB34dCF1239A91CE2A4CF5a7",
+    WardenSwapRouter: "0x7A1Decf6c24232060F4D76A33a317157549C2093",
+    OneInchRouter: "0x11111112542D85B3EF69AE05771c2dCCff4fAa26",
+    DodoexRouter: "0x8F8Dd7DB1bDA5eD3da8C9daf3bfa471c12d58486",
+    MetamaskRouter: "0x1a1ec25DC08e98e5E93F1104B5e5cdD298707d31",
+    LevelNetwork: "0x19981BBA28a646FdF8733F5521d52862ed7958A1"
 }
 
 const assets = require(process.env.RAZZLE_ASSETS_MANIFEST);
@@ -56,57 +61,6 @@ function getContract(address, abi, signer) {
   }
   const contract = new ethers.Contract(address, abi, signer)
   return contract
-}
-
-async function callWithRetry(func, args, maxTries = 10) {
-  let i = 0
-  while (true) {
-    try {
-      return await func(...args)
-    } catch (ex) {
-      i++
-      if (i == maxTries) {
-        throw ex
-      }
-    }
-  }
-}
-
-async function queryProviderLogs({ provider, fromBlock, toBlock, topic0, address }) {
-  console.log(`query logs fromBlock=${fromBlock} toBlock=${toBlock} blocks length=${toBlock - fromBlock}`)
-  provider = provider || getProvider()
-  const allResult = []
-  const MAX = 1000
-  let chunkFromBlock = fromBlock
-  let chunkToBlock = Math.min(toBlock, fromBlock + MAX)
-  let i = 0
-  while (true) {
-    console.log(`requesting ${i} chunk ${chunkFromBlock}-${chunkToBlock}...`)
-    try {
-      const result = await callWithRetry(provider.getLogs.bind(provider), [{
-        fromBlock: chunkFromBlock,
-        toBlock: chunkToBlock,
-        topic: topic0,
-        address
-      }])
-      allResult.push(...result)
-    } catch (ex) {
-      console.log(`chunk ${i} failed. break`)
-      console.error(ex.message)
-      break
-    }
-    i++
-
-    if (chunkToBlock === toBlock) {
-      console.log('done')
-      break
-    }
-
-    chunkFromBlock = chunkToBlock + 1
-    chunkToBlock = Math.min(toBlock, chunkToBlock + MAX)
-  }
-
-  return allResult
 }
 
 const DB_PATH = path.join(__dirname, '..', 'main.db')
@@ -148,7 +102,6 @@ async function getLastLogRecord({ tableName, backwards = false } = {}) {
   })  
 }
 
-const BACKWARDS = false
 const BLOCKS_PER_JOB = 10000
 
 async function getLatestReliableBlock() {
@@ -187,7 +140,7 @@ function retrieveLogsFactory({ decoder, address, tableName, getAnchorNumber, nam
       toBlock = Math.min(latestBlockNumber, fromBlock + BLOCKS_PER_JOB)
     }
 
-    const logResults = await queryProviderLogs({ fromBlock, toBlock, address })
+    const logResults = await queryProviderLogs({ provider, fromBlock, toBlock, address, backwards })
     console.log(`retrieved ${logResults.length} results`)
 
     for (const logResult of logResults) {
@@ -236,7 +189,7 @@ async function getAnchorPoolStats(backwards) {
 
 async function insertPoolStatsRow({ value, symbol, type, timestamp, blockNumber, logIndex }) {
   return await dbRun(`
-    INSERT INTO poolStats (value, valueHex, symbol, type, timestamp, blockNumber, logIndex)
+    INSERT OR IGNORE INTO poolStats (value, valueHex, symbol, type, timestamp, blockNumber, logIndex)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `, [formatUnits(value, 18), value.toHexString(), symbol, type, timestamp, blockNumber, logIndex])
 }
@@ -290,7 +243,7 @@ async function retrieveLatestPoolStats(lastBlock) {
   console.log('done')
 }
 
-async function calculatePoolStats(backwards = false) {
+async function calculatePoolStats({ backwards = false } = {}) {
   console.log('Calculate pool stats based on logs')
   const anchor = await dbGet(`
     SELECT blockNumber
@@ -307,7 +260,6 @@ async function calculatePoolStats(backwards = false) {
     anchorBlockNumber = await getLatestReliableBlockNumber()
 
     await retrieveLatestPoolStats(lastBlock)
-    return
   } else {
     anchorBlockNumber = anchor.blockNumber
   }
@@ -324,9 +276,9 @@ async function calculatePoolStats(backwards = false) {
     INNER JOIN blocks b ON b.number = l.blockNumber
     WHERE
       name in ('IncreasePoolAmount', 'DecreasePoolAmount', 'IncreaseUsdgAmount', 'DecreaseUsdgAmount', 'IncreaseReservedAmount', 'DecreaseReservedAmount')
-      AND blockNumber ${backwards ? '<' : '>'} ${anchorBlockNumber}
+      AND blockNumber ${backwards ? '<=' : '>='} ${anchorBlockNumber}
     ORDER BY blockNumber ${orderKey}, logIndex ${orderKey}
-    LIMIT 10000
+    LIMIT 100000
   `)
 
   if (logs.length === 0) {
@@ -344,6 +296,11 @@ async function calculatePoolStats(backwards = false) {
     const record = LogRecord(log)
     const [tokenAddress, amount] = record.args
     const token = TOKENS_BY_ADDRESS[tokenAddress]
+
+    // TODO remove
+    // if (token.symbol !== 'ETH' || !(record.name === 'IncreaseReservedAmount' || record.name === 'DecreaseReservedAmount')) {
+    //   continue
+    // }
 
     if (!token) {
       console.warn('unsupported token address %s', tokenAddress)
@@ -373,16 +330,16 @@ async function calculatePoolStats(backwards = false) {
     const current = BigNumber.from(stats.valueHex)
     const next = shouldAdd ? current.add(amount) : current.sub(amount)
 
-    console.log('%s %s %s (%s), prev: %s, next: %s, diff: %s, amount: %s, %s', 
+    console.log('%s %s %s (%s), prev: %s, next: %s, diff: %s, tx %s', 
       token.symbol,
       type,
       new Date(record.timestamp * 1000),
       blockNumber,
-      formatUnits(current, 18),
-      formatUnits(next, 18),
-      formatUnits(next.sub(current), 18),
-      formatUnits(amount, 18),
-      name
+      formatUnits(current, 18).slice(0, 7),
+      formatUnits(next, 18).slice(0, 7),
+      formatUnits(next.sub(current), 18).slice(0, 7),
+      name,
+      record.txHash
     )
 
     if (next.lt(0)) {
@@ -544,17 +501,26 @@ async function retrieveTransactionsForLogs({ tableName }) {
   console.log('done')
 }
 
+function getTransaction(hash) {
+  return callWithRetry(provider.getTransaction.bind(provider), [hash])
+}
+
 function getTransactions(hashes) {
-  return Promise.all(hashes.map(provider.getTransaction.bind(provider)))
+  return Promise.all(hashes.map(getTransaction))
+}
+
+function getBlock(blockNumber) {
+  return callWithRetry(provider.getBlock.bind(provider), [blockNumber])
 }
 
 function getBlocks(numbers) {
-  return Promise.all(numbers.map(provider.getBlock.bind(provider)))
+  return Promise.all(numbers.map(getBlock))
 }
 
 async function retrieveBlocksForLogs({ tableName }) {
   console.log('retrieve blocks for logs tableName=%s...', tableName)
 
+  // TODO is it sync??
   const blockNumbers = (await dbAll(`
     SELECT
       distinct(l.blockNumber)
@@ -588,17 +554,19 @@ async function retrieveBlocksForLogs({ tableName }) {
   console.log('done')
 }
 
-const JOB_PERIOD = 1000 * 5
+const JOB_PERIOD = 1000 * 60
 
 async function schedulePoolStatsJob() {
-  await calculatePoolStats(true) 
+  const backwards = false
+  await calculatePoolStats({ backwards }) 
   setTimeout(() => {
-    schedulePoolStatsJob(true)
+    schedulePoolStatsJob()
   }, JOB_PERIOD)
 }
 
 async function scheduleVaultLogsJob() {
-  await retrieveVaultLogs({ backwards: true })
+  const backwards = false
+  await retrieveVaultLogs({ backwards })
   await retrieveBlocksForLogs({ tableName: 'vaultLogs' })
   await retrieveTransactionsForLogs({ tableName: 'vaultLogs' })
 
@@ -608,7 +576,8 @@ async function scheduleVaultLogsJob() {
 }
 
 async function scheduleUsdgLogsJob() {
-  await retrieveUsdgLogs()
+  const backwards = false
+  await retrieveUsdgLogs({ backwards })
   await retrieveBlocksForLogs({ tableName: 'usdgLogs' })
   await retrieveTransactionsForLogs({ tableName: 'usdgLogs' })
 
@@ -763,6 +732,14 @@ function getPrice(address, timestamp) {
   return token.defaultPrice
 }
 
+
+async function schedulePricesJob() {
+  await retrievePrices()
+  setTimeout(() => {
+    schedulePricesJob() 
+  }, 15 * 60 * 1000)
+}
+
 function ts2date(timestamp) {
   const d = new Date(timestamp * 1000)
   let month = d.getMonth() + 1
@@ -800,12 +777,12 @@ if (require.main) {
   app.get('/api/poolStats', async (req, res) => {
     const rows = await dbAll(`
       SELECT
-        AVG(value) value,
+        value,
         type,
         symbol,
-        timestamp / ${3600} * ${3600} as timestamp
+        timestamp / ${GROUP_PERIOD} * ${GROUP_PERIOD} as timestamp
       FROM poolStats
-      GROUP BY timestamp / ${3600}, type, symbol
+      GROUP BY timestamp / ${GROUP_PERIOD}, type, symbol
       ORDER BY blockNumber
     `)
 
@@ -823,13 +800,124 @@ if (require.main) {
         row.valueUsd = row.value
       } else {
         const price = getPrice(token.address, row.timestamp)
-        console.log(row.value, row.type, token.symbol, price)
+
         row.valueUsd = row.value * price
       }
       last[token.symbol] = last[token.symbol] || {}
       last[token.symbol][row.type] = row
       return memo
     }, [])
+    res.send(data)
+  })
+
+  const SWAP_EVENTS_SET = new Set(['Swap', 'BuyUSDG', 'SellUSDG'])
+  const MARGIN_EVENTS_SET = new Set(['IncreasePosition', 'DecreasePosition', 'LiquidatePosition'])
+  function isSwapEvent(name) {
+    return SWAP_EVENTS_SET.has(name)
+  }
+  function isMarginEvent(name) {
+    return MARGIN_EVENTS_SET.has(name)
+  }
+
+  app.get('/api/users', async (req, res) => {
+    const rows = await dbAll(`
+      SELECT COUNT(DISTINCT t.\`from\`) count, l.name, b.timestamp / ${GROUP_PERIOD} * ${GROUP_PERIOD} timestamp
+      FROM vaultLogs l
+      INNER JOIN blocks b ON b.number = l.blockNumber
+      INNER JOIN transactions t ON t.hash = l.txHash
+      WHERE l.name in ('IncreasePosition', 'DecreasePosition', 'Swap', 'BuyUSDG', 'SellUSDG')
+      GROUP BY timestamp / ${GROUP_PERIOD}, name
+    `) 
+
+    let data = rows.reduce((memo, row) => {
+      const { timestamp, name } = row
+      const type = isSwapEvent(name) ? 'swap' : 'margin'
+
+      memo[timestamp] = memo[timestamp] || {}
+      memo[timestamp][type] = memo[timestamp][type] || 0
+      memo[timestamp][type] += row.count
+
+      return memo
+    }, {})
+
+    data = Object.entries(data).map(([timestamp, item]) => {
+      return {
+        timestamp,
+        swap: item.swap || 0,
+        margin: item.margin || 0
+      }
+    })
+
+    res.send(data)
+  })
+
+  app.get('/api/swapSources', async (req, res) => {
+    const rows = await dbAll(`
+      SELECT l.args, l.name, b.number, b.timestamp, t.\`to\`
+      FROM vaultLogs l
+      INNER JOIN blocks b ON b.number = l.blockNumber
+      INNER JOIN transactions t ON t.hash = l.txHash
+      WHERE l.name in ('Swap', 'BuyUSDG', 'SellUSDG')
+    `)
+
+    let data = rows.reduce((memo, row) => {
+      const timeKey = Math.floor(row.timestamp / GROUP_PERIOD) * GROUP_PERIOD
+      const record = LogRecord(row)
+
+      let value = 0
+      if (record.name === 'Swap') {
+        const tokenInAddress = record.args[1]
+        const tokenOutAddress = record.args[2]
+        const amountIn = record.args[3]
+        const amountOut = record.args[4]
+
+        const tokenIn = TOKENS_BY_ADDRESS[tokenInAddress]
+        const tokenOut = TOKENS_BY_ADDRESS[tokenInAddress]
+
+        if (tokenIn.stable) {
+          value = Number(formatUnits(amountIn, 18))
+        } else if (tokenOut.stable) {
+          value = Number(formatUnits(amountOut, 18))
+        } else {
+          value = Number(formatUnits(amountIn, 18)) * getPrice(tokenInAddress, row.timestamp)
+        }
+      } else if (record.name === 'BuyUSDG') {
+        value = Number(formatUnits(record.args[3], 18))
+      } else {
+        const token = record.args[1]
+        value = Number(formatUnits(record.args[3], 18)) * getPrice(token, row.timestamp)
+      }
+
+      let source
+      if (row.to === addresses.WardenSwapRouter) {
+        source = 'warden'
+      } else if (row.to === addresses.OneInchRouter) {
+        source = '1inch' 
+      } else if (row.to === addresses.Router) {
+        source = 'gmx'
+      } else if (row.to === addresses.DodoexRouter) {
+        source = 'dodoex'
+      } else if (row.to === addresses.MetamaskRouter) {
+        source = 'metamask'
+      } else if (row.to === addresses.LeverNetwork) {
+        source = 'leverNetwork'
+      } else {
+        source = 'other'
+      }
+
+      memo[timeKey] = memo[timeKey] || {}
+      memo[timeKey][source] = memo[timeKey][source] || 0
+      memo[timeKey][source] += value
+      return memo
+    }, {})
+
+    data = Object.entries(data).map(([timestamp, item]) => {
+      return {
+        timestamp,
+        ...item
+      }
+    })
+
     res.send(data)
   })
 
@@ -974,13 +1062,35 @@ if (require.main) {
     }
   });
 
-  retrievePrices()
+  // (async function () {
+  //   console.log('start')
+  //   const toBlock = 9673073
+  //   const fromBlock = 9670639
+  //   const logResults = await queryProviderLogs({ provider, fromBlock, toBlock, address: addresses.Vault })
+  //   console.log(`retrieved ${logResults.length} results`)
 
-  // schedulePoolStatsJob()
+  //   const decoder = new ethers.utils.Interface(vaultAbi)
+  //   for (const logResult of logResults) {
+  //     const logData = decoder.parseLog(logResult)
+  //     const { blockNumber, logIndex } = logResult
+  //     const { name } = logData
+  //     if (name === 'IncreaseReservedAmount' || name === 'DecreaseReservedAmount') {
+  //       const { token: tokenAddress, amount } = logData.args
+  //       const token = TOKENS_BY_ADDRESS[tokenAddress]
+  //       if (token.symbol === 'ETH') {
+  //         console.log('%s – %s %s %s', blockNumber, token.symbol, name, formatUnits(amount, 18))
+  //       }
+  //     }
+  //   }
+  // })()
 
-  // scheduleVaultLogsJob()
-  // scheduleUsdgLogsJob()
-  // scheduleUsdgSupplyJob()
+  // loadPrices()
+
+  schedulePricesJob()
+  schedulePoolStatsJob()
+  scheduleVaultLogsJob()
+  scheduleUsdgLogsJob()
+  scheduleUsdgSupplyJob()
 }
 
 export default app;

@@ -1,13 +1,47 @@
 .Home {
+  color: #222;
   line-height: 1.15;
   padding: 0 20px;
 }
 
 h3, h2 {
-  margin: 3rem 0 1.5rem;
+  color: #666;
+  margin: 1rem 0 1.5rem;
+}
+
+h2 {
+  font-size: 1.5rem;
 }
 
 .stats {
-  font-size: 1rem;
+  font-size: 0.9rem;
   margin: 2rem 0;
+}
+
+.chart-description {
+  font-size: 0.9rem;
+  margin: 1rem 0;
+  max-width: 600px;
+}
+
+.chart-description p {
+  margin: 0;
+}
+
+.chart-description ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.chart-description li {
+  margin-top: 5px;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem; 
+}
+
+.chart-cell {
 }
