@@ -116,10 +116,9 @@ function Home() {
       warden: item.warden,
       dodoex: item.dodoex,
       metamask: item.metamask,
-      leverNetwork: item.leverNetwork,
       '1inch': item['1inch'],
       other: item.other,
-      all: (item.warden || 0) + (item.other || 0) + (item.gmx || 0) + (item['1inch'] || 0) + (item.dodex || 0) + (item.metamask || 0) + (item.leverNetwork || 0),
+      all: (item.warden || 0) + (item.other || 0) + (item.gmx || 0) + (item['1inch'] || 0) + (item.dodoex || 0) + (item.metamask || 0),
       date: new Date(item.timestamp * 1000)
     }
   })
@@ -301,8 +300,7 @@ function Home() {
               <Bar type="monotone" dataKey="dodoex" stackId="a" name="Dodoex" fill="#c90000" />
               <Bar type="monotone" dataKey="warden" stackId="a" name="WardenSwap" fill="#eb8334" />
               <Bar type="monotone" dataKey="metamask" stackId="a" name="MetaMask" fill="#ab6100" />
-              <Bar type="monotone" dataKey="gmx" stackId="a" name="GMX direct" fill="#8884ff" />
-              <Bar type="monotone" dataKey="leverNetwork" stackId="a" name="LeverNetwork" fill="#6e64b8" />
+              <Bar type="monotone" dataKey="gmx" stackId="a" name="GMX" fill="#8884ff" />
               <Bar type="monotone" dataKey="other" stackId="a" name="Other" fill="#22c761" />
             </BarChart>
           </ResponsiveContainer>

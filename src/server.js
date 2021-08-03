@@ -28,8 +28,7 @@ const addresses = {
     WardenSwapRouter: "0x7A1Decf6c24232060F4D76A33a317157549C2093",
     OneInchRouter: "0x11111112542D85B3EF69AE05771c2dCCff4fAa26",
     DodoexRouter: "0x8F8Dd7DB1bDA5eD3da8C9daf3bfa471c12d58486",
-    MetamaskRouter: "0x1a1ec25DC08e98e5E93F1104B5e5cdD298707d31",
-    LevelNetwork: "0x19981BBA28a646FdF8733F5521d52862ed7958A1"
+    MetamaskRouter: "0x1a1ec25DC08e98e5E93F1104B5e5cdD298707d31"
 }
 
 const assets = require(process.env.RAZZLE_ASSETS_MANIFEST);
@@ -145,22 +144,19 @@ function retrieveLogsFactory({ decoder, address, tableName, getAnchorNumber, nam
 
     for (const logResult of logResults) {
       const logData = decoder.parseLog(logResult)
-      await new Promise((resolve, reject) => {
-        db.run(`INSERT OR IGNORE INTO ${tableName}
-          (blockNumber, blockHash, txHash, name, args, logIndex)
-          VALUES (?, ?, ?, ?, ?, ?) 
-        `, [
-          logResult.blockNumber,
-          logResult.blockHash,
-          logResult.transactionHash,
-          logData.name,
-          JSON.stringify(logData.args),
-          logResult.logIndex
-        ], (err) => {
-          if (err) return reject(err)
-          resolve()
-        })
-      })
+      await dbRun(`INSERT OR IGNORE INTO ${tableName}
+        (blockNumber, blockHash, txHash, name, args, logIndex)
+        VALUES (?, ?, ?, ?, ?, ?) 
+      `, [
+        logResult.blockNumber,
+        logResult.blockHash,
+        logResult.transactionHash,
+        logData.name,
+        JSON.stringify(logData.args),
+        logResult.logIndex
+      ])
+      await dbRun(`INSERT OR IGNORE INTO blocksQueue (number) VALUES (?)`, [logResult.blockNumber])
+      await dbRun(`INSERT OR IGNORE INTO transactionsQueue (hash) VALUES (?)`, [logResult.transactionHash])
     }
   } 
 }
@@ -464,16 +460,12 @@ async function dbGet(query, ...args) {
   })
 }
 
-async function retrieveTransactionsForLogs({ tableName }) {
+async function retrieveQueueTransactions({ tableName }) {
   console.log('retrieve transactions for logs tableName=%s...', tableName)
 
   const txHashes = (await dbAll(`
-    SELECT
-      distinct(l.txHash)
-    FROM ${tableName} l
-    LEFT JOIN transactions t on t.hash = l.txHash
-    WHERE t.hash IS NULL
-  `)).map(row => row.txHash)
+    SELECT DISTINCT(hash) FROM transactionsQueue
+  `)).map(row => row.hash)
 
   console.log('found %s logs without corresponding transactions', txHashes.length)
   if (txHashes.length === 0) {
@@ -490,9 +482,10 @@ async function retrieveTransactionsForLogs({ tableName }) {
     const transactions = await getTransactions(chunkNumbers)  
     for (const tx of transactions) {
       await dbRun(`
-        INSERT INTO transactions (hash, \`to\`, \`from\`, blockNumber)
+        INSERT OR IGNORE INTO transactions (hash, \`to\`, \`from\`, blockNumber)
         VALUES (?, ?, ?, ?)
       `, [tx.hash, tx.to, tx.from, tx.blockNumber])
+      await dbRun(`DELETE FROM transactionsQueue WHERE hash = ?`, [tx.hash])
     }
     console.log('chunk done')
     i++
@@ -517,17 +510,12 @@ function getBlocks(numbers) {
   return Promise.all(numbers.map(getBlock))
 }
 
-async function retrieveBlocksForLogs({ tableName }) {
+async function retrieveQueueBlocks({ tableName }) {
   console.log('retrieve blocks for logs tableName=%s...', tableName)
 
-  // TODO is it sync??
   const blockNumbers = (await dbAll(`
-    SELECT
-      distinct(l.blockNumber)
-    FROM ${tableName} l
-    LEFT JOIN blocks b on b.number = l.blockNumber
-    WHERE b.number IS NULL
-  `)).map(row => row.blockNumber)
+    SELECT DISTINCT(number) FROM blocksQueue
+  `)).map(row => row.number)
 
   console.log('found %s logs without corresponding blocks', blockNumbers.length)
   if (blockNumbers.length === 0) {
@@ -544,9 +532,10 @@ async function retrieveBlocksForLogs({ tableName }) {
     const blocks = await getBlocks(chunkNumbers)  
     for (const block of blocks) {
       await dbRun(`
-        INSERT INTO blocks (number, hash, timestamp)
+        INSERT OR IGNORE INTO blocks (number, hash, timestamp)
         VALUES (?, ?, ?)
       `, [block.number, block.hash, block.timestamp])
+      await dbRun(`DELETE FROM blocksQueue WHERE number = ?`, [block.number])
     }
     console.log('chunk done')
     i++
@@ -567,8 +556,8 @@ async function schedulePoolStatsJob() {
 async function scheduleVaultLogsJob() {
   const backwards = false
   await retrieveVaultLogs({ backwards })
-  await retrieveBlocksForLogs({ tableName: 'vaultLogs' })
-  await retrieveTransactionsForLogs({ tableName: 'vaultLogs' })
+  await retrieveQueueBlocks({ tableName: 'vaultLogs' })
+  await retrieveQueueTransactions({ tableName: 'vaultLogs' })
 
   setTimeout(() => {
     scheduleVaultLogsJob()
@@ -578,8 +567,8 @@ async function scheduleVaultLogsJob() {
 async function scheduleUsdgLogsJob() {
   const backwards = false
   await retrieveUsdgLogs({ backwards })
-  await retrieveBlocksForLogs({ tableName: 'usdgLogs' })
-  await retrieveTransactionsForLogs({ tableName: 'usdgLogs' })
+  await retrieveQueueBlocks({ tableName: 'usdgLogs' })
+  await retrieveQueueTransactions({ tableName: 'usdgLogs' })
 
   setTimeout(() => {
     scheduleUsdgLogsJob()
@@ -899,8 +888,6 @@ if (require.main) {
         source = 'dodoex'
       } else if (row.to === addresses.MetamaskRouter) {
         source = 'metamask'
-      } else if (row.to === addresses.LeverNetwork) {
-        source = 'leverNetwork'
       } else {
         source = 'other'
       }
@@ -922,12 +909,14 @@ if (require.main) {
   })
 
   app.get('/api/volume', async (req, res) => {
+    console.log('/api/volume call')
     const rows = await dbAll(`
       SELECT l.args, l.name, b.number, b.timestamp
       FROM vaultLogs l
       INNER JOIN blocks b ON b.number = l.blockNumber
       WHERE l.name in ('IncreasePosition', 'DecreasePosition', 'LiquidatePosition', 'Swap', 'BuyUSDG', 'SellUSDG')
     `)
+    console.log(2)
 
     let data = rows.reduce((memo, row) => {
       const key = Math.floor(row.timestamp / GROUP_PERIOD) * GROUP_PERIOD
@@ -1086,11 +1075,20 @@ if (require.main) {
 
   // loadPrices()
 
-  schedulePricesJob()
-  schedulePoolStatsJob()
+  // schedulePricesJob()
+  // schedulePoolStatsJob()
   scheduleVaultLogsJob()
-  scheduleUsdgLogsJob()
-  scheduleUsdgSupplyJob()
+  // scheduleUsdgLogsJob()
+  // scheduleUsdgSupplyJob()
+
+  // (async function () {
+  //   console.log(1)
+  //   await retrieveQueueBlocks({ tableName: 'vaultLogs' })
+  //   await retrieveQueueTransactions({ tableName: 'vaultLogs' })
+    
+  //   await retrieveQueueBlocks({ tableName: 'usdgLogs' })
+  //   await retrieveQueueTransactions({ tableName: 'usdgLogs' })
+  // })()
 }
 
 export default app;
