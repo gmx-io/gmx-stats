@@ -145,26 +145,28 @@ function retrieveLogsFactory({ decoder, address, tableName, getAnchorNumber, nam
     console.log('insert data into db')
     for (const logResult of logResults) {
       const logData = decoder.parseLog(logResult)
-      try {
-        await dbRun('BEGIN')
-        await dbRun(`INSERT OR IGNORE INTO blocksQueue (number) VALUES (?)`, [logResult.blockNumber])
-        await dbRun(`INSERT OR IGNORE INTO transactionsQueue (hash) VALUES (?)`, [logResult.transactionHash])
-        await dbRun(`INSERT OR IGNORE INTO ${tableName}
-          (blockNumber, blockHash, txHash, name, args, logIndex)
-          VALUES (?, ?, ?, ?, ?, ?) 
-        `, [
-          logResult.blockNumber,
-          logResult.blockHash,
-          logResult.transactionHash,
-          logData.name,
-          JSON.stringify(logData.args),
-          logResult.logIndex
-        ])
-        await dbRun('COMMIT')
-      } catch (ex) {
-        await dbRun('ROLLBACK')
-        throw ex
-      }
+      db.serialize(() => {
+        try {
+          dbRun('BEGIN')
+          dbRun(`INSERT OR IGNORE INTO blocksQueue (number) VALUES (?)`, [logResult.blockNumber])
+          dbRun(`INSERT OR IGNORE INTO transactionsQueue (hash) VALUES (?)`, [logResult.transactionHash])
+          dbRun(`INSERT OR IGNORE INTO ${tableName}
+            (blockNumber, blockHash, txHash, name, args, logIndex)
+            VALUES (?, ?, ?, ?, ?, ?) 
+          `, [
+            logResult.blockNumber,
+            logResult.blockHash,
+            logResult.transactionHash,
+            logData.name,
+            JSON.stringify(logData.args),
+            logResult.logIndex
+          ])
+          dbRun('COMMIT')
+        } catch (ex) {
+          dbRun('ROLLBACK')
+          throw ex
+        }
+      })
     }
     console.log('insertion done')
   } 
@@ -739,15 +741,6 @@ async function schedulePricesJob() {
   }, 15 * 60 * 1000)
 }
 
-function ts2date(timestamp) {
-  const d = new Date(timestamp * 1000)
-  let month = d.getMonth() + 1
-  if (month < 10) month = `0${month}`
-  let day = d.getDate()
-  if (day < 10) day = `0${day}`
-  return `${d.getFullYear()}-${month}-${day}`
-}
-
 if (require.main) {
   app
     .disable('x-powered-by')
@@ -760,13 +753,16 @@ if (require.main) {
   const GROUP_PERIOD = 86400
 
   app.get('/api/usdgSupply', async (req, res) => {
+    const period = Number(req.query.period) || GROUP_PERIOD
+    const from = req.query.from || 0
     const rows = await dbAll(`
-      SELECT s.supply, b.number, (b.timestamp / ${GROUP_PERIOD} * ${GROUP_PERIOD}) as timestamp
+      SELECT s.supply, b.number, (b.timestamp / ${period} * ${period}) as timestamp
       FROM usdgSupply s
       INNER JOIN blocks b ON b.number = s.blockNumber
-      GROUP BY timestamp / ${GROUP_PERIOD} 
+      WHERE b.timestamp >= ?
+      GROUP BY b.timestamp / ${period}
       ORDER BY b.number
-    `)
+    `, [from])
 
     const records = rows.map(UsdgSupplyRecord)
 
@@ -774,16 +770,19 @@ if (require.main) {
   })
 
   app.get('/api/poolStats', async (req, res) => {
+    const period = Number(req.query.period) || GROUP_PERIOD
+    const from = req.query.from || 0
     const rows = await dbAll(`
       SELECT
-        value,
+        AVG(value) value,
         type,
         symbol,
-        timestamp / ${GROUP_PERIOD} * ${GROUP_PERIOD} as timestamp
+        timestamp / ${period} * ${period} as timestamp
       FROM poolStats
-      GROUP BY timestamp / ${GROUP_PERIOD}, type, symbol
+      WHERE timestamp >= ?
+      GROUP BY timestamp, type, symbol
       ORDER BY blockNumber
-    `)
+    `, [from])
 
     const data = rows.reduce((memo, row) => {
       let last = memo[memo.length - 1]
@@ -819,14 +818,18 @@ if (require.main) {
   }
 
   app.get('/api/users', async (req, res) => {
+    const period = Number(req.query.period) || GROUP_PERIOD
+    const from = req.query.from || 0
     const rows = await dbAll(`
-      SELECT COUNT(DISTINCT t.\`from\`) count, l.name, b.timestamp / ${GROUP_PERIOD} * ${GROUP_PERIOD} timestamp
+      SELECT COUNT(DISTINCT t.\`from\`) count, l.name, b.timestamp / ${period} * ${period} timestamp
       FROM vaultLogs l
       INNER JOIN blocks b ON b.number = l.blockNumber
       INNER JOIN transactions t ON t.hash = l.txHash
-      WHERE l.name in ('IncreasePosition', 'DecreasePosition', 'Swap', 'BuyUSDG', 'SellUSDG')
-      GROUP BY timestamp / ${GROUP_PERIOD}, name
-    `) 
+      WHERE
+        l.name in ('IncreasePosition', 'DecreasePosition', 'Swap', 'BuyUSDG', 'SellUSDG')
+        AND b.timestamp >= ?
+      GROUP BY timestamp / ${period}, name
+    `, [from]) 
 
     let data = rows.reduce((memo, row) => {
       const { timestamp, name } = row
@@ -851,16 +854,20 @@ if (require.main) {
   })
 
   app.get('/api/swapSources', async (req, res) => {
+    const period = Number(req.query.period) || GROUP_PERIOD
+    const from = req.query.from || 0
     const rows = await dbAll(`
       SELECT l.args, l.name, b.number, b.timestamp, t.\`to\`
       FROM vaultLogs l
       INNER JOIN blocks b ON b.number = l.blockNumber
       INNER JOIN transactions t ON t.hash = l.txHash
-      WHERE l.name in ('Swap', 'BuyUSDG', 'SellUSDG')
-    `)
+      WHERE
+        l.name in ('Swap', 'BuyUSDG', 'SellUSDG')
+        AND b.timestamp >= ?
+    `, [from])
 
     let data = rows.reduce((memo, row) => {
-      const timeKey = Math.floor(row.timestamp / GROUP_PERIOD) * GROUP_PERIOD
+      const timeKey = Math.floor(row.timestamp / period) * period
       const record = LogRecord(row)
 
       let value = 0
@@ -919,17 +926,19 @@ if (require.main) {
   })
 
   app.get('/api/volume', async (req, res) => {
-    console.log('/api/volume call')
+    const period = Number(req.query.period) || GROUP_PERIOD
+    const from = req.query.from || 0
     const rows = await dbAll(`
       SELECT l.args, l.name, b.number, b.timestamp
       FROM vaultLogs l
       INNER JOIN blocks b ON b.number = l.blockNumber
-      WHERE l.name in ('IncreasePosition', 'DecreasePosition', 'LiquidatePosition', 'Swap', 'BuyUSDG', 'SellUSDG')
-    `)
-    console.log(2)
+      WHERE
+        l.name in ('IncreasePosition', 'DecreasePosition', 'LiquidatePosition', 'Swap', 'BuyUSDG', 'SellUSDG')
+        AND b.timestamp >= ?
+    `, [from])
 
     let data = rows.reduce((memo, row) => {
-      const key = Math.floor(row.timestamp / GROUP_PERIOD) * GROUP_PERIOD
+      const key = Math.floor(row.timestamp / period) * period
       const record = LogRecord(row)
       memo[key] = memo[key] || {}
 
@@ -986,12 +995,16 @@ if (require.main) {
   })
 
   app.get('/api/fees', async (req, res) => {
+    const period = Number(req.query.period) || GROUP_PERIOD
+    const from = req.query.from || 0
     const rows = await dbAll(`
       SELECT l.args, l.name, b.number, b.timestamp
       FROM vaultLogs l
       INNER JOIN blocks b ON b.number = l.blockNumber
-      WHERE l.name in ('CollectMarginFees', 'CollectSwapFees')
-    `)
+      WHERE
+        l.name in ('CollectMarginFees', 'CollectSwapFees')
+        AND b.timestamp >= ?
+    `, [from])
 
     let feesData = rows.map(row => {
       const record = LogRecord(row)
@@ -1006,7 +1019,7 @@ if (require.main) {
     })
 
     const grouped = feesData.reduce((memo, el) => {
-      const key = Math.floor(el.timestamp / GROUP_PERIOD) * GROUP_PERIOD
+      const key = Math.floor(el.timestamp / period) * period
 
       memo[key] = memo[key] || {}
       memo[key].all = memo[key].all || 0
@@ -1085,11 +1098,14 @@ if (require.main) {
 
   // loadPrices()
 
-  schedulePricesJob()
-  schedulePoolStatsJob()
-  scheduleVaultLogsJob()
-  scheduleUsdgLogsJob()
-  scheduleUsdgSupplyJob()
+  const RUN_JOBS_LOCALY = false
+  if (process.env.NODE_ENV === 'production' || RUN_JOBS_LOCALY) {
+    schedulePricesJob()
+    schedulePoolStatsJob()
+    scheduleVaultLogsJob()
+    scheduleUsdgLogsJob()
+    scheduleUsdgSupplyJob()
+  }
 
   // (async function () {
   //   console.log(1)

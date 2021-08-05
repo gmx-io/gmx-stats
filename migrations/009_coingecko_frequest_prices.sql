@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS coingeckoFrequentPrices (
+	timestamp INTEGER PRIMARY KEY NOT NULL,
+	price INTEGER NOT NULL
+);

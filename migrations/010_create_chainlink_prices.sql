@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS chainlinkPrices (
+	timestamp INTEGER PRIMARY KEY NOT NULL,
+	price INTEGER NOT NULL,
+	symbol CHAR NOT NULL
+);

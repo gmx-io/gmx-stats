@@ -65,35 +65,67 @@ const formatUsdValue = value => {
     return `$${value.toFixed(1)}`
 }
 
+function urlWithParams(url, params) {
+  const paramsStr = Object.entries(params)
+    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+    .join('&')
+  return `${url}?${paramsStr}`
+}
+
 function Home() {
-  const usdgSupplyData = useRequest(`/api/usdgSupply`, [])
-  const usdgSupplyChartData = usdgSupplyData.map(item => {
-    const supply = BigNumber.from(item.supply.hex)
-    return {
-      value: parseInt(formatUnits(supply, 18)),
-      date: new Date(item.timestamp * 1000)
-    }
-  })
+  const SECONDS_IN_HOUR = 3600
+  const SECONDS_IN_DAY = 86400
+  const [period, setPeriod] = useState(SECONDS_IN_DAY)
+  const today = Math.floor(Date.now() / 1000 / SECONDS_IN_DAY) * SECONDS_IN_DAY
+  const from = period >= SECONDS_IN_DAY ? 0 : today - period * 36
+  const params = { period, from }
 
-  const usersData = useRequest('/api/users', [])
-  const usersChartData = usersData.map(item => {
-    return {
-      margin: item.margin || 0,
-      swap: item.swap || 0,
-      all: item.margin + item.swap,
-      date: new Date(item.timestamp * 1000)
-    }
-  })
+  const [displayPercentage, setDisplayPercentage] = useState(false)
+  const dynamicUnit = displayPercentage ? '%' : ''
 
-  const feesData = useRequest('/api/fees', [])
-  const feesChartData = feesData.map(item => {
-    return {
-      margin: item.margin || 0,
-      swap: item.swap || 0,
-      all: item.margin + item.swap,
-      date: new Date(item.timestamp * 1000)
-    }
-  })
+  const usdgSupplyData = useRequest(urlWithParams('/api/usdgSupply', params), [])
+  const usdgSupplyChartData = useMemo(() => {
+    return usdgSupplyData.map(item => {
+      const supply = BigNumber.from(item.supply.hex)
+      return {
+        value: parseInt(formatUnits(supply, 18)),
+        date: new Date(item.timestamp * 1000)
+      }
+    })
+  }, [usdgSupplyData])
+
+  const usersData = useRequest(urlWithParams('/api/users', params), [])
+  const usersChartData = useMemo(() => {
+    return usersData.map(item => {
+      const allValue = (item.margin || 0) + (item.swap || 0)
+      const margin = displayPercentage ? (item.margin || 0) / allValue * 100 : item.margin
+      const swap = displayPercentage ? (item.swap || 0) / allValue * 100 : item.swap
+      return {
+        margin,
+        swap,
+        all: displayPercentage ? 100 : allValue,
+        date: new Date(item.timestamp * 1000)
+      }
+    })
+  }, [usersData, displayPercentage])
+
+  const feesData = useRequest(urlWithParams('/api/fees', params), [])
+  const feesChartData = useMemo(() => {
+    return feesData.map(item => {
+      const allValue = item.margin + item.swap
+      const metrics = ['margin', 'swap'].reduce((memo, key) => {
+        if (item[key]) {
+          memo[key] = displayPercentage ? item[key] / allValue * 100 : item[key]
+        }
+        return memo
+      }, {})
+      return {
+        ...metrics,
+        all: displayPercentage ? 100 : allValue,
+        date: new Date(item.timestamp * 1000)
+      }
+    })
+  }, [feesData, displayPercentage])
   const feesStats = useMemo(() => {
     if (!feesData || feesData.length === 0) {
       return
@@ -107,51 +139,76 @@ function Home() {
     }
   }, [feesData])
 
-  const swapSourcesData = useRequest('/api/swapSources', [])
-  const swapSourcesChartData = swapSourcesData.map(item => {
-    return {
-      gmx: item.gmx,
-      warden: item.warden,
-      dodoex: item.dodoex,
-      metamask: item.metamask,
-      '1inch': item['1inch'],
-      other: item.other,
-      all: (item.warden || 0) + (item.other || 0) + (item.gmx || 0) + (item['1inch'] || 0) + (item.dodoex || 0) + (item.metamask || 0),
-      date: new Date(item.timestamp * 1000)
-    }
-  })
+  const swapSourcesData = useRequest(urlWithParams('/api/swapSources', params), [])
+  const swapSourcesChartData = useMemo(() => {
+    return swapSourcesData.map(item => {
+      const allValue =  (item.warden || 0) + (item.other || 0) + (item.gmx || 0) + (item['1inch'] || 0) + (item.dodoex || 0) + (item.metamask || 0)
 
-  const poolStatsData = useRequest('/api/poolStats', [])
-  const poolAmountsChartData = useMemo(() => {
-    return poolStatsData.map(item => {
-      const tokens = ['BTC', 'BNB', 'USDT', 'USDC', 'ETH', 'BUSD']
+      const metrics = ['gmx', 'warden', 'dodoex', 'metamask', '1inch', 'other'].reduce((memo, key) => {
+        if (item[key]) {
+          memo[key] = displayPercentage ? item[key] / allValue * 100 : item[key]
+        }
+        return memo
+      }, {})
+
       return {
-        ...tokens.reduce((memo, symbol) => {
-          const valueUsd = (item[symbol] && item[symbol].poolAmount) ? item[symbol].poolAmount.valueUsd : 0
-          memo.all += valueUsd
-          memo[symbol] = memo[symbol] || 0
-          memo[symbol] += valueUsd
-          return memo
-        }, {all: 0}),
+        ...metrics,
+        all: displayPercentage ? 100 : allValue,
         date: new Date(item.timestamp * 1000)
       }
     })
-  }, [poolStatsData])
+  }, [swapSourcesData, displayPercentage])
 
-  const volumeData = useRequest('/api/volume', [])
+  const poolStatsData = useRequest(urlWithParams('/api/poolStats', params), [])
+  const poolAmountsChartData = useMemo(() => {
+    return poolStatsData.map(item => {
+      const tokens = ['BTC', 'BNB', 'USDT', 'USDC', 'ETH', 'BUSD']
+      const allValueUsd = tokens.reduce((memo, symbol) => {
+          const valueUsd = (item[symbol] && item[symbol].poolAmount) ? item[symbol].poolAmount.valueUsd : 0
+          return memo + valueUsd
+      }, 0)
+
+      if (displayPercentage) {
+        return {
+          ...tokens.reduce((memo, symbol) => {
+            const valueUsd = (item[symbol] && item[symbol].poolAmount) ? item[symbol].poolAmount.valueUsd : 0
+            memo[symbol] = valueUsd / allValueUsd * 100
+            return memo
+          }, {}),
+          all: 100,
+          date: new Date(item.timestamp * 1000)
+        }
+      }
+
+      return {
+        ...tokens.reduce((memo, symbol) => {
+          const valueUsd = (item[symbol] && item[symbol].poolAmount) ? item[symbol].poolAmount.valueUsd : 0
+          memo[symbol] = valueUsd
+          return memo
+        }, {}),
+        all: allValueUsd,
+        date: new Date(item.timestamp * 1000)
+      }
+    })
+  }, [poolStatsData, displayPercentage])
+
+  const volumeData = useRequest(urlWithParams('/api/volume', params), [])
   const volumeChartData = useMemo(() => {
     return volumeData.map(item => {
+      const allValue = (item.margin || 0) + (item.swap || 0) + (item.burn || 0) + (item.mint || 0) + (item.liquidation || 0)
+      const metrics = ['margin', 'swap', 'burn', 'mint', 'liquidation'].reduce((memo, key) => {
+        if (item[key]) {
+          memo[key] = displayPercentage ? item[key] / allValue * 100 : item[key]
+        }
+        return memo
+      }, {})
       return {
-        margin: item.margin || 0,
-        swap: item.swap || 0,
-        burn: item.burn || 0,
-        mint: item.mint || 0,
-        liquidation: item.liquidation || 0,
-        all: item.margin + item.swap,
+        ...metrics,
+        all: displayPercentage ? 100 : allValue,
         timestamp: item.timestamp
       }
     })
-  }, [volumeData])
+  }, [volumeData, displayPercentage])
   const volumeStats = useMemo(() => {
     if (!volumeData || volumeData.length === 0) {
       return
@@ -165,7 +222,17 @@ function Home() {
     }
   }, [volumeData])
 
-  const tooltipFormatter = useCallback(value => {
+  const yaxisFormatter = useCallback((value, ...args) => {
+    if (displayPercentage) {
+      return value.toFixed(2)
+    }
+    return formatUsdValue(value)
+  }, [displayPercentage])
+
+  const tooltipFormatter = useCallback((value, name, item) => {
+    if (item && item.unit === '%') {
+      return value.toFixed(2)
+    }
     return formatUsdValue(value)
   }, [])
 
@@ -173,22 +240,33 @@ function Home() {
     if (label.constructor !== Date) {
       label = new Date(label * 1000)
     }
-    const date = strftime('%d.%m', label)
-    const all = args && args[0] && args[0].payload && args[0].payload.all
+    const item = args && args[0] && args[0].payload && args[0]
+    const dateFmtString = period >= SECONDS_IN_DAY ? '%d.%m' : '%d.%m %H:%M'
+    const date = strftime(dateFmtString, label)
+    const all = item && item.payload.all
     if (all) {
+      if (item && item.unit === '%') {
+        return date
+      }
       return `${date}, ${formatUsdValue(all)}`
     }
     return date
-  }, [])
+  }, [period])
 
   const tooltipLabelFormatterUnits = useCallback((label, args) => {
-    const all = args && args[0] && args[0].payload && args[0].payload.all
+    const date = strftime('%d.%m', label)
+
+    const item = args && args[0]
+    if (item && item.unit === '%') {
+      return date
+    }
+
+    const all = item && item.payload.all
 
     if (label.constructor !== Date) {
       return `${label}, total: ${all}`
     }
 
-    const date = strftime('%d.%m', label)
     return `${date}, total: ${all}`
   })
 
@@ -197,9 +275,14 @@ function Home() {
 
   return (
     <div className="Home">
+      <h1>GMX analytics</h1>
+      <div className="form">
+        <input id="displayPercentageCheckbox" type="checkbox" checked={displayPercentage} onChange={evt => setDisplayPercentage(evt.target.checked)} />
+        <label for="displayPercentageCheckbox">Show relative shares</label>
+      </div>
       <div className="chart-grid">
         <div className="chart-cell half">
-          <h2>Volume</h2>
+          <h3>Volume</h3>
           {volumeStats &&
             <p className="stats">
               Today: <b>{numberFmt.format(volumeStats.today)}</b><br />
@@ -210,18 +293,18 @@ function Home() {
             <BarChart syncId="syncId" data={volumeChartData}>
               <CartesianGrid strokeDasharray="10 10" />
               <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-              <YAxis dataKey="all" tickFormatter={tooltipFormatter} width={YAXIS_WIDTH} />
+              <YAxis dataKey="all" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
               <Tooltip
                 formatter={tooltipFormatter}
                 labelFormatter={tooltipLabelFormatter}
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" dataKey="swap" stackId="a" name="Swap" fill="#ee64b8" />
-              <Bar type="monotone" dataKey="margin" stackId="a" name="Margin trading" fill="#8884ff" />
-              <Bar type="monotone" dataKey="mint" stackId="a" name="Mint USDG" fill="#22c761" />
-              <Bar type="monotone" dataKey="burn" stackId="a" name="Burn USDG" fill="#ab6100" />
-              <Bar type="monotone" dataKey="liquidation" stackId="a" name="Liquidation" fill="#c90000" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill="#ee64b8" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill="#22c761" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="burn" stackId="a" name="Burn USDG" fill="#ab6100" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="liquidation" stackId="a" name="Liquidation" fill="#c90000" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#8884ff" />
 
               <ReferenceLine x={1624406400} strokeWidth={2} stroke="lightblue">
                 <Label value="1.5% threshold" angle={90} position="insideMiddle" />
@@ -234,7 +317,7 @@ function Home() {
         </div>
 
         <div className="chart-cell half">
-          <h2>Collected Fees</h2>
+          <h3>Collected Fees</h3>
           {feesStats &&
             <p className="stats">
               Today: <b>{numberFmt.format(feesStats.today)}</b><br />
@@ -245,61 +328,61 @@ function Home() {
             <BarChart syncId="syncId" data={feesChartData}>
               <CartesianGrid strokeDasharray="10 10" />
               <XAxis dataKey="date" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-              <YAxis dataKey="all" tickFormatter={tooltipFormatter} width={YAXIS_WIDTH} />
+              <YAxis dataKey="all" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
               <Tooltip
                 formatter={tooltipFormatter}
                 labelFormatter={tooltipLabelFormatter}
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" dataKey="swap" stackId="a" name="Swap, Mint & Burn USDG" fill="#3483eb" />
-              <Bar type="monotone" dataKey="margin" stackId="a" name="Margin & Liquidations" fill="#eb8334" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap, Mint & Burn USDG" fill="#3483eb" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin & Liquidations" fill="#eb8334" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="chart-cell">
-          <h2>Pool</h2>
+          <h3>Pool</h3>
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <BarChart syncId="syncId" data={poolAmountsChartData}>
               <CartesianGrid strokeDasharray="10 10" />
               <XAxis dataKey="date" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-              <YAxis dataKey="all" tickFormatter={tooltipFormatter} width={YAXIS_WIDTH} />
+              <YAxis dataKey="all" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
               <Tooltip
                 formatter={tooltipFormatter}
                 labelFormatter={tooltipLabelFormatter}
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" dataKey="BTC" stackId="a" name="BTC" fill="#3483eb" />
-              <Bar type="monotone" dataKey="ETH" stackId="a" name="ETH" fill="#eb8334" />
-              <Bar type="monotone" dataKey="BNB" stackId="a" name="BNB" fill="#ee64b8" />
-              <Bar type="monotone" dataKey="USDC" stackId="a" name="USDC" fill="#8884ff" />
-              <Bar type="monotone" dataKey="USDT" stackId="a" name="USDT" fill="#ab6100" />
-              <Bar type="monotone" dataKey="BUSD" stackId="a" name="BUSD" fill="#c90000" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="USDC" stackId="a" name="USDC" fill="#8884ff" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="USDT" stackId="a" name="USDT" fill="#ab6100" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="BUSD" stackId="a" name="BUSD" fill="#c90000" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="BTC" stackId="a" name="BTC" fill="#3483eb" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="ETH" stackId="a" name="ETH" fill="#eb8334" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="BNB" stackId="a" name="BNB" fill="#ee64b8" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="chart-cell">
-          <h2>Swap Sources</h2>
+          <h3>Swap Sources</h3>
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <BarChart syncId="syncId" data={swapSourcesChartData}>
               <CartesianGrid strokeDasharray="10 10" />
               <XAxis dataKey="date" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-              <YAxis dataKey="all" tickFormatter={tooltipFormatter} width={YAXIS_WIDTH} />
+              <YAxis dataKey="all" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
               <Tooltip
                 formatter={tooltipFormatter}
                 labelFormatter={tooltipLabelFormatter}
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" dataKey="1inch" stackId="a" name="1inch" fill="#ee64b8" />
-              <Bar type="monotone" dataKey="dodoex" stackId="a" name="Dodoex" fill="#c90000" />
-              <Bar type="monotone" dataKey="warden" stackId="a" name="WardenSwap" fill="#eb8334" />
-              <Bar type="monotone" dataKey="metamask" stackId="a" name="MetaMask" fill="#ab6100" />
-              <Bar type="monotone" dataKey="gmx" stackId="a" name="GMX" fill="#8884ff" />
-              <Bar type="monotone" dataKey="other" stackId="a" name="Other" fill="#22c761" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="1inch" stackId="a" name="1inch" fill="#ee64b8" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="dodoex" stackId="a" name="Dodoex" fill="#c90000" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="warden" stackId="a" name="WardenSwap" fill="#eb8334" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="metamask" stackId="a" name="MetaMask" fill="#ab6100" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="gmx" stackId="a" name="GMX" fill="#8884ff" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="other" stackId="a" name="Other" fill="#22c761" />
             </BarChart>
           </ResponsiveContainer>
           <div className="chart-description">
@@ -311,7 +394,7 @@ function Home() {
         </div>
 
         <div className="chart-cell">
-          <h2>USDG Supply</h2>
+          <h3>USDG Supply</h3>
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <AreaChart
               data={usdgSupplyChartData}
@@ -333,16 +416,19 @@ function Home() {
         </div>
 
         <div className="chart-cell">
-          <h2>Unique users</h2>
+          <h3>Unique users</h3>
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <BarChart syncId="syncId" data={usersChartData}>
               <CartesianGrid strokeDasharray="10 10" />
               <XAxis dataKey="date" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-              <YAxis dataKey="all" width={YAXIS_WIDTH} />
-              <Tooltip labelFormatter={tooltipLabelFormatterUnits} />
+              <YAxis dataKey="all" unit={displayPercentage ? '%' : ''} width={YAXIS_WIDTH} />
+              <Tooltip
+                labelFormatter={tooltipLabelFormatterUnits}
+                formatter={value => displayPercentage ? value.toFixed(2) : value}
+              />
               <Legend />
-              <Bar type="monotone" dataKey="margin" stackId="a" name="Margin trading" fill="#eb8334" />
-              <Bar type="monotone" dataKey="swap" stackId="a" name="Swaps, Mint & Burn USDG" fill="#3483eb" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#eb8334" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swaps, Mint & Burn USDG" fill="#3483eb" />
             </BarChart>
           </ResponsiveContainer>
           <div className="chart-description">
