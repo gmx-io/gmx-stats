@@ -2,11 +2,8 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
 import * as strftime from 'strftime'
 
-import logo from './react.svg';
+import { useRequest, urlWithParams } from './helpers'
 import './Home.css';
-
-const { BigNumber } = ethers
-const { formatUnits} = ethers.utils
 
 import {
   LineChart,
@@ -23,8 +20,13 @@ import {
   LabelList,
   ReferenceLine,
   Area,
-  AreaChart
+  AreaChart,
+  ComposedChart
 } from 'recharts';
+
+const { BigNumber } = ethers
+const { formatUnits} = ethers.utils
+
 const data = [
   {
     name: 'Page A',
@@ -39,16 +41,6 @@ const data = [
     amt: 2210,
   }
 ]
-
-const defaultFetcher = url => fetch(url).then(res => res.json())
-function useRequest(url, defaultValue, fetcher = defaultFetcher) {
-  const [data, setData] = useState(defaultValue) 
-  useEffect(() => {
-    fetcher(url).then(setData)
-  }, [url])
-
-  return data
-}
 
 const numberFmt = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
@@ -65,11 +57,11 @@ const formatUsdValue = value => {
     return `$${value.toFixed(1)}`
 }
 
-function urlWithParams(url, params) {
-  const paramsStr = Object.entries(params)
-    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-    .join('&')
-  return `${url}?${paramsStr}`
+const tooltipFormatter = (value, name, item) => {
+  if (item && item.unit === '%') {
+    return value.toFixed(2)
+  }
+  return numberFmt.format(value)
 }
 
 function Home() {
@@ -112,15 +104,12 @@ function Home() {
   const feesData = useRequest(urlWithParams('/api/fees', params), [])
   const feesChartData = useMemo(() => {
     return feesData.map(item => {
-      const allValue = item.margin + item.swap
-      const metrics = ['margin', 'swap'].reduce((memo, key) => {
-        if (item[key]) {
-          memo[key] = displayPercentage ? item[key] / allValue * 100 : item[key]
-        }
-        return memo
-      }, {})
+      const allValue = Object.values(item.metrics).reduce((memo, el) => memo + el)
       return {
-        ...metrics,
+        ...Object.entries(item.metrics).reduce((memo, [key, value]) => {
+          memo[key] = displayPercentage ? value / allValue * 100 : value
+          return memo
+        }, {}),
         all: displayPercentage ? 100 : allValue,
         date: new Date(item.timestamp * 1000)
       }
@@ -130,11 +119,11 @@ function Home() {
     if (!feesData || feesData.length === 0) {
       return
     }
-    const getAll = el => (el.margin || 0) + (el.swap || 0)
+    const getAll = metrics => Object.values(metrics).reduce((memo, value) => memo + value)
     return {
-      today: getAll(feesData[feesData.length - 1]),
+      today: getAll(feesData[feesData.length - 1].metrics),
       last7days: feesData.slice(-7).reduce((memo, el) => {
-        return memo + getAll(el)
+        return memo + getAll(el.metrics)
       }, 0)
     }
   }, [feesData])
@@ -229,14 +218,11 @@ function Home() {
     return formatUsdValue(value)
   }, [displayPercentage])
 
-  const tooltipFormatter = useCallback((value, name, item) => {
-    if (item && item.unit === '%') {
-      return value.toFixed(2)
-    }
-    return formatUsdValue(value)
-  }, [])
-
   const tooltipLabelFormatter = useCallback((label, args) => {
+    if (!label) {
+      return
+    }
+
     if (label.constructor !== Date) {
       label = new Date(label * 1000)
     }
@@ -248,12 +234,21 @@ function Home() {
       if (item && item.unit === '%') {
         return date
       }
-      return `${date}, ${formatUsdValue(all)}`
+      return `${date}, ${numberFmt.format(all)}`
     }
     return date
   }, [period])
 
   const tooltipLabelFormatterUnits = useCallback((label, args) => {
+    if (!label) {
+      return label
+    }
+    if (label.constructor !== Date) {
+      label = new Date(label * 1000)
+      if (!label.getDate()) {
+        return label
+      }
+    }
     const date = strftime('%d.%m', label)
 
     const item = args && args[0]
@@ -278,7 +273,7 @@ function Home() {
       <h1>GMX analytics</h1>
       <div className="form">
         <input id="displayPercentageCheckbox" type="checkbox" checked={displayPercentage} onChange={evt => setDisplayPercentage(evt.target.checked)} />
-        <label for="displayPercentageCheckbox">Show relative shares</label>
+        <label htmlFor="displayPercentageCheckbox">Show relative shares</label>
       </div>
       <div className="chart-grid">
         <div className="chart-cell half">
@@ -335,8 +330,11 @@ function Home() {
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap, Mint & Burn USDG" fill="#3483eb" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin & Liquidations" fill="#eb8334" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill="#ee64b8" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill="#22c761" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="burn" stackId="a" name="Burn USDG" fill="#ab6100" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="liquidation" stackId="a" name="Liquidation" fill="#c90000" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#8884ff" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -434,6 +432,9 @@ function Home() {
           <div className="chart-description">
             <p>Includes users routed through other protocols (like 1inch)</p>
           </div>
+        </div>
+
+        <div className="chart-cell">
         </div>
       </div>
     </div>

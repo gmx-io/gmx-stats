@@ -31,3 +31,68 @@ body {
 .recharts-wrapper {
   font-size: 0.85rem;
 }
+
+.App {
+  color: #222;
+  line-height: 1.15;
+  padding: 20px;
+}
+
+h3, h2 {
+  color: #444;
+  margin: 1rem 0 1.5rem;
+}
+h3 {
+  margin:  1rem 0;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+label {
+  cursor: pointer;
+}
+
+input + label,
+label + input {
+  margin-left: 0.5rem;
+}
+
+.stats {
+  font-size: 0.9rem;
+  margin: 1.5rem 0 1rem;
+}
+
+.chart-description {
+  font-size: 0.9rem;
+  margin: 1rem 0;
+  max-width: 600px;
+}
+
+.chart-description p {
+  margin: 0;
+}
+
+.chart-description ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.chart-description li {
+  margin-top: 5px;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem; 
+  margin-top: 2rem;
+}
+
+@media all and (max-width: 1200px) {
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
