@@ -433,8 +433,35 @@ export default function routes(app) {
     res.send(data)
   })
 
+  app.get('/api/liquidations', async (req, res) => {
+    const from = req.query.from || Math.round(Date.now() / 1000) - 86400 * 3
+    const to = req.query.to || Math.round(Date.now() / 1000)
+    const rows = await dbAll(`
+      SELECT l.args, b.timestamp
+      FROM vaultLogs l
+      INNER JOIN blocks b ON b.number = l.blockNumber
+      WHERE
+        name = 'LiquidatePosition'
+        AND b.timestamp BETWEEN ? AND ?
+      ORDER BY b.timestamp
+    `, [from, to])
+
+    const output = rows.map(row => {
+      const record = LogRecord(row)
+      const collateral = record.args[6] 
+      const isLong = record.args[4] 
+      const value = collateral / 1e30
+      return {
+        timestamp: row.timestamp,
+        collateral: value,
+        isLong
+      }
+    })
+
+    res.send(output)
+  })
+
   app.get('/api/marginPnl', async (req, res) => {
-    console.log('req', req.query)
     const from = req.query.from || Math.round(Date.now() / 1000) - 86400 * 3
     const to = req.query.to || Math.round(Date.now() / 1000)
     const rows = await dbAll(`

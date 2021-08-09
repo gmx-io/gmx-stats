@@ -90,6 +90,27 @@ function Trading() {
   const pnlMin = pnlChartData.length ? pnlChartData[pnlChartData.length - 1].loss : 0
   const pnlMax = pnlChartData.length ? pnlChartData[pnlChartData.length - 1].profits : 0
 
+  const liquidationsData = useRequest(urlWithParams('api/liquidations', {from: fromTs, to: toTs}), [])
+  const liquidationsChartData = useMemo(() => {
+  	let cum = 0
+  	let longCum = 0
+  	let shortCum = 0
+  	return liquidationsData.map(item => {
+  		cum += item.collateral
+  		if (item.isLong) {
+  			longCum += item.collateral
+  		} else {
+  			shortCum += item.collateral
+  		}
+  		return {
+  			date: new Date(item.timestamp * 1000),
+  			collateral: cum,
+  			long: longCum,
+  			short: shortCum
+  		}
+  	})
+  }, [liquidationsData])
+
   return (
     <>
 			<div>
@@ -119,12 +140,28 @@ function Trading() {
               <YAxis yAxisId="right" orientation="right" dataKey="poolAmount" />
               <Tooltip />
               <Legend />
-              <Area isAnimationActive={false} yAxisId="right" dataKey="poolAmount" name="Pool" dot={false} fill="#eb8334" />
+              <Area isAnimationActive={false} strokeWidth={0} yAxisId="right" dataKey="poolAmount" name="Pool" dot={false} fill="#eb8334" />
               <Line isAnimationActive={false} yAxisId="left" dataKey="price" name="Chainlink Price" dot={false} stroke="#666" strokeWidth={2} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
       })}
+
+      <h2>Liquidated Collateral</h2>
+      <ResponsiveContainer width="100%" height={600}>
+        <ComposedChart
+          data={liquidationsChartData}
+        >
+          <CartesianGrid strokeDasharray="10 10" />
+          <XAxis dataKey="date" />
+          <YAxis dataKey="collateral" />
+          <Tooltip />
+          <Legend />
+          <Area isAnimationActive={false} stackId="a" dataKey="long" name="Long" dot={false} strokeWidth={0} stroke="purple" fill="purple" />
+          <Area isAnimationActive={false} stackId="a" dataKey="short" name="Short" dot={false} stroke="green" strokeWidth={0} fill="green" />
+          <Line isAnimationActive={false} dataKey="collateral" name="All" dot={false} stroke="black" strokeWidth={2} />
+        </ComposedChart>
+      </ResponsiveContainer>
 
       <h2>Global PnL</h2>
       <ResponsiveContainer width="100%" height={600}>
@@ -136,8 +173,8 @@ function Trading() {
           <YAxis domain={[pnlMin * 1.5, pnlMax * 0.50]} />
           <Tooltip />
           <Legend />
-          <Area isAnimationActive={false} dataKey="profits" name="Profits" dot={false} stroke="lightblue" fill="lightblue" />
-          <Area isAnimationActive={false} dataKey="loss" name="Loss" dot={false} stroke="red" fill="red" />
+          <Area isAnimationActive={false} dataKey="profits" name="Profits" dot={false} strokeWidth={0} fill="lightblue" />
+          <Area isAnimationActive={false} dataKey="loss" name="Loss" dot={false} strokeWidth={0} fill="red" />
           <Line isAnimationActive={false} dataKey="net" name="Net" dot={false} stroke="#000" strokeWidth={2} />
           <Line isAnimationActive={false} dataKey="long" name="Longs Net" dot={false} stroke="green" strokeWidth={2} />
           <Line isAnimationActive={false} dataKey="short" name="Shorts Net" dot={false} stroke="purple" strokeWidth={2} />
