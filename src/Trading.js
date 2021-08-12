@@ -88,6 +88,11 @@ function Trading() {
   const pnlData = useRequest(urlWithParams('/api/marginPnl', params), [])
   const pnlChartData = useMemo(() => {
     return pnlData.map(item => {
+      if (!item.metrics) {
+        return {
+          date: new Date(item.timestamp * 1000)
+        }
+      }
       return {
         date: new Date(item.timestamp * 1000),
         net: item.metrics.net,
@@ -107,11 +112,12 @@ function Trading() {
     let longCum = 0
     let shortCum = 0
     return liquidationsData.map(item => {
-      cum += item.collateral
+      const collateral = item.collateral || 0
+      cum += collateral
       if (item.isLong) {
-        longCum += item.collateral
+        longCum += collateral
       } else {
-        shortCum += item.collateral
+        shortCum += collateral
       }
       return {
         date: new Date(item.timestamp * 1000),
@@ -199,10 +205,10 @@ function Trading() {
           <Tooltip />
           <Legend />
           <Area isAnimationActive={false} dataKey="profits" name="Profits" dot={false} strokeWidth={0} fill="lightblue" />
-          <Area isAnimationActive={false} dataKey="loss" name="Loss" dot={false} strokeWidth={0} fill="red" />
+          <Area isAnimationActive={false} dataKey="loss" name="Loss" dot={false} stroke="pink" strokeWidth={0} fill="pink" />
           <Line isAnimationActive={false} dataKey="net" name="Net" dot={false} stroke="#000" strokeWidth={2} />
-          <Line isAnimationActive={false} dataKey="long" name="Longs Net" dot={false} stroke="green" strokeWidth={2} />
-          <Line isAnimationActive={false} dataKey="short" name="Shorts Net" dot={false} stroke="purple" strokeWidth={2} />
+          <Line isAnimationActive={false} dataKey="long" name="Longs Net" dot={false} stroke="green" strokeWidth={1} />
+          <Line isAnimationActive={false} dataKey="short" name="Shorts Net" dot={false} stroke="red" strokeWidth={1} />
         </ComposedChart>
       </ResponsiveContainer>
 

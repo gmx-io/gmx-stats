@@ -23,6 +23,7 @@ const { AddressZero } = ethers.constants
 
 const logger = getLogger('jobs')
 
+const RUN_JOBS_LOCALY = true
 const DEFAULT_JOB_INTERVAL = 1000 * 3
 const BACKWARDS = false
 const BLOCKS_PER_JOB = 10000
@@ -720,7 +721,6 @@ export default function ({ db }) {
 	  logger.info('done')
 	}
 
-  const RUN_JOBS_LOCALY = true
   if (process.env.NODE_ENV === 'production' || RUN_JOBS_LOCALY) {
     initJobs()
   }

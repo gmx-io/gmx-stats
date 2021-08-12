@@ -65,7 +65,7 @@ const tooltipFormatter = (value, name, item) => {
 }
 
 function Home() {
-  const [from, setFrom] = useState(new Date(Date.now() - 86400000 * 30).toISOString().slice(0, -5))
+  const [from, setFrom] = useState(new Date(Date.now() - 86400000 * 60).toISOString().slice(0, -5))
   const [to, setTo] = useState(new Date().toISOString().slice(0, -5))
 
   const fromTs = +new Date(from) / 1000
@@ -83,9 +83,11 @@ function Home() {
   const usdgSupplyData = useRequest(urlWithParams('/api/usdgSupply', params), [])
   const usdgSupplyChartData = useMemo(() => {
     return usdgSupplyData.map(item => {
-      const supply = BigNumber.from(item.supply.hex)
+      const value = item.supply
+        ? parseInt(formatUnits(BigNumber.from(item.supply.hex), 18))
+        : null
       return {
-        value: parseInt(formatUnits(supply, 18)),
+        value,
         date: new Date(item.timestamp * 1000)
       }
     })
@@ -391,7 +393,6 @@ function Home() {
               <Bar type="monotone" unit={dynamicUnit} dataKey="warden" stackId="a" name="WardenSwap" fill="#eb8334" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="metamask" stackId="a" name="MetaMask" fill="#ab6100" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="gmx" stackId="a" name="GMX" fill="#8884ff" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="stabilize" stackId="a" name="Stabilize" fill="#666" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="other" stackId="a" name="Other" fill="#22c761" />
             </BarChart>
           </ResponsiveContainer>

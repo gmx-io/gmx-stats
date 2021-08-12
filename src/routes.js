@@ -84,6 +84,7 @@ export default function routes(app) {
   app.get('/api/usdgSupply', async (req, res) => {
     const period = Number(req.query.period) || GROUP_PERIOD
     const from = req.query.from || 0
+    const to = req.query.to || Math.round(Date.now() / 1000)
     const rows = await dbAll(`
       SELECT s.supply, b.number, (b.timestamp / ${period} * ${period}) as timestamp
       FROM usdgSupply s
@@ -93,7 +94,12 @@ export default function routes(app) {
       ORDER BY b.number
     `, [from])
 
-    const records = rows.map(UsdgSupplyRecord)
+    const records = fillPeriods(rows.map(UsdgSupplyRecord), {
+      from,
+      to,
+      period,
+      extrapolate: false
+    })
 
     return res.send(records)
   })
@@ -134,6 +140,57 @@ export default function routes(app) {
     }
 
     return output
+  }
+
+  function fillPeriods(arr, { period, from, to, interpolate = true, extrapolate = false }) {
+    let i = 0
+    let prevTimestamp = from ? from - period : arr[0].timestamp
+    let prevPeriodStep = Math.floor(prevTimestamp / period)
+    let prevItem
+    const ret = []
+
+    console.log('fillPeriods period: %s, from: %s, to: %s', period, new Date(from * 1000), new Date(to * 1000))
+    while (i < arr.length) {
+      const item = arr[i]
+      const periodStep = Math.floor(item.timestamp / period) 
+
+      if (periodStep - 1 > prevPeriodStep) {
+        const diff = periodStep - prevPeriodStep
+        let j = 1
+        while (j < diff) {
+          let newItem = { timestamp: (prevPeriodStep + j) * period }
+          if (interpolate) {
+            newItem = { ...prevItem, ...newItem }
+          }
+          ret.push(newItem)
+          j++
+        }
+      }
+
+      ret.push(item)
+
+      if (to && i === arr.length - 1) {
+        const lastPeriodStep = Math.floor(to / period)
+        if (lastPeriodStep > periodStep) {
+          const diff = lastPeriodStep - periodStep
+          let j = 0
+          while (j < diff) {
+            let newItem = { timestamp: (periodStep + j + 1) * period }
+            if (extrapolate) {
+              newItem = { ...item, ...newItem }
+            }
+            ret.push(newItem)
+            j++
+          }
+        }
+      }
+
+      prevItem = item
+      prevPeriodStep = periodStep
+      i++
+    }
+
+    return ret
   }
 
   function fillNa(arr, keys) {
@@ -211,6 +268,7 @@ export default function routes(app) {
   app.get('/api/poolStats', async (req, res) => {
     const period = Number(req.query.period) || GROUP_PERIOD
     const from = req.query.from || 0
+    const to = req.query.to || Math.round(Date.now() / 1000)
     const rows = await dbAll(`
       SELECT
         AVG(value) value,
@@ -223,7 +281,7 @@ export default function routes(app) {
       ORDER BY blockNumber
     `, [from])
 
-    const data = rows.reduce((memo, row) => {
+    let data = rows.reduce((memo, row) => {
       let last = memo[memo.length - 1]
       if (!last || last.timestamp !== row.timestamp) {
         memo.push({
@@ -244,6 +302,13 @@ export default function routes(app) {
       last[token.symbol][row.type] = row
       return memo
     }, [])
+
+    data = fillPeriods(data, {
+      from,
+      to,
+      period
+    })
+
     res.send(data)
   })
 
@@ -259,6 +324,7 @@ export default function routes(app) {
   app.get('/api/users', async (req, res) => {
     const period = Number(req.query.period) || GROUP_PERIOD
     const from = req.query.from || 0
+    const to = req.query.to || Math.round(Date.now() / 1000)
     const rows = await dbAll(`
       SELECT COUNT(DISTINCT t.\`from\`) count, l.name, b.timestamp / ${period} * ${period} timestamp
       FROM vaultLogs l
@@ -289,12 +355,19 @@ export default function routes(app) {
       }
     })
 
+    data = fillPeriods(data, {
+      from,
+      to,
+      period
+    })
+
     res.send(data)
   })
 
   app.get('/api/swapSources', async (req, res) => {
     const period = Number(req.query.period) || GROUP_PERIOD
     const from = req.query.from || 0
+    const to = req.query.to || Math.round(Date.now() / 1000)
     const rows = await dbAll(`
       SELECT l.args, l.name, b.number, b.timestamp, t.\`to\`
       FROM vaultLogs l
@@ -361,12 +434,19 @@ export default function routes(app) {
       }
     })
 
+    data = fillPeriods(data, {
+      from,
+      to,
+      period
+    })
+
     res.send(data)
   })
 
   app.get('/api/volume', async (req, res) => {
     const period = Number(req.query.period) || GROUP_PERIOD
     const from = req.query.from || 0
+    const to = req.query.to || Math.round(Date.now() / 1000)
     const rows = await dbAll(`
       SELECT l.args, l.name, b.number, b.timestamp
       FROM vaultLogs l
@@ -430,6 +510,12 @@ export default function routes(app) {
       }
     })
 
+    data = fillPeriods(data, {
+      from,
+      to,
+      period
+    })
+
     res.send(data)
   })
 
@@ -446,7 +532,7 @@ export default function routes(app) {
       ORDER BY b.timestamp
     `, [from, to])
 
-    const output = rows.map(row => {
+    let output = rows.map(row => {
       const record = LogRecord(row)
       const collateral = record.args[6] 
       const isLong = record.args[4] 
@@ -456,6 +542,13 @@ export default function routes(app) {
         collateral: value,
         isLong
       }
+    })
+
+    output = fillPeriods(output, {
+      from,
+      to,
+      period: 60 * 5,
+      interpolate: false
     })
 
     res.send(output)
@@ -502,7 +595,7 @@ export default function routes(app) {
     }
 
     const usdToNumber = usd => Number(formatUnits(usd, 30))
-    const response = rows.filter(row => row.name === 'UpdatePnl').map(row => {
+    let output = rows.filter(row => row.name === 'UpdatePnl').map(row => {
       const record = LogRecord(row)
       const [key, hasProfit, delta] = record.args
       const position = positionByKey[key]
@@ -543,13 +636,21 @@ export default function routes(app) {
       }
     })
 
-    res.send(response)
+    output = fillPeriods(output, {
+      from,
+      to,
+      period: 60 * 5,
+      extrapolate: true
+    })
+
+    res.send(output)
   })
 
   app.get('/api/fees', async (req, res) => {
     const period = Number(req.query.period) || GROUP_PERIOD
     const disableGrouping = req.query.disableGrouping
     const from = req.query.from || 0
+    const to = req.query.to || Math.round(Date.now() / 1000)
 
     const rows = await dbAll(`
       SELECT l.args, l.name, b.number, b.timestamp, l.txHash
@@ -606,6 +707,12 @@ export default function routes(app) {
           value: item.feeUsd
         }
       })
+
+      feesData = fillPeriods(feesData, {
+        from,
+        to,
+        period: 1000 * 60 * 5
+      })
     } else {
       const grouped = feesData.reduce((memo, el) => {
         const { timestamp, type, feeUsd } = el
@@ -623,6 +730,12 @@ export default function routes(app) {
             ...item
           }
         }
+      })
+
+      feesData = fillPeriods(feesData, {
+        from,
+        to,
+        period
       })
     }
 
