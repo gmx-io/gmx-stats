@@ -26,6 +26,16 @@ import {
 const { BigNumber } = ethers
 const { formatUnits} = ethers.utils
 
+// function fillTicks(dataset, { from, to, interval }) {
+//  let i = 0
+//  let prevItem
+//  while (true) {
+//    const item = dataset[i] 
+//    const intervalGroup = Math.floor(item.timestamp / interval)
+//    if (prevItem && )
+//  }
+// }
+
 function Trading() {
   const [from, setFrom] = useState(new Date(Date.now() - 86400000 * 3).toISOString().slice(0, -5))
   const [to, setTo] = useState(new Date().toISOString().slice(0, -5))
@@ -33,9 +43,10 @@ function Trading() {
   const fromTs = +new Date(from) / 1000
   const toTs = +new Date(to) / 1000
 
-  const btcData = useRequest(urlWithParams(`/api/prices/BTC`, {from: fromTs, to: toTs}), [])
-  const ethData = useRequest(urlWithParams(`/api/prices/ETH`, {from: fromTs, to: toTs}), [])
-  const bnbData = useRequest(urlWithParams(`/api/prices/BNB`, {from: fromTs, to: toTs}), [])
+  const params = {from: fromTs, to: toTs}
+  const btcData = useRequest(urlWithParams(`/api/prices/BTC`, params), [])
+  const ethData = useRequest(urlWithParams(`/api/prices/ETH`, params), [])
+  const bnbData = useRequest(urlWithParams(`/api/prices/BNB`, params), [])
 
   const assetChartData = useMemo(() => {
     const all = {}
@@ -74,7 +85,7 @@ function Trading() {
     return all
   }, [btcData, ethData, bnbData])
 
-  const pnlData = useRequest(urlWithParams('/api/marginPnl', {from: fromTs, to: toTs}), [])
+  const pnlData = useRequest(urlWithParams('/api/marginPnl', params), [])
   const pnlChartData = useMemo(() => {
     return pnlData.map(item => {
       return {
@@ -92,37 +103,51 @@ function Trading() {
 
   const liquidationsData = useRequest(urlWithParams('api/liquidations', {from: fromTs, to: toTs}), [])
   const liquidationsChartData = useMemo(() => {
-  	let cum = 0
-  	let longCum = 0
-  	let shortCum = 0
-  	return liquidationsData.map(item => {
-  		cum += item.collateral
-  		if (item.isLong) {
-  			longCum += item.collateral
-  		} else {
-  			shortCum += item.collateral
-  		}
-  		return {
-  			date: new Date(item.timestamp * 1000),
-  			collateral: cum,
-  			long: longCum,
-  			short: shortCum
-  		}
-  	})
+    let cum = 0
+    let longCum = 0
+    let shortCum = 0
+    return liquidationsData.map(item => {
+      cum += item.collateral
+      if (item.isLong) {
+        longCum += item.collateral
+      } else {
+        shortCum += item.collateral
+      }
+      return {
+        date: new Date(item.timestamp * 1000),
+        collateral: cum,
+        long: longCum,
+        short: shortCum
+      }
+    })
   }, [liquidationsData])
+
+  const feesData = useRequest(urlWithParams('/api/fees', { disableGrouping: 1, ...params }), [])
+  const feesChartData = useMemo(() => {
+    const cum = {}
+    return feesData.map(item => {
+      cum[item.type] = (cum[item.type] || 0) + item.value
+      const all = Object.values(cum).reduce((sum, value) => sum + value)
+      return {
+        ...cum,
+        all,
+        date: new Date(item.timestamp * 1000)
+      }
+    })
+  }, [feesData])
 
   return (
     <>
-			<div>
-				<p>
-					<label>From</label>
-					<input type="datetime-local" value={from} onChange={evt => setFrom(evt.target.value)} />
-				</p>
-				<p>
-					<label>To</label>
-					<input type="datetime-local" value={to} onChange={evt => setTo(evt.target.value)} />
-				</p>
-			</div> 		 
+      <div>
+        <p>
+          <label>From</label>
+          <input type="datetime-local" value={from} onChange={evt => setFrom(evt.target.value)} />
+        </p>
+        <p>
+          <label>To</label>
+          <input type="datetime-local" value={to} onChange={evt => setTo(evt.target.value)} />
+        </p>
+      </div>     
       {Object.entries(assetChartData).map(([name, {data, maxPrice, minPrice}]) => {
         return <div key={name}>
           <h2>{name}</h2>
@@ -178,6 +203,23 @@ function Trading() {
           <Line isAnimationActive={false} dataKey="net" name="Net" dot={false} stroke="#000" strokeWidth={2} />
           <Line isAnimationActive={false} dataKey="long" name="Longs Net" dot={false} stroke="green" strokeWidth={2} />
           <Line isAnimationActive={false} dataKey="short" name="Shorts Net" dot={false} stroke="purple" strokeWidth={2} />
+        </ComposedChart>
+      </ResponsiveContainer>
+
+      <h2>Fees</h2>
+      <ResponsiveContainer width="100%" height={600}>
+        <ComposedChart syncId="syncId" data={feesChartData}>
+          <CartesianGrid strokeDasharray="10 10" />
+          <XAxis dataKey="date" minTickGap={30} />
+          <YAxis dataKey="all" />
+          <Tooltip />
+          <Legend />
+          <Area type="monotone" dot={false} dataKey="swap" stackId="a" name="Swap" stroke="#ee64b8" fill="#ee64b8" />
+          <Area type="monotone" dot={false} dataKey="mint" stackId="a" name="Mint USDG" stroke="#22c761" fill="#22c761" />
+          <Area type="monotone" dot={false} dataKey="burn" stackId="a" name="Burn USDG" stroke="#ab6100" fill="#ab6100" />
+          <Area type="monotone" dot={false} dataKey="liquidation" stackId="a" name="Liquidation" stroke="#c90000" fill="#c90000" />
+          <Area type="monotone" dot={false} dataKey="margin" stackId="a" name="Margin trading" stroke="#8884ff" fill="#8884ff" />
+          <Line isAnimationActive={false} dot={false} dataKey="all" name="Total" stroke="#000" />
         </ComposedChart>
       </ResponsiveContainer>
     </>

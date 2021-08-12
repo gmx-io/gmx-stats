@@ -25,7 +25,7 @@ const logger = getLogger('jobs')
 
 const DEFAULT_JOB_INTERVAL = 1000 * 3
 const BACKWARDS = false
-const BLOCKS_PER_JOB = 1000
+const BLOCKS_PER_JOB = 10000
 
 export default function ({ db }) {
 	const jobs = [
@@ -79,7 +79,7 @@ export default function ({ db }) {
 	      await retrieveQueuedTransactions({ tableName: 'usdgLogs' })
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 3,
-	    disabled: true
+	    // disabled: true
 	  },
 	  {
 	    name: 'UsdgSupply',
@@ -88,7 +88,7 @@ export default function ({ db }) {
 	      await calculateUsdgSupply({ backwards: BACKWARDS })
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 3,
-	    disabled: true
+	    // disabled: true
 	  },
 	  {
 	    name: 'CoingeckoPrices',
@@ -96,7 +96,7 @@ export default function ({ db }) {
 	      await retrievePrices()
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 30,
-	    disabled: true
+	    // disabled: true
 	  }
 	]
 
@@ -264,6 +264,11 @@ export default function ({ db }) {
 	      lastProcessedBlock
 	    )
 
+	    if (lastProcessedBlock <= 0) {
+			logger.info('lastProcessedBlock <= 0. Skip')	    	
+			return
+	    }
+
 	    const anchorNumber = lastProcessedBlock ? lastProcessedBlock : latestBlockNumber
 	    logger.info('anchorNumber: %s, blocks ahead: %s',
 	      anchorNumber,
@@ -274,7 +279,7 @@ export default function ({ db }) {
 	    let fromBlock
 	    if (backwards) {
 	      toBlock = anchorNumber - 1
-	      fromBlock = toBlock - BLOCKS_PER_JOB
+	      fromBlock = Math.max(toBlock - BLOCKS_PER_JOB, 0)
 	    } else {
 	      fromBlock = anchorNumber + 1
 	      toBlock = Math.min(latestBlockNumber, fromBlock + BLOCKS_PER_JOB)

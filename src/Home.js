@@ -65,12 +65,17 @@ const tooltipFormatter = (value, name, item) => {
 }
 
 function Home() {
+  const [from, setFrom] = useState(new Date(Date.now() - 86400000 * 30).toISOString().slice(0, -5))
+  const [to, setTo] = useState(new Date().toISOString().slice(0, -5))
+
+  const fromTs = +new Date(from) / 1000
+  const toTs = +new Date(to) / 1000
+
   const SECONDS_IN_HOUR = 3600
   const SECONDS_IN_DAY = 86400
   const [period, setPeriod] = useState(SECONDS_IN_DAY)
   const today = Math.floor(Date.now() / 1000 / SECONDS_IN_DAY) * SECONDS_IN_DAY
-  const from = period >= SECONDS_IN_DAY ? 0 : today - period * 36
-  const params = { period, from }
+  const params = { period, from: fromTs, to: toTs }
 
   const [displayPercentage, setDisplayPercentage] = useState(false)
   const dynamicUnit = displayPercentage ? '%' : ''
@@ -131,12 +136,10 @@ function Home() {
   const swapSourcesData = useRequest(urlWithParams('/api/swapSources', params), [])
   const swapSourcesChartData = useMemo(() => {
     return swapSourcesData.map(item => {
-      const allValue =  (item.warden || 0) + (item.other || 0) + (item.gmx || 0) + (item['1inch'] || 0) + (item.dodoex || 0) + (item.metamask || 0)
+      const allValue = Object.values(item.metrics).reduce((memo, value) => memo + value)
 
-      const metrics = ['gmx', 'warden', 'dodoex', 'metamask', '1inch', 'other'].reduce((memo, key) => {
-        if (item[key]) {
-          memo[key] = displayPercentage ? item[key] / allValue * 100 : item[key]
-        }
+      const metrics = Object.entries(item.metrics).reduce((memo, [key, value]) => {
+        memo[key] = displayPercentage ? value / allValue * 100 : value
         return memo
       }, {})
 
@@ -272,8 +275,16 @@ function Home() {
     <div className="Home">
       <h1>GMX analytics</h1>
       <div className="form">
-        <input id="displayPercentageCheckbox" type="checkbox" checked={displayPercentage} onChange={evt => setDisplayPercentage(evt.target.checked)} />
-        <label htmlFor="displayPercentageCheckbox">Show relative shares</label>
+        <p>
+          <label>Period</label>
+          <input type="datetime-local" value={from} onChange={evt => setFrom(evt.target.value)} />
+          &nbsp;—&nbsp;
+          <input type="datetime-local" value={to} onChange={evt => setTo(evt.target.value)} />
+        </p>
+        <p>
+          <input id="displayPercentageCheckbox" type="checkbox" checked={displayPercentage} onChange={evt => setDisplayPercentage(evt.target.checked)} />
+          <label htmlFor="displayPercentageCheckbox">Show relative shares</label>
+        </p>
       </div>
       <div className="chart-grid">
         <div className="chart-cell half">
@@ -380,6 +391,7 @@ function Home() {
               <Bar type="monotone" unit={dynamicUnit} dataKey="warden" stackId="a" name="WardenSwap" fill="#eb8334" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="metamask" stackId="a" name="MetaMask" fill="#ab6100" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="gmx" stackId="a" name="GMX" fill="#8884ff" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="stabilize" stackId="a" name="Stabilize" fill="#666" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="other" stackId="a" name="Other" fill="#22c761" />
             </BarChart>
           </ResponsiveContainer>

@@ -357,7 +357,7 @@ export default function routes(app) {
     data = Object.entries(data).map(([timestamp, item]) => {
       return {
         timestamp,
-        ...item
+        metrics: { ...item }
       }
     })
 
@@ -548,7 +548,9 @@ export default function routes(app) {
 
   app.get('/api/fees', async (req, res) => {
     const period = Number(req.query.period) || GROUP_PERIOD
+    const disableGrouping = req.query.disableGrouping
     const from = req.query.from || 0
+
     const rows = await dbAll(`
       SELECT l.args, l.name, b.number, b.timestamp, l.txHash
       FROM vaultLogs l
@@ -571,11 +573,12 @@ export default function routes(app) {
       let feeUsd
       if (row.name === 'LiquidatePosition') {
         type = 'liquidation'
+        // TODO use real marginFee
         const fees = record.args[5].div(1000) // 0.1%
         feeUsd = parseFloat(formatUnits(fees, 30))
       } else if (row.name === 'CollectMarginFees') {
         type = eventsInTx[row.txHash].LiquidatePosition ? 'liquidation' : 'margin'
-        feeUsd = parseFloat(formatUnits(record.args[1], 30)) - 5 // substract liquidation fee
+        feeUsd = parseFloat(formatUnits(record.args[1], 30))
       } else {
         const feeToken = parseFloat(formatUnits(record.args[1], 18))
         feeUsd = feeToken * getPrice(record.args[0], record.timestamp)
@@ -595,23 +598,33 @@ export default function routes(app) {
       }
     })
 
-    const grouped = feesData.reduce((memo, el) => {
-      const { timestamp, type, feeUsd } = el
-      const key = Math.floor(timestamp / period) * period
-
-      memo[key] = memo[key] || {}
-      memo[key][type] = (memo[key][type] || 0) + feeUsd
-      return memo
-    }, {})
-
-    feesData = Object.entries(grouped).map(([timestamp, item]) => {
-      return {
-        timestamp,
-        metrics: {
-          ...item
+    if (disableGrouping) {
+      feesData = feesData.map(item => {
+        return {
+          timestamp: item.timestamp,
+          type: item.type,
+          value: item.feeUsd
         }
-      }
-    })
+      })
+    } else {
+      const grouped = feesData.reduce((memo, el) => {
+        const { timestamp, type, feeUsd } = el
+        const key = Math.floor(timestamp / period) * period
+
+        memo[key] = memo[key] || {}
+        memo[key][type] = (memo[key][type] || 0) + feeUsd
+        return memo
+      }, {})
+
+      feesData = Object.entries(grouped).map(([timestamp, item]) => {
+        return {
+          timestamp,
+          metrics: {
+            ...item
+          }
+        }
+      })
+    }
 
     res.send(feesData)
   })
