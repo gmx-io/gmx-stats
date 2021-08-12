@@ -65,7 +65,7 @@ const tooltipFormatter = (value, name, item) => {
 }
 
 function Home() {
-  const [from, setFrom] = useState(new Date(Date.now() - 86400000 * 60).toISOString().slice(0, -5))
+  const [from, setFrom] = useState(new Date(Date.now() - 86400000 * 30).toISOString().slice(0, -5))
   const [to, setTo] = useState(new Date().toISOString().slice(0, -5))
 
   const fromTs = +new Date(from) / 1000
@@ -189,11 +189,15 @@ function Home() {
   const volumeData = useRequest(urlWithParams('/api/volume', params), [])
   const volumeChartData = useMemo(() => {
     return volumeData.map(item => {
-      const allValue = (item.margin || 0) + (item.swap || 0) + (item.burn || 0) + (item.mint || 0) + (item.liquidation || 0)
-      const metrics = ['margin', 'swap', 'burn', 'mint', 'liquidation'].reduce((memo, key) => {
-        if (item[key]) {
-          memo[key] = displayPercentage ? item[key] / allValue * 100 : item[key]
+      if (!item.metrics) {
+        return {
+          timestamp: item.timestamp
         }
+      }
+
+      const allValue = Object.values(item.metrics).reduce((sum, value) => sum + value, 0)
+      const metrics = Object.entries(item.metrics).reduce((memo, [key, value]) => {
+        memo[key] = displayPercentage ? value / allValue * 100 : value
         return memo
       }, {})
       return {

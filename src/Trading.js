@@ -142,6 +142,44 @@ function Trading() {
     })
   }, [feesData])
 
+  const swapSourcesData = useRequest(urlWithParams('/api/swapSources', { period: 3600, rawSource: 1, ...params }), [])
+  const swapSourcesFilteredKeys = useMemo(() => {
+    if (swapSourcesData.length === 0) {
+      return []
+    }
+    const count = {}
+    swapSourcesData.forEach(item => {
+      Object.keys(item.metrics).forEach(key => {
+        count[key] = (count[key] || 0) + 1
+      })
+    })
+
+    return Object.keys(count).filter(key => count[key] > 1)
+  }, [swapSourcesData])
+  const swapSourcesChartData = useMemo(() => {
+    if (swapSourcesFilteredKeys.length === 0) {
+      return []
+    }
+
+    let cum = {}
+    return swapSourcesData.map(item => {
+      let all = 0
+      swapSourcesFilteredKeys.forEach(key => {
+        if (item.metrics[key]) {
+          cum[key] = (cum[key] || 0) + item.metrics[key]
+          all += cum[key]
+        }
+      })
+      return {
+        date: new Date(item.timestamp * 1000),
+        all,
+        ...cum
+      }
+    })
+  }, [swapSourcesData, swapSourcesFilteredKeys])
+
+  const COLORS = ['red', 'green', 'blue', 'lightblue', 'purple', 'pink', 'brown', 'orange']
+
   return (
     <>
       <div>
@@ -227,6 +265,20 @@ function Trading() {
           <Area type="monotone" dot={false} dataKey="margin" stackId="a" name="Margin trading" stroke="#8884ff" fill="#8884ff" />
           <Line isAnimationActive={false} dot={false} dataKey="all" name="Total" stroke="#000" />
         </ComposedChart>
+      </ResponsiveContainer>
+
+      <h2>Swap volumes by recipient</h2>
+      <ResponsiveContainer width="100%" height={600}>
+        <LineChart syncId="syncId" data={swapSourcesChartData}>
+          <CartesianGrid strokeDasharray="10 10" />
+          <XAxis dataKey="date" minTickGap={30} />
+          <YAxis dataKey="all" />
+          <Tooltip />
+          <Legend />
+          {swapSourcesFilteredKeys.map((key, i) => {
+            return <Line dataKey={key} dot={false} stroke={COLORS[i % COLORS.length]} />
+          })}
+        </LineChart>
       </ResponsiveContainer>
     </>
   )

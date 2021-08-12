@@ -368,6 +368,8 @@ export default function routes(app) {
     const period = Number(req.query.period) || GROUP_PERIOD
     const from = req.query.from || 0
     const to = req.query.to || Math.round(Date.now() / 1000)
+    const rawSource = req.query.rawSource
+
     const rows = await dbAll(`
       SELECT l.args, l.name, b.number, b.timestamp, t.\`to\`
       FROM vaultLogs l
@@ -407,18 +409,23 @@ export default function routes(app) {
       }
 
       let source
-      if (row.to === addresses.WardenSwapRouter) {
-        source = 'warden'
-      } else if (row.to === addresses.OneInchRouter) {
-        source = '1inch' 
-      } else if (row.to === addresses.Router) {
-        source = 'gmx'
-      } else if (row.to === addresses.DodoexRouter) {
-        source = 'dodoex'
-      } else if (row.to === addresses.MetamaskRouter) {
-        source = 'metamask'
+
+      if (rawSource) {
+        source = row.to
       } else {
-        source = 'other'
+        if (row.to === addresses.WardenSwapRouter) {
+          source = 'warden'
+        } else if (row.to === addresses.OneInchRouter) {
+          source = '1inch' 
+        } else if (row.to === addresses.Router) {
+          source = 'gmx'
+        } else if (row.to === addresses.DodoexRouter) {
+          source = 'dodoex'
+        } else if (row.to === addresses.MetamaskRouter) {
+          source = 'metamask'
+        } else {
+          source = 'other'
+        }
       }
 
       memo[timeKey] = memo[timeKey] || {}
@@ -502,11 +509,9 @@ export default function routes(app) {
     data = Object.entries(data).map(([timestamp, item]) => {
       return {
         timestamp: Number(timestamp),
-        swap: item.swap,
-        margin: item.margin,
-        mint: item.mint,
-        burn: item.burn,
-        liquidation: item.liquidation,
+        metrics: {
+          ...item
+        }
       }
     })
 
