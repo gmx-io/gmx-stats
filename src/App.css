@@ -90,6 +90,31 @@ label + input {
   margin-top: 2rem;
 }
 
+.chart-cell {
+  position: relative;
+}
+
+@keyframes loader {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loader {
+  animation: loader 1s infinite;
+}
+.chart-cell .loader {
+  position: absolute;
+  margin-left: -1.5em;
+  margin-right: -1.5em;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+}
+
 @media all and (max-width: 1200px) {
   .chart-grid {
     display: grid;

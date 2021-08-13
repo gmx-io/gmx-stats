@@ -44,9 +44,9 @@ function Trading() {
   const toTs = +new Date(to) / 1000
 
   const params = {from: fromTs, to: toTs}
-  const btcData = useRequest(urlWithParams(`/api/prices/BTC`, params), [])
-  const ethData = useRequest(urlWithParams(`/api/prices/ETH`, params), [])
-  const bnbData = useRequest(urlWithParams(`/api/prices/BNB`, params), [])
+  const [btcData] = useRequest(urlWithParams(`/api/prices/BTC`, params), [])
+  const [ethData] = useRequest(urlWithParams(`/api/prices/ETH`, params), [])
+  const [bnbData] = useRequest(urlWithParams(`/api/prices/BNB`, params), [])
 
   const assetChartData = useMemo(() => {
     const all = {}
@@ -57,7 +57,7 @@ function Trading() {
     ]
 
     options.forEach(([name, assetData]) => {
-      if (!assetData) {
+      if (!assetData || assetData.length === 0) {
         return
       }
       let maxPrice = 0
@@ -85,7 +85,7 @@ function Trading() {
     return all
   }, [btcData, ethData, bnbData])
 
-  const pnlData = useRequest(urlWithParams('/api/marginPnl', params), [])
+  const [pnlData] = useRequest(urlWithParams('/api/marginPnl', params), [])
   const pnlChartData = useMemo(() => {
     return pnlData.map(item => {
       if (!item.metrics) {
@@ -106,7 +106,7 @@ function Trading() {
   const pnlMin = pnlChartData.length ? pnlChartData[pnlChartData.length - 1].loss : 0
   const pnlMax = pnlChartData.length ? pnlChartData[pnlChartData.length - 1].profits : 0
 
-  const liquidationsData = useRequest(urlWithParams('api/liquidations', {from: fromTs, to: toTs}), [])
+  const [liquidationsData] = useRequest(urlWithParams('api/liquidations', {from: fromTs, to: toTs}), [])
   const liquidationsChartData = useMemo(() => {
     let cum = 0
     let longCum = 0
@@ -128,7 +128,7 @@ function Trading() {
     })
   }, [liquidationsData])
 
-  const feesData = useRequest(urlWithParams('/api/fees', { disableGrouping: 1, ...params }), [])
+  const [feesData] = useRequest(urlWithParams('/api/fees', { disableGrouping: 1, ...params }), [])
   const feesChartData = useMemo(() => {
     const cum = {}
     return feesData.map(item => {
@@ -142,13 +142,16 @@ function Trading() {
     })
   }, [feesData])
 
-  const swapSourcesData = useRequest(urlWithParams('/api/swapSources', { period: 3600, rawSource: 1, ...params }), [])
+  const [swapSourcesData] = useRequest(urlWithParams('/api/swapSources', { period: 3600, rawSource: 1, ...params }), [])
   const swapSourcesFilteredKeys = useMemo(() => {
     if (swapSourcesData.length === 0) {
       return []
     }
     const count = {}
     swapSourcesData.forEach(item => {
+      if (!item.metrics) {
+        return
+      }
       Object.keys(item.metrics).forEach(key => {
         count[key] = (count[key] || 0) + 1
       })

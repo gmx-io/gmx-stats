@@ -23,6 +23,9 @@ import {
   AreaChart,
   ComposedChart
 } from 'recharts';
+import {
+  RiLoader5Fill
+} from 'react-icons/ri'
 
 const { BigNumber } = ethers
 const { formatUnits} = ethers.utils
@@ -80,7 +83,7 @@ function Home() {
   const [displayPercentage, setDisplayPercentage] = useState(false)
   const dynamicUnit = displayPercentage ? '%' : ''
 
-  const usdgSupplyData = useRequest(urlWithParams('/api/usdgSupply', params), [])
+  const [usdgSupplyData, usdgSupplyLoading] = useRequest(urlWithParams('/api/usdgSupply', params), [])
   const usdgSupplyChartData = useMemo(() => {
     return usdgSupplyData.map(item => {
       const value = item.supply
@@ -93,7 +96,7 @@ function Home() {
     })
   }, [usdgSupplyData])
 
-  const usersData = useRequest(urlWithParams('/api/users', params), [])
+  const [usersData, usersLoading] = useRequest(urlWithParams('/api/users', params), [])
   const usersChartData = useMemo(() => {
     return usersData.map(item => {
       const allValue = (item.margin || 0) + (item.swap || 0)
@@ -108,7 +111,7 @@ function Home() {
     })
   }, [usersData, displayPercentage])
 
-  const feesData = useRequest(urlWithParams('/api/fees', params), [])
+  const [feesData, feesLoading] = useRequest(urlWithParams('/api/fees', params), [])
   const feesChartData = useMemo(() => {
     return feesData.map(item => {
       const allValue = Object.values(item.metrics).reduce((memo, el) => memo + el)
@@ -135,7 +138,7 @@ function Home() {
     }
   }, [feesData])
 
-  const swapSourcesData = useRequest(urlWithParams('/api/swapSources', params), [])
+  const [swapSourcesData, swapSourcesLoading] = useRequest(urlWithParams('/api/swapSources', params), [])
   const swapSourcesChartData = useMemo(() => {
     return swapSourcesData.map(item => {
       const allValue = Object.values(item.metrics).reduce((memo, value) => memo + value)
@@ -153,19 +156,24 @@ function Home() {
     })
   }, [swapSourcesData, displayPercentage])
 
-  const poolStatsData = useRequest(urlWithParams('/api/poolStats', params), [])
+  const [poolStatsType, setPoolStatsType] = useState('poolAmount')
+  const [poolStatsData, poolStatsLoading] = useRequest(urlWithParams('/api/poolStats', params), [])
   const poolAmountsChartData = useMemo(() => {
+    const getValueUsd = (item, symbol) => {
+      return (item[symbol] && item[symbol][poolStatsType]) ? item[symbol][poolStatsType].valueUsd : 0
+    }
+
     return poolStatsData.map(item => {
       const tokens = ['BTC', 'BNB', 'USDT', 'USDC', 'ETH', 'BUSD']
       const allValueUsd = tokens.reduce((memo, symbol) => {
-          const valueUsd = (item[symbol] && item[symbol].poolAmount) ? item[symbol].poolAmount.valueUsd : 0
+          const valueUsd = getValueUsd(item, symbol)
           return memo + valueUsd
       }, 0)
 
       if (displayPercentage) {
         return {
           ...tokens.reduce((memo, symbol) => {
-            const valueUsd = (item[symbol] && item[symbol].poolAmount) ? item[symbol].poolAmount.valueUsd : 0
+            const valueUsd = getValueUsd(item, symbol)
             memo[symbol] = valueUsd / allValueUsd * 100
             return memo
           }, {}),
@@ -176,7 +184,7 @@ function Home() {
 
       return {
         ...tokens.reduce((memo, symbol) => {
-          const valueUsd = (item[symbol] && item[symbol].poolAmount) ? item[symbol].poolAmount.valueUsd : 0
+          const valueUsd = getValueUsd(item, symbol)
           memo[symbol] = valueUsd
           return memo
         }, {}),
@@ -184,9 +192,9 @@ function Home() {
         date: new Date(item.timestamp * 1000)
       }
     })
-  }, [poolStatsData, displayPercentage])
+  }, [poolStatsData, displayPercentage, poolStatsType])
 
-  const volumeData = useRequest(urlWithParams('/api/volume', params), [])
+  const [volumeData, volumeLoading] = useRequest(urlWithParams('/api/volume', params), [])
   const volumeChartData = useMemo(() => {
     return volumeData.map(item => {
       if (!item.metrics) {
@@ -211,7 +219,7 @@ function Home() {
     if (!volumeData || volumeData.length === 0) {
       return
     }
-    const getAll = el => (el.margin || 0) + (el.swap || 0) + (el.burn || 0) + (el.mint || 0) + (el.liquidation || 0)
+    const getAll = el => Object.values(el.metrics).reduce((sum, value) => sum + value)
     return {
       today: getAll(volumeData[volumeData.length - 1]),
       last7days: volumeData.slice(-7).reduce((memo, el) => {
@@ -301,6 +309,7 @@ function Home() {
               Last 7 days: <b>{numberFmt.format(volumeStats.last7days)}</b>
             </p>
           }
+          { volumeLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <BarChart syncId="syncId" data={volumeChartData}>
               <CartesianGrid strokeDasharray="10 10" />
@@ -336,6 +345,7 @@ function Home() {
               Last 7 days: <b>{numberFmt.format(feesStats.last7days)}</b>
             </p>
           }
+          { feesLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <BarChart syncId="syncId" data={feesChartData}>
               <CartesianGrid strokeDasharray="10 10" />
@@ -357,7 +367,10 @@ function Home() {
         </div>
 
         <div className="chart-cell">
-          <h3>Pool</h3>
+          <h3>
+            Pool
+          </h3>
+          { poolStatsLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <BarChart syncId="syncId" data={poolAmountsChartData}>
               <CartesianGrid strokeDasharray="10 10" />
@@ -381,6 +394,7 @@ function Home() {
 
         <div className="chart-cell">
           <h3>Swap Sources</h3>
+          { swapSourcesLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <BarChart syncId="syncId" data={swapSourcesChartData}>
               <CartesianGrid strokeDasharray="10 10" />
@@ -410,6 +424,7 @@ function Home() {
 
         <div className="chart-cell">
           <h3>USDG Supply</h3>
+          { usdgSupplyLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <AreaChart
               data={usdgSupplyChartData}
@@ -431,7 +446,8 @@ function Home() {
         </div>
 
         <div className="chart-cell">
-          <h3>Unique users</h3>
+          <h3>Unique users</h3> 
+          { usersLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <BarChart syncId="syncId" data={usersChartData}>
               <CartesianGrid strokeDasharray="10 10" />

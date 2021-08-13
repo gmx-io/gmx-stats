@@ -26,12 +26,22 @@ const logger = getLogger('helpers')
 
 const defaultFetcher = url => fetch(url).then(res => res.json())
 export function useRequest(url, defaultValue, fetcher = defaultFetcher) {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState()
   const [data, setData] = useState(defaultValue) 
-  useEffect(() => {
-    fetcher(url).then(setData)
+
+  useEffect(async () => {
+    try {
+      setLoading(true)
+      const data = await fetcher(url)
+      setData(data)
+    } catch (ex) {
+      setError(ex)
+    }
+    setLoading(false)
   }, [url])
 
-  return data
+  return [data, loading, error]
 }
 
 export function urlWithParams(url, params) {
