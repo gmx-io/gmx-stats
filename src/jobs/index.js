@@ -26,9 +26,9 @@ const { AddressZero } = ethers.constants
 
 const logger = getLogger('jobs')
 
-const RUN_JOBS_LOCALY = false
-const DEFAULT_JOB_INTERVAL = 1000
-const BACKWARDS = true
+const RUN_JOBS_LOCALY = true
+const DEFAULT_JOB_INTERVAL = 3000
+const BACKWARDS = false
 const BLOCKS_PER_JOB = 10000
 
 export default function ({ db }) {
@@ -39,7 +39,7 @@ export default function ({ db }) {
 	      await retrieveChainlinkPrices({ symbol: 'BTC', backwards: BACKWARDS })
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 10,
-	    disabled: true
+	    // disabled: true
 	  },
 	  {
 	    name: 'ETH ChainlinkPrices',
@@ -47,7 +47,7 @@ export default function ({ db }) {
 	      await retrieveChainlinkPrices({ symbol: 'ETH', backwards: BACKWARDS })
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 10,
-	    disabled: true
+	    // disabled: true
 	  },
 	  {
 	    name: 'BNB ChainlinkPrices',
@@ -55,7 +55,7 @@ export default function ({ db }) {
 	      await retrieveChainlinkPrices({ symbol: 'BNB', backwards: BACKWARDS })
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 10,
-	    disabled: true
+	    // disabled: true
 	  },
 	  {
 	    name: 'PoolStats',
@@ -63,7 +63,7 @@ export default function ({ db }) {
 	      calculatePoolStats({ backwards: BACKWARDS })
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 3,
-	    disabled: true
+	    // disabled: true
 	  },
 	  {
 	    name: 'VaultLogs',
@@ -92,7 +92,7 @@ export default function ({ db }) {
 	      await retrievePrices()
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 30,
-	    disabled: true
+	    // disabled: true
 	  }
 	]
 
@@ -550,7 +550,7 @@ export default function ({ db }) {
 	        await job.run()
 	        logger.info('job %s finished in %s ms', job.name, Date.now() - now)
 	      } catch (ex) {
-	        logger.info('job %s failed', job.name)
+	        logger.error('job %s failed', job.name)
 	        logger.error(ex)
 	      }
 	      job.lastRun = Date.now()

@@ -6,7 +6,7 @@
     "start": "razzle start",
     "build": "razzle build",
     "test": "razzle test --env=jsdom",
-    "start:prod": "NODE_ENV=production forever start -a -l app.log build/server.js"
+    "start:prod": "NODE_ENV=production forever start -a -o app.log -e error.log build/server.js"
   },
   "dependencies": {
     "axios": "^0.21.1",

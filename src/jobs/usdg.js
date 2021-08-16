@@ -3,13 +3,13 @@ import { ethers } from 'ethers'
 import {
 	getLogger,
 	UsdgSupplyRecord,
-	LogRecord
+	LogRecord,
+  getLatestReliableBlock
 } from '../helpers'
 import {
 	dbGet,
 	dbRun,
-	dbAll,
-	getLatestReliableBlock
+	dbAll
 } from '../db'
 import { usdgContract, chainlinkFeedContracts } from '../contracts'
 
