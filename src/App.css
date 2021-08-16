@@ -94,6 +94,11 @@ label + input {
   position: relative;
 }
 
+.form button {
+  cursor: pointer;
+  margin-left: 10px;
+}
+
 @keyframes loader {
   from {
     transform: rotate(0);

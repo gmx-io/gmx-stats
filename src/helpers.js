@@ -44,9 +44,16 @@ export function useRequest(url, defaultValue, fetcher = defaultFetcher) {
   return [data, loading, error]
 }
 
+export function tsToIso(ts) {
+  return new Date(ts - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, -5)
+}
+
 export function urlWithParams(url, params) {
   const paramsStr = Object.entries(params)
-    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+    .reduce((memo, [key, value]) => {
+      if (value) memo.push(`${key}=${encodeURIComponent(value)}`)
+      return memo
+    }, [])
     .join('&')
   return `${url}?${paramsStr}`
 }

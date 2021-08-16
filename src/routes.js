@@ -211,14 +211,15 @@ export default function routes(app) {
 
   app.get('/api/prices/:symbol', async (req, res) => {
     const validSymbols = new Set(['BTC', 'ETH', 'BNB'])
-    const from = req.query.from || Math.round(Date.now() / 1000) - 86400 * 3
-    const to = req.query.to || Math.round(Date.now() / 1000)
+    const from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 3
+    const to = Number(req.query.to) || Math.round(Date.now() / 1000)
     const { symbol } = req.params
     if (!validSymbols.has(symbol)) {
       res.send(`Unknown symbol ${symbol}`)
       res.status(400)
       return
     }
+    console.log(from, to)
     console.log('symbol: %s, from: %s (%s), to: %s (%s)',
       symbol,
       from,
@@ -450,6 +451,85 @@ export default function routes(app) {
     res.send(data)
   })
 
+  function getTradeFromLogRecord(record) {
+    let value = 0
+    let type = null
+    if (record.name === 'Swap') {
+      const tokenInAddress = record.args[1]
+      const tokenOutAddress = record.args[2]
+      const amountIn = record.args[3]
+      const amountOut = record.args[4]
+
+      const tokenIn = TOKENS_BY_ADDRESS[tokenInAddress]
+      const tokenOut = TOKENS_BY_ADDRESS[tokenInAddress]
+
+      if (tokenIn.stable) {
+        value = Number(formatUnits(amountIn, 18))
+      } else if (tokenOut.stable) {
+        value = Number(formatUnits(amountOut, 18))
+      } else {
+        value = Number(formatUnits(amountIn, 18)) * getPrice(tokenInAddress, record.timestamp)
+      }
+      type = 'swap'
+    } else if (record.name === 'BuyUSDG') {
+      value = Number(formatUnits(record.args[3], 18))
+      type = 'mint'
+    } else if (record.name === 'SellUSDG') {
+      const token = record.args[1]
+      value = Number(formatUnits(record.args[3], 18)) * getPrice(token, record.timestamp)
+      type = 'burn'
+    } else if (record.name === 'LiquidatePosition') {
+      value = Number(formatUnits(record.args[5], 30))
+      type = 'liquidation'
+    } else {
+      value = Number(formatUnits(record.args[5], 30))
+      type = 'margin'
+    }
+
+    return { type, value }
+  }
+
+  function sumObjects(a, b) {
+    const aKeys = Object.keys(a)
+    const bKeys = Object.keys(b)
+    return Array.from(new Set([...aKeys, ...bKeys])).reduce((memo, key) => {
+      memo[key] = (a[key] || 0) + (b[key] || 0)
+      return memo
+    }, {})
+  }
+
+  app.get('/api/volumeByHour', async (req, res) => {
+    const from = req.query.from || 0
+    const to = req.query.to || Math.round(Date.now() / 1000)
+    const rows = await dbAll(`
+      SELECT l.args, l.name, b.number, b.timestamp, strftime('%H', b.timestamp, 'unixepoch') hour
+      FROM vaultLogs l
+      INNER JOIN blocks b ON b.number = l.blockNumber
+      WHERE
+        l.name in ('IncreasePosition', 'DecreasePosition', 'LiquidatePosition', 'Swap', 'BuyUSDG', 'SellUSDG')
+        AND b.timestamp BETWEEN ? and ?
+    `, [from, to])
+
+    const grouped = rows.reduce((memo, row) => {
+      const record = LogRecord(row)
+      memo[record.hour] = memo[record.hour] || {}
+
+      const { type, value } = getTradeFromLogRecord(record)
+      memo[record.hour][type] = memo[record.hour][type] || 0
+      memo[record.hour][type] += value
+      return memo
+    }, {})
+
+    const data = Object.keys(grouped).sort().map(key => {
+      return {
+        hour: key,
+        metrics: grouped[key]
+      }
+    })
+
+    res.send(data)
+  })
+
   app.get('/api/volume', async (req, res) => {
     const period = Number(req.query.period) || GROUP_PERIOD
     const from = req.query.from || 0
@@ -460,47 +540,16 @@ export default function routes(app) {
       INNER JOIN blocks b ON b.number = l.blockNumber
       WHERE
         l.name in ('IncreasePosition', 'DecreasePosition', 'LiquidatePosition', 'Swap', 'BuyUSDG', 'SellUSDG')
-        AND b.timestamp >= ?
-    `, [from])
+        AND b.timestamp BETWEEN ? AND ?
+    `, [from, to])
 
     let data = rows.reduce((memo, row) => {
       const key = Math.floor(row.timestamp / period) * period
       const record = LogRecord(row)
       memo[key] = memo[key] || {}
 
-      let value = 0
-      let type = null
-      if (record.name === 'Swap') {
-        const tokenInAddress = record.args[1]
-        const tokenOutAddress = record.args[2]
-        const amountIn = record.args[3]
-        const amountOut = record.args[4]
+      const { type, value } = getTradeFromLogRecord(record)
 
-        const tokenIn = TOKENS_BY_ADDRESS[tokenInAddress]
-        const tokenOut = TOKENS_BY_ADDRESS[tokenInAddress]
-
-        if (tokenIn.stable) {
-          value = Number(formatUnits(amountIn, 18))
-        } else if (tokenOut.stable) {
-          value = Number(formatUnits(amountOut, 18))
-        } else {
-          value = Number(formatUnits(amountIn, 18)) * getPrice(tokenInAddress, row.timestamp)
-        }
-        type = 'swap'
-      } else if (record.name === 'BuyUSDG') {
-        value = Number(formatUnits(record.args[3], 18))
-        type = 'mint'
-      } else if (record.name === 'SellUSDG') {
-        const token = record.args[1]
-        value = Number(formatUnits(record.args[3], 18)) * getPrice(token, row.timestamp)
-        type = 'burn'
-      } else if (record.name === 'LiquidatePosition') {
-        value = Number(formatUnits(record.args[5], 30))
-        type = 'liquidation'
-      } else {
-        value = Number(formatUnits(record.args[5], 30))
-        type = 'margin'
-      }
       memo[key][type] = memo[key][type] || 0
       memo[key][type] += value
       return memo

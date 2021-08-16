@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
 import * as strftime from 'strftime'
 
-import { useRequest, urlWithParams } from './helpers'
+import { useRequest, urlWithParams, tsToIso } from './helpers'
 
 import {
   LineChart,
@@ -37,11 +37,11 @@ const { formatUnits} = ethers.utils
 // }
 
 function Trading() {
-  const [from, setFrom] = useState(new Date(Date.now() - 86400000 * 3).toISOString().slice(0, -5))
-  const [to, setTo] = useState(new Date().toISOString().slice(0, -5))
+  const [from, setFrom] = useState(tsToIso(Date.now() - 86400000 * 3))
+  const [to, setTo] = useState()
 
   const fromTs = +new Date(from) / 1000
-  const toTs = +new Date(to) / 1000
+  const toTs = to ?? +new Date(to) / 1000
 
   const params = {from: fromTs, to: toTs}
   const [btcData] = useRequest(urlWithParams(`/api/prices/BTC`, params), [])
@@ -168,7 +168,7 @@ function Trading() {
     return swapSourcesData.map(item => {
       let all = 0
       swapSourcesFilteredKeys.forEach(key => {
-        if (item.metrics[key]) {
+        if (item.metrics && item.metrics[key]) {
           cum[key] = (cum[key] || 0) + item.metrics[key]
           all += cum[key]
         }

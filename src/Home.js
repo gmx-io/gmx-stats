@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
 import * as strftime from 'strftime'
 
-import { useRequest, urlWithParams } from './helpers'
+import { useRequest, urlWithParams, tsToIso } from './helpers'
 import './Home.css';
 
 import {
@@ -68,15 +68,20 @@ const tooltipFormatter = (value, name, item) => {
 }
 
 function Home() {
-  const [from, setFrom] = useState(new Date(Date.now() - 86400000 * 30).toISOString().slice(0, -5))
-  const [to, setTo] = useState(new Date().toISOString().slice(0, -5))
+  const [from, setFrom] = useState(tsToIso(Date.now() - 86400000 * 30))
+  const [to, setTo] = useState()
+
+  const setDatetimeRange = useCallback(range => {
+    setFrom(new Date(Date.now() - range * 1000).toISOString().slice(0, -5))    
+    setTo(undefined)
+  }, [setFrom, setTo])
 
   const fromTs = +new Date(from) / 1000
-  const toTs = +new Date(to) / 1000
+  const toTs = to ?? +new Date(to) / 1000
 
   const SECONDS_IN_HOUR = 3600
   const SECONDS_IN_DAY = 86400
-  const [period, setPeriod] = useState(SECONDS_IN_DAY)
+  const period = (toTs - fromTs) <= 86400 ? SECONDS_IN_HOUR : SECONDS_IN_DAY
   const today = Math.floor(Date.now() / 1000 / SECONDS_IN_DAY) * SECONDS_IN_DAY
   const params = { period, from: fromTs, to: toTs }
 
@@ -114,7 +119,8 @@ function Home() {
   const [feesData, feesLoading] = useRequest(urlWithParams('/api/fees', params), [])
   const feesChartData = useMemo(() => {
     return feesData.map(item => {
-      const allValue = Object.values(item.metrics).reduce((memo, el) => memo + el)
+      item.metrics = item.metrics || {}
+      const allValue = Object.values(item.metrics).reduce((memo, el) => memo + el, 0)
       return {
         ...Object.entries(item.metrics).reduce((memo, [key, value]) => {
           memo[key] = displayPercentage ? value / allValue * 100 : value
@@ -129,7 +135,7 @@ function Home() {
     if (!feesData || feesData.length === 0) {
       return
     }
-    const getAll = metrics => Object.values(metrics).reduce((memo, value) => memo + value)
+    const getAll = metrics => Object.values(metrics).reduce((memo, value) => memo + value, 0)
     return {
       today: getAll(feesData[feesData.length - 1].metrics),
       last7days: feesData.slice(-7).reduce((memo, el) => {
@@ -141,7 +147,8 @@ function Home() {
   const [swapSourcesData, swapSourcesLoading] = useRequest(urlWithParams('/api/swapSources', params), [])
   const swapSourcesChartData = useMemo(() => {
     return swapSourcesData.map(item => {
-      const allValue = Object.values(item.metrics).reduce((memo, value) => memo + value)
+      item.metrics = item.metrics || {}
+      const allValue = Object.values(item.metrics).reduce((memo, value) => memo + value, 0)
 
       const metrics = Object.entries(item.metrics).reduce((memo, [key, value]) => {
         memo[key] = displayPercentage ? value / allValue * 100 : value
@@ -219,7 +226,7 @@ function Home() {
     if (!volumeData || volumeData.length === 0) {
       return
     }
-    const getAll = el => Object.values(el.metrics).reduce((sum, value) => sum + value)
+    const getAll = el => Object.values(el.metrics || {}).reduce((sum, value) => sum + value, 0)
     return {
       today: getAll(volumeData[volumeData.length - 1]),
       last7days: volumeData.slice(-7).reduce((memo, el) => {
@@ -227,6 +234,17 @@ function Home() {
       }, 0)
     }
   }, [volumeData])
+
+  const [volumeByHourData, volumeByHourLoading] = useRequest(urlWithParams('/api/volumeByHour', params), [])
+  const volumeByHourChartData = useMemo(() => {
+    const getAll = el => Object.values(el.metrics || {}).reduce((sum, value) => sum + value, 0)
+    return volumeByHourData.map(item => {
+      return {
+        hour: item.hour,
+        value: getAll(item)
+      }
+    })
+  }, [volumeByHourData])
 
   const yaxisFormatter = useCallback((value, ...args) => {
     if (displayPercentage) {
@@ -294,6 +312,9 @@ function Home() {
           <input type="datetime-local" value={from} onChange={evt => setFrom(evt.target.value)} />
           &nbsp;—&nbsp;
           <input type="datetime-local" value={to} onChange={evt => setTo(evt.target.value)} />
+          <button onClick={evt => setDatetimeRange(86400 * 30)}>30 days</button>
+          <button onClick={evt => setDatetimeRange(86400 * 7)}>7 days</button>
+          <button onClick={evt => setDatetimeRange(86400)}>24 hours</button>
         </p>
         <p>
           <input id="displayPercentageCheckbox" type="checkbox" checked={displayPercentage} onChange={evt => setDisplayPercentage(evt.target.checked)} />
@@ -468,6 +489,18 @@ function Home() {
         </div>
 
         <div className="chart-cell">
+          <h3>Volume by hour</h3> 
+          { volumeByHourLoading && <RiLoader5Fill size="3em" className="loader" /> }
+          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+            <BarChart data={volumeByHourChartData}>
+              <CartesianGrid strokeDasharray="10 10" />
+              <XAxis dataKey="hour" />
+              <YAxis dataKey="value" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
+              <Tooltip />
+              <Legend />
+              <Bar type="monotone" dataKey="value" name="Volume" fill="#eb8334" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
