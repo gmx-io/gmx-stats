@@ -222,7 +222,7 @@ export default function routes(app) {
       return null
     }
   }
-  app.get('/api/chart/:symbol', async (req, res) => {
+  app.get('/api/chart', async (req, res) => {
     const cacheKey = JSON.stringify([req.path, req.query])
     const fromCache = ttlCache.get(cacheKey, 1000 * 60 * 5)
     if (fromCache) {
@@ -233,7 +233,7 @@ export default function routes(app) {
     const validSymbols = new Set(['BTC', 'ETH', 'BNB'])
     const from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
     const to = Number(req.query.to) || Math.round(Date.now() / 1000)
-    const { symbol } = req.params
+    const { symbol } = req.query
     if (!validSymbols.has(symbol)) {
       res.send(`Invalid symbol ${symbol}`)
       res.status(400)
