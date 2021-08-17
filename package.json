@@ -12,6 +12,7 @@
     "axios": "^0.21.1",
     "chalk": "^4.1.1",
     "console-log-level": "^1.4.1",
+    "cors": "^2.8.5",
     "ethers": "^5.4.2",
     "express": "^4.17.1",
     "forever": "^4.0.1",
