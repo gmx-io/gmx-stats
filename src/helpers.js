@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import chalk from 'chalk'
 
+import { BSC, ARBITRUM } from './addresses'
+
 const { BigNumber } = ethers
-const CHAIN_ID = 56
 
 const levelColor = {
   'debug': 'grey',
@@ -58,11 +59,21 @@ export function urlWithParams(url, params) {
   return `${url}?${paramsStr}`
 }
 
-export function getProvider() {
-  return new ethers.providers.JsonRpcProvider("https://bsc-dataseed1.defibit.io/", CHAIN_ID)
+export function getProvider(chainId) {
+  let rpc 
+  if (chainId === BSC) {
+    rpc = 'https://bsc-dataseed1.defibit.io/'
+  } else if (chainId === ARBITRUM) {
+    rpc = 'https://arb-mainnet.g.alchemy.com/v2/k5Sg-ThNip-VhTDMeYrr7STpTLfHuKB2'
+  }
+  if (!rpc) {
+    throw Error(`Unsupported chainId: ${chainId}`)
+  }
+
+  return new ethers.providers.JsonRpcProvider(rpc, chainId)
 }
 
-const provider = getProvider()
+const provider = getProvider(BSC)
 
 export async function getLatestReliableBlock() {
   const number = await getLatestReliableBlockNumber() - 3

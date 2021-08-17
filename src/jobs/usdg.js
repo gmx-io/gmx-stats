@@ -11,7 +11,8 @@ import {
 	dbRun,
 	dbAll
 } from '../db'
-import { usdgContract, chainlinkFeedContracts } from '../contracts'
+import { BSC } from '../addresses'
+import { contracts } from '../contracts'
 
 const { AddressZero } = ethers.constants
 const { formatUnits } = ethers.utils
@@ -33,6 +34,7 @@ export async function calculateUsdgSupply({ backwards = false } = {}) {
   } else {
     logger.info('No record in db. Retrieve')
 
+    const usdgContract = contracts[BSC].usdgContract
     const [
       block,
       totalSupply

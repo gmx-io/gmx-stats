@@ -4,9 +4,9 @@ import got from 'got'
 
 import { TOKENS, TOKENS_BY_ADDRESS } from '../tokens'
 import { db, dbRun, dbAll, dbGet } from '../db'
-import { vaultContract, usdgContract, chainlinkFeedContracts } from '../contracts'
+import { contracts } from '../contracts'
 import { vaultAbi, tokenAbi } from '../contracts'
-import { addresses } from '../addresses'
+import { addresses, BSC, ARBITRUM } from '../addresses'
 import {
 	LogRecord,
 	UsdgSupplyRecord,
@@ -28,31 +28,47 @@ const logger = getLogger('jobs')
 
 const RUN_JOBS_LOCALY = true
 const DEFAULT_JOB_INTERVAL = 3000
-const BACKWARDS = false
-const BLOCKS_PER_JOB = 10000
+const BACKWARDS = true
+const BLOCKS_PER_JOB = 1000
 
 export default function ({ db }) {
 	const jobs = [
 	  {
-	    name: 'BTC ChainlinkPrices',
+	    name: 'BTC ChainlinkPrices Arbitrum',
 	    run: async () => {
-	      await retrieveChainlinkPrices({ symbol: 'BTC', backwards: BACKWARDS })
+	      await retrieveChainlinkPrices({ symbol: 'BTC', chainId: ARBITRUM, backwards: BACKWARDS })
+	    },
+	    interval: 1000 * 60 * 10,
+	    // disabled: true
+	  },
+	  {
+	    name: 'ETH ChainlinkPrices Arbitrum',
+	    run: async () => {
+	      await retrieveChainlinkPrices({ symbol: 'ETH', chainId: ARBITRUM, backwards: BACKWARDS })
+	    },
+	    interval: 1000 * 60 * 10,
+	    // disabled: true
+	  },
+	  {
+	    name: 'BTC ChainlinkPrices BSC',
+	    run: async () => {
+	      await retrieveChainlinkPrices({ symbol: 'BTC', chainId: BSC, backwards: BACKWARDS })
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 10,
 	    // disabled: true
 	  },
 	  {
-	    name: 'ETH ChainlinkPrices',
+	    name: 'ETH ChainlinkPrices BSC',
 	    run: async () => {
-	      await retrieveChainlinkPrices({ symbol: 'ETH', backwards: BACKWARDS })
+	      await retrieveChainlinkPrices({ symbol: 'ETH', chainId: BSC, backwards: BACKWARDS })
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 10,
 	    // disabled: true
 	  },
 	  {
-	    name: 'BNB ChainlinkPrices',
+	    name: 'BNB ChainlinkPrices BSC',
 	    run: async () => {
-	      await retrieveChainlinkPrices({ symbol: 'BNB', backwards: BACKWARDS })
+	      await retrieveChainlinkPrices({ symbol: 'BNB', chainId: BSC, backwards: BACKWARDS })
 	    },
 	    interval: DEFAULT_JOB_INTERVAL * 10,
 	    // disabled: true
@@ -148,24 +164,32 @@ export default function ({ db }) {
 	  logger.info('done')
 	}
 
-	async function retrieveChainlinkPrices({ symbol, backwards = false }) {
-	  logger.info('Retrieve chainlink prices symbol: %s, backwards: %s', symbol, backwards)
+	async function retrieveChainlinkPrices({ symbol, chainId = BSC, backwards = false }) {
+	  logger.info('Retrieve chainlink prices chainId: %s, symbol: %s, backwards: %s',
+	  	chainId,
+	  	symbol,
+	  	backwards
+	  )
+	  const { chainlinkFeedContracts } = contracts[chainId]
 	  if (!(symbol in chainlinkFeedContracts)) {
-	    logger.warn('unknown symbol %s', symbol) 
+	    logger.warn('unknown symbol %s. Skip', symbol) 
 	    return
 	  }
 	  const feed = chainlinkFeedContracts[symbol]
+	  const chainIdSuffix = chainId === BSC ? '' : `_${chainId}`
+	  const tableName = `chainlinkPrices${chainIdSuffix}`
+	  console.log('tableName: %s', tableName)
 
 	  const latestRound = await feed.latestRound()
 
-	  const metaKey = `chainlink_prices_${symbol}_${backwards ? 'oldest' : 'newest'}_round`
+	  const metaKey = `chainlink_prices_${symbol}_${backwards ? 'oldest' : 'newest'}_round${chainIdSuffix}`
 	  let lastProcessedRound = await getMeta(metaKey)
 
 	  if (!lastProcessedRound) {
-	    logger.info('%s is null, retrieve from existing prices', metaKey) 
+	    logger.info('meta %s is null, retrieve from existing prices', metaKey) 
 	    const row = await dbGet(`
 	      SELECT round
-	      FROM chainlinkPrices
+	      FROM ${tableName}
 	      WHERE symbol = ?
 	      ORDER BY timestamp ${backwards ? 'ASC' : 'DESC'}
 	      LIMIT 1
@@ -217,7 +241,7 @@ export default function ({ db }) {
 	    }
 
 	    await dbRun(`
-	      INSERT OR IGNORE INTO chainlinkPrices (symbol, round, timestamp, price)
+	      INSERT OR IGNORE INTO ${tableName} (symbol, round, timestamp, price)
 	      VALUES (?, ?, ?, ?)
 	    `, [symbol, roundData.roundId, roundData.updatedAt, roundData.answer.toNumber()])
 	  }
@@ -350,6 +374,7 @@ export default function ({ db }) {
 	}
 
 	async function retrieveLatestPoolStats(lastBlock) {
+	  const vaultContract = contracts[BSC].vaultContract
 	  let fakeLogIndex = 0
 	  for (const token of TOKENS) {
 	    if (token.symbol === 'USDG') {
@@ -514,14 +539,14 @@ export default function ({ db }) {
 	const retrieveVaultLogs = retrieveLogsFactory({
 	  decoder: new ethers.utils.Interface(vaultAbi),
 	  name: 'Vault',
-	  address: addresses.Vault,
+	  address: addresses[BSC].Vault,
 	  tableName: 'vaultLogs'
 	})
 
 	const retrieveUsdgLogs = retrieveLogsFactory({
 	  decoder: new ethers.utils.Interface(tokenAbi),
 	  name: 'USDG',
-	  address: addresses.USDG,
+	  address: addresses[BSC].USDG,
 	  tableName: 'usdgLogs'
 	})
 
@@ -552,6 +577,9 @@ export default function ({ db }) {
 	      } catch (ex) {
 	        logger.error('job %s failed', job.name)
 	        logger.error(ex)
+          if (process.env.NODE_ENV !== 'production') {
+            throw ex
+          }
 	      }
 	      job.lastRun = Date.now()
 	    }

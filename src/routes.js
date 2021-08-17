@@ -11,7 +11,7 @@ import { getContract, findNearest, queryProviderLogs, callWithRetry, UsdgSupplyR
 import * as helpers from './helpers'
 import { TOKENS, TOKENS_BY_ADDRESS, TOKENS_BY_SYMBOL } from './tokens'
 import { db, dbAll } from './db'
-import { addresses } from './addresses'
+import { addresses, BSC, ARBITRUM } from './addresses'
 
 const assets = require(process.env.RAZZLE_ASSETS_MANIFEST);
 
@@ -209,6 +209,67 @@ export default function routes(app) {
     return arr
   }
 
+  const _ttlCacheStorage = {}
+  const ttlCache = {
+    set: (key, value) => _ttlCacheStorage[key] = {added: Date.now(), value},
+    get: (key, ttl) => {
+      const data = _ttlCacheStorage[key]
+      if (data) {
+        if (!ttl || data.added + ttl > Date.now()) {
+          return data.value
+        }
+      }
+      return null
+    }
+  }
+  app.get('/api/chart/:symbol', async (req, res) => {
+    const cacheKey = JSON.stringify([req.path, req.query])
+    const fromCache = ttlCache.get(cacheKey, 1000 * 60 * 5)
+    if (fromCache) {
+      res.send(fromCache)
+      return
+    }
+
+    const validSymbols = new Set(['BTC', 'ETH', 'BNB'])
+    const from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
+    const to = Number(req.query.to) || Math.round(Date.now() / 1000)
+    const { symbol } = req.params
+    if (!validSymbols.has(symbol)) {
+      res.send(`Invalid symbol ${symbol}`)
+      res.status(400)
+      return
+    }
+    const preferableChainId = Number(req.query.preferableChainId ?? BSC)
+    const validSources = new Set([BSC, ARBITRUM])
+    if (!validSources.has(preferableChainId)) {
+      res.send(`Invalid preferableChainId ${preferableChainId}`)
+      res.status(400)
+      return
+    }
+
+    const tableName = preferableChainId === BSC ? 'chainlinkPrices' : `chainlinkPrices_${preferableChainId}`
+    const primaryPrices = await dbAll(`
+      SELECT timestamp, price, 'primary' as source
+      FROM ${tableName}
+      WHERE timestamp BETWEEN ? AND ? AND symbol = ?
+      ORDER BY timestamp
+    `, [from, to, symbol])
+
+    const secondaryTableName = preferableChainId === BSC ? `chainlinkPrices_42161` : 'chainlinkPrices'
+    const secondaryPrices = await dbAll(`
+      SELECT timestamp, price, 'secondary' as source
+      FROM ${secondaryTableName}
+      WHERE timestamp BETWEEN ? AND ? AND symbol = ?
+      ORDER BY timestamp
+    `, [from, Math.min(to, primaryPrices[0] ? primaryPrices[0].timestamp : to), symbol])
+
+    const prices = [...secondaryPrices, ...primaryPrices].map(item => {
+      return [item.timestamp, item.price / 1e8, item.source === 'primary']
+    })
+    ttlCache.set(cacheKey, prices)
+    res.send(prices) 
+  })
+
   app.get('/api/prices/:symbol', async (req, res) => {
     const validSymbols = new Set(['BTC', 'ETH', 'BNB'])
     const from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 3
@@ -219,7 +280,6 @@ export default function routes(app) {
       res.status(400)
       return
     }
-    console.log(from, to)
     console.log('symbol: %s, from: %s (%s), to: %s (%s)',
       symbol,
       from,
@@ -414,15 +474,15 @@ export default function routes(app) {
       if (rawSource) {
         source = row.to
       } else {
-        if (row.to === addresses.WardenSwapRouter) {
+        if (row.to === addresses[BSC].WardenSwapRouter) {
           source = 'warden'
-        } else if (row.to === addresses.OneInchRouter) {
+        } else if (row.to === addresses[BSC].OneInchRouter) {
           source = '1inch' 
-        } else if (row.to === addresses.Router) {
+        } else if (row.to === addresses[BSC].Router) {
           source = 'gmx'
-        } else if (row.to === addresses.DodoexRouter) {
+        } else if (row.to === addresses[BSC].DodoexRouter) {
           source = 'dodoex'
-        } else if (row.to === addresses.MetamaskRouter) {
+        } else if (row.to === addresses[BSC].MetamaskRouter) {
           source = 'metamask'
         } else {
           source = 'other'
