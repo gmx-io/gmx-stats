@@ -1,3 +1,7 @@
+import * as https from 'https'
+import * as http from 'http'
+import * as fs from 'fs'
+
 import express from 'express';
 
 let app = require('./server').default;
@@ -14,14 +18,36 @@ if (module.hot) {
   console.info('✅  Server-side HMR Enabled!');
 }
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3105;
+const isProduction = process.env.NODE_ENV === 'production'
+let httpsPort
+let keyPath
+let certPath
+let passphrase
 
-export default express()
-  .use((req, res) => app.handle(req, res))
-  .listen(port, function(err) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    console.log(`> Started on port ${port}`);
-  });
+if (isProduction) {
+  httpsPort = 443
+  certPath = '/etc/letsencrypt/live/stats.gambit.financial/cert.pem'
+  keyPath = '/etc/letsencrypt/live/stats.gambit.financial/privkey.pem'
+} else {
+  httpsPort = Number(port) + 10
+  keyPath = './key.pem'
+  certPath = './cert.pem'
+  passphrase = '123456'
+}
+
+function cb(err, port) {
+  if (err) {
+    console.error(err);
+    return;
+  }
+  console.log(`> Started https on port ${httpsPort}`);
+}
+
+http.createServer(app).listen(port, err => cb(err, port))
+https.createServer({
+  key: fs.readFileSync(keyPath),
+  cert: fs.readFileSync(certPath),
+  passphrase
+}, app).listen(httpsPort, err => cb(err, httpsPort))
+

@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "start": "razzle start",
-    "build": "razzle build",
+    "build": "PORT=80 razzle build",
     "test": "razzle test --env=jsdom",
     "start:prod": "NODE_ENV=production forever start -a -o app.log -e error.log build/server.js"
   },

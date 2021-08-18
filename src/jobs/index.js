@@ -26,9 +26,9 @@ const { AddressZero } = ethers.constants
 
 const logger = getLogger('jobs')
 
-const RUN_JOBS_LOCALY = true
+const RUN_JOBS_LOCALY = false
 const DEFAULT_JOB_INTERVAL = 3000
-const BACKWARDS = true
+const BACKWARDS = false
 const BLOCKS_PER_JOB = 1000
 
 export default function ({ db }) {
