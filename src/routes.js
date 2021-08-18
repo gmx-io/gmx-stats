@@ -111,8 +111,6 @@ export default function routes(app) {
     let j = 0
     let prevA = arrA[0]
     let prevB = arrB[0]
-    console.log('arrA.length', arrA.length)
-    console.log('arrB.length', arrB.length)
     while (true) {
       const a = arrA[i]
       const b = arrB[j]
@@ -149,7 +147,6 @@ export default function routes(app) {
     let prevItem
     const ret = []
 
-    console.log('fillPeriods period: %s, from: %s, to: %s', period, new Date(from * 1000), new Date(to * 1000))
     while (i < arr.length) {
       const item = arr[i]
       const periodStep = Math.floor(item.timestamp / period) 
@@ -222,18 +219,14 @@ export default function routes(app) {
       return null
     }
   }
-  app.get('/api/chart', async (req, res) => {
-    const cacheKey = JSON.stringify([req.path, req.query])
-    const fromCache = ttlCache.get(cacheKey, 1000 * 60 * 5)
-    if (fromCache) {
-      res.send(fromCache)
-      return
-    }
+  app.get('/api/chart/:symbol', async (req, res) => {
+    let from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
+    from = Math.floor(from / 300) * 300
+    let to = Number(req.query.to) || Math.round(Date.now() / 1000)
+    to = Math.ceil(to / 300) * 300
 
     const validSymbols = new Set(['BTC', 'ETH', 'BNB'])
-    const from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
-    const to = Number(req.query.to) || Math.round(Date.now() / 1000)
-    const { symbol } = req.query
+    const { symbol } = req.params
     if (!validSymbols.has(symbol)) {
       res.send(`Invalid symbol ${symbol}`)
       res.status(400)
@@ -244,6 +237,13 @@ export default function routes(app) {
     if (!validSources.has(preferableChainId)) {
       res.send(`Invalid preferableChainId ${preferableChainId}`)
       res.status(400)
+      return
+    }
+
+    const cacheKey = JSON.stringify(['/api/chart', symbol, from, to, preferableChainId])
+    const fromCache = ttlCache.get(cacheKey, 1000 * 60 * 5)
+    if (fromCache) {
+      res.send(fromCache)
       return
     }
 
@@ -264,7 +264,7 @@ export default function routes(app) {
     `, [from, Math.min(to, primaryPrices[0] ? primaryPrices[0].timestamp : to), symbol])
 
     const prices = [...secondaryPrices, ...primaryPrices].map(item => {
-      return [item.timestamp, item.price / 1e8, item.source === 'primary']
+      return [item.timestamp, Number((item.price / 1e8).toFixed(2))]
     })
     ttlCache.set(cacheKey, prices)
     res.send(prices) 
@@ -280,7 +280,7 @@ export default function routes(app) {
       res.status(400)
       return
     }
-    console.log('symbol: %s, from: %s (%s), to: %s (%s)',
+    logger.info('symbol: %s, from: %s (%s), to: %s (%s)',
       symbol,
       from,
       new Date(from * 1000).toISOString(),
