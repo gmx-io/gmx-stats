@@ -314,10 +314,10 @@ export default function ({ db }) {
         await new Promise((resolve, reject) => {
           db.serialize(async () => {
             try {
-              await dbRun('BEGIN')
-              await dbRun(`INSERT OR IGNORE INTO blocksQueue (number) VALUES (?)`, [logResult.blockNumber])
-              await dbRun(`INSERT OR IGNORE INTO transactionsQueue (hash) VALUES (?)`, [logResult.transactionHash])
-              await dbRun(`INSERT OR IGNORE INTO ${tableName}
+              dbRun('BEGIN')
+              dbRun(`INSERT OR IGNORE INTO blocksQueue (number) VALUES (?)`, [logResult.blockNumber])
+              dbRun(`INSERT OR IGNORE INTO transactionsQueue (hash) VALUES (?)`, [logResult.transactionHash])
+              dbRun(`INSERT OR IGNORE INTO ${tableName}
                 (blockNumber, blockHash, txHash, name, args, logIndex)
                 VALUES (?, ?, ?, ?, ?, ?) 
               `, [
