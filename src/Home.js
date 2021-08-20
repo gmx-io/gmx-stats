@@ -46,6 +46,7 @@ const data = [
 ]
 
 const numberFmt = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+const NOW = Math.floor(Date.now() / 1000)
 
 const formatUsdValue = value => {
     if (value > 1e9) {
@@ -77,11 +78,11 @@ function Home() {
   }, [setFrom, setTo])
 
   const fromTs = +new Date(from) / 1000
-  const toTs = to ?? +new Date(to) / 1000
+  const toTs = to ? +new Date(to) / 1000 : NOW
 
   const SECONDS_IN_HOUR = 3600
   const SECONDS_IN_DAY = 86400
-  const period = (toTs - fromTs) <= 86400 ? SECONDS_IN_HOUR : SECONDS_IN_DAY
+  const period = (toTs - fromTs) <= 86400 * 2 ? SECONDS_IN_HOUR : SECONDS_IN_DAY
   const today = Math.floor(Date.now() / 1000 / SECONDS_IN_DAY) * SECONDS_IN_DAY
   const params = { period, from: fromTs, to: toTs }
 
