@@ -49,13 +49,13 @@ const numberFmt = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD
 const NOW = Math.floor(Date.now() / 1000)
 
 const formatUsdValue = value => {
-    if (value > 1e9) {
+    if (value >= 1e9) {
       return `$${(value / 1e9).toFixed(value < 1e10 ? 2 : 1)}B`
     }
-    if (value > 1e6) {
+    if (value >= 1e6) {
       return `$${(value / 1e6).toFixed(value < 1e7 ? 2 : 1)}M`
     }
-    if (value > 1e3) {
+    if (value >= 1e3) {
       return `$${(value / 1e3).toFixed(value < 1e4 ? 2 : 1)}K`
     }
     return `$${value.toFixed(1)}`
@@ -82,7 +82,7 @@ function Home() {
 
   const SECONDS_IN_HOUR = 3600
   const SECONDS_IN_DAY = 86400
-  const period = (toTs - fromTs) <= 86400 * 2 ? SECONDS_IN_HOUR : SECONDS_IN_DAY
+  const period = (toTs - fromTs) <= 86400 * 3 ? SECONDS_IN_HOUR : SECONDS_IN_DAY
   const today = Math.floor(Date.now() / 1000 / SECONDS_IN_DAY) * SECONDS_IN_DAY
   const params = { period, from: fromTs, to: toTs }
 

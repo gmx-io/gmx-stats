@@ -89,10 +89,10 @@ export default function routes(app) {
       SELECT s.supply, b.number, (b.timestamp / ${period} * ${period}) as timestamp
       FROM usdgSupply s
       INNER JOIN blocks b ON b.number = s.blockNumber
-      WHERE b.timestamp >= ?
+      WHERE b.timestamp BETWEEN ? AND ?
       GROUP BY b.timestamp / ${period}
       ORDER BY b.number
-    `, [from])
+    `, [from, to])
 
     const records = fillPeriods(rows.map(UsdgSupplyRecord), {
       from,
@@ -338,10 +338,10 @@ export default function routes(app) {
         symbol,
         timestamp / ${period} * ${period} as timestamp
       FROM poolStats
-      WHERE timestamp >= ?
+      WHERE timestamp BETWEEN ? AND ?
       GROUP BY timestamp, type, symbol
       ORDER BY blockNumber
-    `, [from])
+    `, [from, to])
 
     let data = rows.reduce((memo, row) => {
       let last = memo[memo.length - 1]
@@ -394,9 +394,9 @@ export default function routes(app) {
       INNER JOIN transactions t ON t.hash = l.txHash
       WHERE
         l.name in ('IncreasePosition', 'DecreasePosition', 'Swap', 'BuyUSDG', 'SellUSDG')
-        AND b.timestamp >= ?
+        AND b.timestamp BETWEEN ? AND ?
       GROUP BY timestamp / ${period}, name
-    `, [from]) 
+    `, [from, to]) 
 
     let data = rows.reduce((memo, row) => {
       const { timestamp, name } = row
@@ -439,8 +439,8 @@ export default function routes(app) {
       INNER JOIN transactions t ON t.hash = l.txHash
       WHERE
         l.name in ('Swap', 'BuyUSDG', 'SellUSDG')
-        AND b.timestamp >= ?
-    `, [from])
+        AND b.timestamp BETWEEN ? AND ?
+    `, [from, to])
 
     let data = rows.reduce((memo, row) => {
       const timeKey = Math.floor(row.timestamp / period) * period
@@ -773,8 +773,8 @@ export default function routes(app) {
       INNER JOIN blocks b ON b.number = l.blockNumber
       WHERE
         l.name in ('CollectMarginFees', 'CollectSwapFees', 'Swap', 'BuyUSDG', 'SellUSDG', 'LiquidatePosition')
-        AND b.timestamp >= ?
-    `, [from])
+        AND b.timestamp BETWEEN ? AND ?
+    `, [from, to])
 
     const eventsInTx = rows.reduce((memo, row) => {
       memo[row.txHash] = memo[row.txHash] || {}
