@@ -165,7 +165,7 @@ function Home() {
   }, [swapSourcesData, displayPercentage])
 
   const [poolStatsType, setPoolStatsType] = useState('poolAmount')
-  const [poolStatsData, poolStatsLoading] = useRequest(urlWithParams('/api/poolStats', params), [])
+  const [poolStatsData, poolStatsLoading] = useRequest(urlWithParams('/api/poolStats2', params), [])
   const poolAmountsChartData = useMemo(() => {
     const getValueUsd = (item, symbol) => {
       return (item[symbol] && item[symbol][poolStatsType]) ? item[symbol][poolStatsType].valueUsd : 0
@@ -306,7 +306,7 @@ function Home() {
 
   return (
     <div className="Home">
-      <h1>GMX analytics</h1>
+      <h1>Gambit analytics / BSC</h1>
       <div className="form">
         <p>
           <label>Period</label>
@@ -323,7 +323,7 @@ function Home() {
         </p>
       </div>
       <div className="chart-grid">
-        <div className="chart-cell half">
+        <div className="chart-cell">
           <h3>Volume</h3>
           {volumeStats &&
             <p className="stats">
@@ -359,7 +359,7 @@ function Home() {
           </ResponsiveContainer>
         </div>
 
-        <div className="chart-cell half">
+        <div className="chart-cell">
           <h3>Collected Fees</h3>
           {feesStats &&
             <p className="stats">
