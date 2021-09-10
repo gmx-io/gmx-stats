@@ -45,9 +45,12 @@ function cb(err, port) {
 }
 
 http.createServer(app).listen(port, err => cb(err, port))
-https.createServer({
-  key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath),
-  passphrase
-}, app).listen(httpsPort, err => cb(err, httpsPort))
 
+if (isProduction) {
+  https.createServer({
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath),
+    passphrase
+  }, app).listen(httpsPort, err => cb(err, httpsPort))
+
+}
