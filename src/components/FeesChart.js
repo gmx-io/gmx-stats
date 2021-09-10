@@ -1,5 +1,4 @@
 import {
-  BarChart,
   Bar,
   Label,
   XAxis,
@@ -7,6 +6,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ComposedChart,
+  Line,
   ResponsiveContainer
 } from 'recharts';
 
@@ -26,10 +27,11 @@ export default function FeesChart(props) {
 
   return <ChartWrapper title="Fees" loading={loading}>
     <ResponsiveContainer width="100%" height={chartHeight}>
-      <BarChart syncId="syncId" data={data}>
+      <ComposedChart syncId="syncId" data={data}>
         <CartesianGrid strokeDasharray="10 10" />
         <XAxis dataKey="timestamp" tickFormatter={xaxisTickFormatter} minTickGap={30} />
         <YAxis dataKey="all" tickFormatter={yaxisTickFormatter} width={yaxisWidth} />
+        <YAxis dataKey="cumulative" orientation="right" yAxisId="right" tickFormatter={yaxisTickFormatter} width={yaxisWidth} />
         <Tooltip
           formatter={tooltipFormatter}
           labelFormatter={tooltipLabelFormatter}
@@ -41,7 +43,8 @@ export default function FeesChart(props) {
         <Bar type="monotone" dataKey="burn" stackId="a" name="Burn USDG" fill="#ab6100" />
         <Bar type="monotone" dataKey="liquidation" stackId="a" name="Liquidation" fill="#c90000" />
         <Bar type="monotone" dataKey="margin" stackId="a" name="Margin trading" fill="#8884ff" />
-      </BarChart>
+        <Line type="monotone" strokeWidth={2} dot={false} stroke="#ee64b8" dataKey="cumulative" yAxisId="right" name="Cumulative" />
+      </ComposedChart>
     </ResponsiveContainer>
   </ChartWrapper>
 }

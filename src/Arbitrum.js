@@ -99,7 +99,7 @@ function Arbitrum() {
                 />
                 <Legend />
                 <Area type="monotone" dataKey="aum" stackId="a" name="AUM" />
-                <Line type="monotone" yAxisId="right" strokeWidth={2} dot={false} dataKey="glpPrice" stackId="a" name="GLP Price" stroke="#c90000" />
+                <Line type="monotone" yAxisId="right" strokeWidth={2} dot={false} dataKey="glpPrice" stackId="a" name="GLP Price" stroke="#ee64b8" />
               </ComposedChart>
             </ResponsiveContainer>
           </ChartWrapper>
@@ -160,14 +160,19 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Bar type="monotone" fill="green" dot={false} dataKey="pnl" name="PnL">
+                <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="Daily PnL">
                   {(pnlData || []).map((item, i) => {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#22c761' : '#f93333'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke="#8884ff" dataKey="cumulativePnl" name="Cumulative PnL" />
+                <Line  yAxisId="right" type="monotone" strokeWidth={2} stroke="#8884ff" dataKey="cumulativePnl" name="Cumulative PnL" />
               </ComposedChart>
             </ResponsiveContainer>
+            <div className="chart-description">
+              <p>
+                Doesn't include trading fees
+              </p>
+            </div>
           </ChartWrapper>
         </div>
       </div>

@@ -64,24 +64,36 @@ export function useGraph(query, subgraph = 'gkrasulya/gmx') {
 }
 
 export function usePnlData() {
-  const query = `{
+  const [closedPositionsData, loading, error] = useGraph(`{
     aggregatedTradeCloseds(first: 1000, orderBy: settledBlockTimestamp) {
      settledPosition {
-       id,
-      realisedPnl
+       realisedPnl
      },
      settledBlockTimestamp
    } 
-  }`
+  }`, 'nissoh/gmx-vault')
 
-  const [graphData, loading, error] = useGraph(query, 'nissoh/gmx-vault')
+  const [liquidatedPositionsData] = useGraph(`{
+    aggregatedTradeLiquidateds(first: 1000, orderBy: settledBlockTimestamp) {
+     settledPosition {
+       collateral
+     },
+     settledBlockTimestamp
+   } 
+  }`, 'nissoh/gmx-vault')
 
   let ret = null
-  if (graphData) {
-    ret = graphData.aggregatedTradeCloseds.map(item => ({
-      timestamp: item.settledBlockTimestamp,
-      pnl: Number(item.settledPosition.realisedPnl) / 1e30
-    }))
+  if (closedPositionsData && liquidatedPositionsData) {
+    ret = [
+      ...closedPositionsData.aggregatedTradeCloseds.map(item => ({
+        timestamp: item.settledBlockTimestamp,
+        pnl: Number(item.settledPosition.realisedPnl) / 1e30
+      })),
+      ...liquidatedPositionsData.aggregatedTradeLiquidateds.map(item => ({
+        timestamp: item.settledBlockTimestamp,
+        pnl: -Number(item.settledPosition.collateral) / 1e30
+      }))
+     ]
 
     let cumulativePnl = 0 
     ret = chain(ret)
@@ -127,10 +139,17 @@ export function useVolumeData() {
       return ret
     })
 
+    let cumulative = 0
     return chain(ret)
       .groupBy(item => Math.floor(item.timestamp / 86400) * 86400)
       .map((values, timestamp) => {
-        const ret = { timestamp, all: sumBy(values, 'all') }
+        const all = sumBy(values, 'all')
+        cumulative += all
+        const ret = {
+          timestamp,
+          all,
+          cumulative
+        }
         PROPS.forEach(prop => {
            ret[prop] = sumBy(values, prop)
         })
@@ -167,10 +186,17 @@ export function useFeesData() {
       return ret
     })
 
+    let cumulative = 0
     return chain(chartData)
       .groupBy(item => Math.floor(item.timestamp / 86400) * 86400)
       .map((values, timestamp) => {
-        const ret = { timestamp, all: sumBy(values, 'all') }
+        const all = sumBy(values, 'all')
+        cumulative += all
+        const ret = {
+          timestamp,
+          all,
+          cumulative
+        }
         PROPS.forEach(prop => {
            ret[prop] = sumBy(values, prop)
         })
