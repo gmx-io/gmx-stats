@@ -101,6 +101,23 @@ function useGraph(query, defaultData) {
   return [data, loading]
 }
 
+function useCoingeckoPrices(symbol) {
+  const _symbol = {
+    BTC: 'bitcoin',
+    ETH: 'ethereum'
+  }[symbol]
+
+  const now = Date.now() / 1000
+  const fromTs = +new Date(2021, 7, 31) / 1000
+  const days = Math.floor(now / 86400) - Math.floor(fromTs / 86400)
+
+  const url = `https://api.coingecko.com/api/v3/coins/${_symbol}/market_chart?vs_currency=usd&days=${days}&interval=daily`
+
+  const [data, loading, error] = useRequest(url)
+
+  return [data ? data.prices.slice(0, -1).map(item => ({ timestamp: item[0] / 1000, value: item[1] })) : data, loading, error]
+}
+
 function Arbitrum() {
   const [from, setFrom] = useState(tsToIso(Date.now() - 86400000 * 30))
   const [to, setTo] = useState()
@@ -130,9 +147,10 @@ function Arbitrum() {
     }
   }`);
   let [data, loading] = useGraph(query)
-  const addLiquiditiesChartData = useMemo(() => {
+
+  const glpChartData = useMemo(() => {
     if (!data) {
-      return []
+      return null
     }
 
     return data.addLiquidities.reduce((memo, item) => {
@@ -158,6 +176,39 @@ function Arbitrum() {
       return memo
     }, [])
   }, [data])
+
+  const [btcPrices] = useCoingeckoPrices('BTC')
+  const [ethPrices] = useCoingeckoPrices('ETH')
+
+  const glpPerformanceChartData = useMemo(() => {
+    if (!btcPrices || !ethPrices || !glpChartData) {
+      return null
+    }
+
+    const BTC_WEIGHT = 0.25
+    const ETH_WEIGHT = 0.25
+    const GLP_START_PRICE = 1.19
+    const btcCount = GLP_START_PRICE * BTC_WEIGHT / btcPrices[0].value
+    const ethCount = GLP_START_PRICE * ETH_WEIGHT / ethPrices[0].value
+
+    const ret = []
+    for (let i = 0; i < btcPrices.length; i++) {
+      const btcPrice = btcPrices[i].value
+      const ethPrice = ethPrices[i].value
+      const glpPrice = glpChartData[i]?.glpPrice 
+
+      const syntheticPrice = btcCount * btcPrice + ethCount * ethPrice + GLP_START_PRICE / 2
+
+      ret.push({
+        timestamp: btcPrices[i].timestamp,
+        syntheticPrice,
+        glpPrice,
+        ratio: glpPrice / syntheticPrice
+      })
+    }
+
+    return ret
+  }, [btcPrices, ethPrices, glpChartData])
 
   const FEES_PROPS = 'margin liquidation swap mint burn'.split(' ')
   const feesQuery = gql(`{
@@ -292,7 +343,7 @@ function Arbitrum() {
 
   return (
     <div className="Home">
-      <h1>GMX analytics / Arbitrum</h1>
+      <h1>GMX Dashboard / Arbitrum</h1>
       <div className="chart-grid">
         <div className="chart-cell half">
           <h3>Volume</h3>
@@ -356,7 +407,7 @@ function Arbitrum() {
           <h3>AUM / Glp Price</h3>
           { loading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <ComposedChart syncId="syncId" data={addLiquiditiesChartData}>
+            <ComposedChart syncId="syncId" data={glpChartData}>
               <CartesianGrid strokeDasharray="10 10" />
               <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
               <YAxis dataKey="aum" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
@@ -368,7 +419,7 @@ function Arbitrum() {
               />
               <Legend />
               <Area type="monotone" unit={dynamicUnit} dataKey="aum" stackId="a" name="AUM" />
-              <Line type="monotone" yAxisId="right" unit={dynamicUnit} dot={false} dataKey="glpPrice" stackId="a" name="GLP Price" stroke="#c90000" />
+              <Line type="monotone" yAxisId="right" strokeWidth={2} unit={dynamicUnit} dot={false} dataKey="glpPrice" stackId="a" name="GLP Price" stroke="#c90000" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
@@ -376,7 +427,7 @@ function Arbitrum() {
           <h3>Glp Supply</h3>
           { loading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <AreaChart syncId="syncId" data={addLiquiditiesChartData}>
+            <AreaChart syncId="syncId" data={glpChartData}>
               <CartesianGrid strokeDasharray="10 10" />
               <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
               <YAxis dataKey="glpSupply" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
@@ -388,6 +439,24 @@ function Arbitrum() {
               <Legend />
               <Area type="monotone" dataKey="glpSupply" stackId="a" name="GLP Supply" fill="#8884ff" />
             </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="chart-cell half">
+          <h3>Glp Index Perfomance</h3>
+          { loading && <RiLoader5Fill size="3em" className="loader" /> }
+          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+            <LineChart syncId="syncId" data={glpPerformanceChartData}>
+              <CartesianGrid strokeDasharray="10 10" />
+              <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
+              <YAxis dataKey="ratio" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+              <Tooltip
+                formatter={tooltipFormatterNumber}
+                labelFormatter={tooltipLabelFormatter}
+                contentStyle={{ textAlign: 'left' }}
+              />
+              <Legend />
+              <Line type="monotone" unit={dynamicUnit} strokeWidth={3} dot={false} dataKey="ratio" stackId="a" name="Perfomance" stroke="#ee64b8" />
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </div>

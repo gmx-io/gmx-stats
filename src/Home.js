@@ -306,7 +306,7 @@ function Home() {
 
   return (
     <div className="Home">
-      <h1>Gambit analytics / BSC</h1>
+      <h1>Gambit Dashboard / BSC</h1>
       <div className="form">
         <p>
           <label>Period</label>
