@@ -5,6 +5,7 @@
   "scripts": {
     "start": "PORT=3113 razzle start",
     "build": "PORT=80 razzle build",
+    "build-upload": "PORT=80 razzle build && tar -zcvf build.tar.gz build && scp build.tar.gz do:~/gmx-stats",
     "test": "razzle test --env=jsdom",
     "start:prod": "NODE_ENV=production forever start -a -o app.log -e error.log build/server.js"
   },

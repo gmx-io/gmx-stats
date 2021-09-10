@@ -1,6 +1,7 @@
 import Logger from 'console-log-level'
 import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
+import strftime from 'strftime'
 import chalk from 'chalk'
 
 import { BSC, ARBITRUM } from './addresses'
@@ -25,24 +26,102 @@ export function getLogger(ns) {
 
 const logger = getLogger('helpers')
 
-const defaultFetcher = url => fetch(url).then(res => res.json())
-export function useRequest(url, defaultValue, fetcher = defaultFetcher) {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState()
-  const [data, setData] = useState(defaultValue) 
+const numberFmt = Intl.NumberFormat('en-US')
+const currencyFmt = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
-  useEffect(async () => {
-    try {
-      setLoading(true)
-      const data = await fetcher(url)
-      setData(data)
-    } catch (ex) {
-      setError(ex)
+export const formatNumber = (value, opts = {}) => {
+  const currency = !!opts.currency
+  const compact = !!opts.compact
+
+  if (currency && !compact) {
+    return currencyFmt.format(value)
+  }
+
+  const display = compact ? compactNumber(value) : numberFmt.format(value)
+  if (currency) {
+    return `$${display}`
+  }
+  return display
+}
+
+export const compactNumber = value => {
+  const abs = Math.abs(value)
+  if (abs >= 1e9) {
+    return `${(value / 1e9).toFixed(abs < 1e10 ? 2 : 1)}B`
+  }
+  if (abs >= 1e6) {
+    return `${(value / 1e6).toFixed(abs < 1e7 ? 2 : 1)}M`
+  }
+  if (abs >= 1e3) {
+    return `${(value / 1e3).toFixed(abs < 1e4 ? 2 : 1)}K`
+  }
+  return `${value.toFixed(1)}`
+}
+
+export const tooltipLabelFormatter = (label, args) => {
+  if (!label) {
+    return
+  }
+
+  if (label.constructor !== Date) {
+    label = new Date(label * 1000)
+  }
+  const item = args && args[0] && args[0].payload && args[0]
+  const dateFmtString = '%d.%m'
+  const date = strftime(dateFmtString, label)
+  const all = item && item.payload.all
+  if (all) {
+    if (item && item.unit === '%') {
+      return date
     }
-    setLoading(false)
-  }, [url])
+    return `${date}, ${formatNumber(all, {currency: true, compact: true})}`
+  }
+  return date
+}
 
-  return [data, loading, error]
+export const yaxisFormatterNumber = value => {
+  return compactNumber(value)
+}
+
+export const yaxisFormatter = (value, ...args) => {
+  return formatNumber(value, { currency: true, compact: true })
+}
+
+export const tooltipFormatterNumber = (value, name, item) => {
+  return formatNumber(value)
+}
+
+export const tooltipFormatter = (value, name, item) => {
+  if (item && item.unit === '%') {
+    return value.toFixed(2)
+  }
+  return formatNumber(value, { currency: true })
+}
+
+export const tooltipLabelFormatterUnits = (label, args) => {
+  if (!label) {
+    return label
+  }
+  if (label.constructor !== Date) {
+    label = new Date(label * 1000)
+    if (!label.getDate()) {
+      return label
+    }
+  }
+  const date = strftime('%d.%m', label)
+
+  const item = args && args[0]
+  if (item && item.unit === '%') {
+    return date
+  }
+
+  const all = item && item.payload.all
+
+  if (label.constructor !== Date) {
+    return `${label}, total: ${all}`
+  }
+
+  return `${date}, total: ${all}`
 }
 
 export function tsToIso(ts) {
