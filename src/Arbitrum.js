@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { chain, sumBy } from 'lodash'
 import fetch from 'cross-fetch';
 import { ApolloClient, InMemoryCache, gql, HttpLink } from '@apollo/client'
 import * as ethers from 'ethers'
@@ -140,7 +141,7 @@ function Arbitrum() {
       const aum = Number(item.aumInUsdg) / 1e18
       const glpSupply = Number(item.glpSupply) / 1e18
       const glpPrice = aum / glpSupply
-      const timestamp = Math.floor(item.timestamp / 3600) * 3600
+      const timestamp = Math.floor(item.timestamp / 86400) * 86400
 
       const newItem = {
         timestamp,
@@ -157,6 +158,76 @@ function Arbitrum() {
       return memo
     }, [])
   }, [data])
+
+  const FEES_PROPS = 'margin liquidation swap mint burn'.split(' ')
+  const feesQuery = gql(`{
+    hourlyFees(first: 1000 orderBy: id) {
+      id
+      ${FEES_PROPS.join('\n')}
+    }
+  }`)
+  let [feesData, feesLoading] = useGraph(feesQuery)
+  const feesChartData = useMemo(() => {
+    if (!feesData) {
+      return null
+    }
+
+    let chartData =  feesData.hourlyFees.map(item => {
+      const ret = { timestamp: item.id };
+      let all = 0;
+      FEES_PROPS.forEach(prop => {
+        ret[prop] = item[prop] / 1e30
+        all += item[prop] / 1e30
+      })
+      ret.all = all
+      return ret
+    })
+
+    return chain(chartData)
+      .groupBy(item => Math.floor(item.timestamp / 86400) * 86400)
+      .map((values, timestamp) => {
+        const ret = { timestamp, all: sumBy(values, 'all') }
+        FEES_PROPS.forEach(prop => {
+           ret[prop] = sumBy(values, prop)
+        })
+        return ret
+      }).value()
+  }, [feesData])
+
+  const VOLUME_PROPS = 'margin liquidation swap mint burn'.split(' ')
+  const volumeQuery = gql(`{
+    hourlyVolumes(first: 1000 orderBy: id) {
+      id
+      ${VOLUME_PROPS.join('\n')}
+    }
+  }`)
+  let [volumeData, volumeLoading] = useGraph(volumeQuery)
+  const volumeChartData = useMemo(() => {
+    if (!volumeData) {
+      return null
+    }
+
+    let chartData =  volumeData.hourlyVolumes.map(item => {
+      const ret = { timestamp: item.id };
+      let all = 0;
+      VOLUME_PROPS.forEach(prop => {
+        ret[prop] = item[prop] / 1e30
+        all += item[prop] / 1e30
+      })
+      ret.all = all
+      return ret
+    })
+
+    return chain(chartData)
+      .groupBy(item => Math.floor(item.timestamp / 86400) * 86400)
+      .map((values, timestamp) => {
+        const ret = { timestamp, all: sumBy(values, 'all') }
+        VOLUME_PROPS.forEach(prop => {
+           ret[prop] = sumBy(values, prop)
+        })
+        return ret
+      }).value()
+  }, [volumeData])
 
   const yaxisFormatterNumber = useCallback(value => {
     return formatNumberValue(value)
@@ -224,6 +295,64 @@ function Arbitrum() {
       <h1>GMX analytics / Arbitrum</h1>
       <div className="chart-grid">
         <div className="chart-cell half">
+          <h3>Volume</h3>
+          { volumeLoading && <RiLoader5Fill size="3em" className="loader" /> }
+          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+            <BarChart syncId="syncId" data={volumeChartData}>
+              <CartesianGrid strokeDasharray="10 10" />
+              <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
+              <YAxis dataKey="all" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
+              <Tooltip
+                formatter={tooltipFormatter}
+                labelFormatter={tooltipLabelFormatter}
+                contentStyle={{ textAlign: 'left' }}
+              />
+              <Legend />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill="#ee64b8" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill="#22c761" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="burn" stackId="a" name="Burn USDG" fill="#ab6100" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="liquidation" stackId="a" name="Liquidation" fill="#c90000" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#8884ff" />
+
+              <ReferenceLine x={1624406400} strokeWidth={2} stroke="lightblue">
+                <Label value="1.5% threshold" angle={90} position="insideMiddle" />
+              </ReferenceLine>
+              <ReferenceLine x={1624924800} strokeWidth={2} stroke="lightblue">
+                <Label value="1inch integration" angle={90} position="insideMiddle" />
+              </ReferenceLine>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="chart-cell half">
+          <h3>Fees</h3>
+          { feesLoading && <RiLoader5Fill size="3em" className="loader" /> }
+          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+            <BarChart syncId="syncId" data={feesChartData}>
+              <CartesianGrid strokeDasharray="10 10" />
+              <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
+              <YAxis dataKey="all" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
+              <Tooltip
+                formatter={tooltipFormatter}
+                labelFormatter={tooltipLabelFormatter}
+                contentStyle={{ textAlign: 'left' }}
+              />
+              <Legend />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill="#ee64b8" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill="#22c761" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="burn" stackId="a" name="Burn USDG" fill="#ab6100" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="liquidation" stackId="a" name="Liquidation" fill="#c90000" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#8884ff" />
+
+              <ReferenceLine x={1624406400} strokeWidth={2} stroke="lightblue">
+                <Label value="1.5% threshold" angle={90} position="insideMiddle" />
+              </ReferenceLine>
+              <ReferenceLine x={1624924800} strokeWidth={2} stroke="lightblue">
+                <Label value="1inch integration" angle={90} position="insideMiddle" />
+              </ReferenceLine>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="chart-cell half">
           <h3>AUM / Glp Price</h3>
           { loading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
@@ -238,7 +367,7 @@ function Arbitrum() {
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="aum" stackId="a" name="AUM" fill="#ee64b8" />
+              <Area type="monotone" unit={dynamicUnit} dataKey="aum" stackId="a" name="AUM" />
               <Line type="monotone" yAxisId="right" unit={dynamicUnit} dot={false} dataKey="glpPrice" stackId="a" name="GLP Price" stroke="#c90000" />
             </ComposedChart>
           </ResponsiveContainer>
@@ -247,7 +376,7 @@ function Arbitrum() {
           <h3>Glp Supply</h3>
           { loading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <BarChart syncId="syncId" data={addLiquiditiesChartData}>
+            <AreaChart syncId="syncId" data={addLiquiditiesChartData}>
               <CartesianGrid strokeDasharray="10 10" />
               <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
               <YAxis dataKey="glpSupply" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
@@ -257,8 +386,8 @@ function Arbitrum() {
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" dataKey="glpSupply" stackId="a" name="GLP Supply" fill="#8884ff" />
-            </BarChart>
+              <Area type="monotone" dataKey="glpSupply" stackId="a" name="GLP Supply" fill="#8884ff" />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
