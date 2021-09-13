@@ -3,10 +3,12 @@ import * as ethers from 'ethers'
 
 import {
   yaxisFormatterNumber,
+  yaxisFormatterPercent,
   yaxisFormatter,
   tooltipLabelFormatter,
   tooltipFormatter,
-  tooltipFormatterNumber
+  tooltipFormatterNumber,
+  tooltipFormatterPercent
 } from './helpers'
 import './Home.css';
 
@@ -27,7 +29,9 @@ import {
   Area,
   AreaChart,
   ComposedChart,
-  Cell
+  Cell,
+  PieChart,
+  Pie
 } from 'recharts';
 
 import ChartWrapper from './components/ChartWrapper'
@@ -40,18 +44,23 @@ import {
   useGlpData,
   useCoingeckoPrices,
   useGlpPerformanceData,
-  usePnlData
+  usePnlData,
+  useSwapSources
 } from './dataProvider'
 
 const { BigNumber } = ethers
 const { formatUnits} = ethers.utils
+const COLORS = ['#ee64b8', '#22c761', '#ab6100', '#c90000', '#8884ff']
 
 function Arbitrum() {
-  const [glpData, glpLoading] = useGlpData()
-  const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData)
-  const [volumeData, volumeLoading] = useVolumeData()
-  const [feesData, feesLoading] = useFeesData()
-  const [pnlData, pnlLoading] = usePnlData()
+  const GROUP_PERIOD = 86400
+
+  const [glpData, glpLoading] = useGlpData({ groupPeriod: GROUP_PERIOD })
+  const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, { groupPeriod: GROUP_PERIOD })
+  const [volumeData, volumeLoading] = useVolumeData({ groupPeriod: GROUP_PERIOD })
+  const [feesData, feesLoading] = useFeesData({ groupPeriod: GROUP_PERIOD })
+  const [pnlData, pnlLoading] = usePnlData({ groupPeriod: GROUP_PERIOD })
+  const [swapSources, swapSourcesLoading] = useSwapSources({ groupPeriod: GROUP_PERIOD })
 
   const CHART_HEIGHT = 300
   const YAXIS_WIDTH = 65
@@ -107,18 +116,24 @@ function Arbitrum() {
         <div className="chart-cell half">
           <ChartWrapper title="Glp Supply" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <AreaChart syncId="syncId" data={glpData}>
+              <ComposedChart syncId="syncId" data={glpData}>
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis dataKey="glpSupply" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="glpSupplyChange" tickFormatter={yaxisFormatterPercent} orientation="right" yAxisId="right" width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Area type="monotone" dataKey="glpSupply" stackId="a" name="GLP Supply" fill="#8884ff" />
-              </AreaChart>
+                <Bar type="monotone" yAxisId="right" dataKey="glpSupplyChange" name="Change %" fill="#444">
+                  {(glpData || []).map((item, i) => {
+                    return <Cell key={`cell-${i}`} fill={item.glpSupplyChange > 0 ? '#22c761' : '#f93333'} />
+                  })}
+                </Bar>
+                <Line type="monotone" dot={false} strokeWidth={3} dataKey="glpSupply" stackId="a" name="GLP Supply" stroke="#8884ff" />
+              </ComposedChart>
             </ResponsiveContainer>
           </ChartWrapper>
         </div>
@@ -160,7 +175,7 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="Daily PnL">
+                <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="PnL">
                   {(pnlData || []).map((item, i) => {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#22c761' : '#f93333'} />
                   })}
@@ -169,10 +184,31 @@ function Arbitrum() {
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
+              <p>Considers settled (closed) positions</p>
               <p>
-                Doesn't include trading fees
+                Doesn't include trading fees <br />
+                Cumulative PnL uses data from selected time period only
               </p>
             </div>
+          </ChartWrapper>
+        </div>
+        <div className="chart-cell half">
+          <ChartWrapper title="Swap Sources" loading={swapSourcesLoading}>
+            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+              <PieChart syncId="syncId" data={swapSources}>
+                <Tooltip
+                  formatter={tooltipFormatterPercent}
+                  labelFormatter={tooltipLabelFormatter}
+                  contentStyle={{ textAlign: 'left' }}
+                />
+                <Legend />
+                <Pie data={swapSources} dataKey="value" cx="50%" cy="50%" outerRadius={120} fill="#8884d8">
+                  {(swapSources || []).map((item, i) => {
+                    return <Cell key={`cell-${i}`} fill={COLORS[i]} />
+                  })}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
           </ChartWrapper>
         </div>
       </div>

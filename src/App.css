@@ -70,8 +70,12 @@ label + input {
   max-width: 600px;
 }
 
-.chart-description p {
-  margin: 0;
+.chart-description p:first-child {
+  margin-top: 0;
+}
+
+.chart-description p:last-child {
+  margin-bottom: 0;
 }
 
 .chart-description ul {
@@ -118,6 +122,11 @@ label + input {
   top: 50%;
   left: 50%;
   z-index: 2;
+}
+
+.nav-link {
+  color: #444;
+  margin-right: 0.5rem;
 }
 
 @media all and (max-width: 1200px) {

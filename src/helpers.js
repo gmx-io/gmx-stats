@@ -79,6 +79,10 @@ export const tooltipLabelFormatter = (label, args) => {
   return date
 }
 
+export const yaxisFormatterPercent = value => {
+  return value.toFixed(2) + '%'
+}
+
 export const yaxisFormatterNumber = value => {
   return compactNumber(value)
 }
@@ -89,6 +93,10 @@ export const yaxisFormatter = (value, ...args) => {
 
 export const tooltipFormatterNumber = (value, name, item) => {
   return formatNumber(value)
+}
+
+export const tooltipFormatterPercent = (value, name, item) => {
+  return value.toFixed(2) + '%'
 }
 
 export const tooltipFormatter = (value, name, item) => {

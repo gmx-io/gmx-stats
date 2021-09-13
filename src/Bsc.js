@@ -4,7 +4,6 @@ import * as strftime from 'strftime'
 
 import { urlWithParams, tsToIso } from './helpers'
 import { useRequest } from './dataProvider'
-import './Home.css';
 
 import {
   LineChart,
@@ -69,7 +68,7 @@ const tooltipFormatter = (value, name, item) => {
   return numberFmt.format(value)
 }
 
-function Home() {
+function Bsc() {
   const [from, setFrom] = useState(tsToIso(Date.now() - 86400000 * 30))
   const [to, setTo] = useState()
 
@@ -306,7 +305,7 @@ function Home() {
   const YAXIS_WIDTH = 65
 
   return (
-    <div className="Home">
+    <div className="Bsc">
       <h1>Gambit Dashboard / BSC</h1>
       <div className="form">
         <p>
@@ -509,4 +508,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Bsc;
