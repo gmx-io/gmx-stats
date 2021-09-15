@@ -5,6 +5,7 @@ import fetch from 'cross-fetch';
 import * as ethers from 'ethers'
 
 const BigNumber = ethers.BigNumber
+const provider = new ethers.providers.JsonRpcProvider('https://arb1.arbitrum.io/rpc')
 
 const DEFAULT_GROUP_PERIOD = 86400
 
@@ -77,6 +78,43 @@ export function useGraph(query, { subgraph = 'gkrasulya/gmx' } = {}) {
   }, [query, setData, setLoading])
 
   return [data, loading]
+}
+
+export function useLastBlock() {
+  const [data, setData] = useState()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  useEffect(() => {
+    provider.getBlock()
+      .then(setData)
+      .catch(setError)
+      .finally(() => setLoading(false))
+  }, [])
+
+  return [data, loading, error]
+}
+
+export function useLastSubgraphBlock() {
+  const [data, loading, error] = useGraph(`{
+    _meta {
+      block {
+        number
+      }
+    } 
+  }`)
+  const [block, setBlock] = useState(null)
+
+  useEffect(() => {
+    if (!data) {
+      return
+    } 
+
+    provider.getBlock(data._meta.block.number).then(block => {
+      setBlock(block)
+    })
+  }, [data, setBlock])
+
+  return [block, loading, error]
 }
 
 export function usePnlData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {

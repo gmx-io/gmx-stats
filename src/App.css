@@ -124,6 +124,14 @@ label + input {
   z-index: 2;
 }
 
+a, a:active, a:visited {
+  color: #444;
+}
+
+.warning, .warning a {
+  color: #e46b00;
+}
+
 .nav-link {
   color: #444;
   margin-right: 0.5rem;

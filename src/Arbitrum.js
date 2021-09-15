@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
+import moment from 'moment'
 
 import {
   yaxisFormatterNumber,
@@ -45,7 +46,9 @@ import {
   useCoingeckoPrices,
   useGlpPerformanceData,
   usePnlData,
-  useSwapSources
+  useSwapSources,
+  useLastSubgraphBlock,
+  useLastBlock
 } from './dataProvider'
 
 const { BigNumber } = ethers
@@ -62,12 +65,24 @@ function Arbitrum() {
   const [pnlData, pnlLoading] = usePnlData({ groupPeriod: GROUP_PERIOD })
   const [swapSources, swapSourcesLoading] = useSwapSources({ groupPeriod: GROUP_PERIOD })
 
+  const [lastSubgraphBlock] = useLastSubgraphBlock()
+  const [lastBlock] = useLastBlock()
+
+  const isObsolete = lastSubgraphBlock && lastBlock && lastBlock.timestamp - lastSubgraphBlock.timestamp > 3600
+
   const CHART_HEIGHT = 300
   const YAXIS_WIDTH = 65
 
   return (
     <div className="Home">
       <h1>GMX Dashboard / Arbitrum</h1>
+      {lastSubgraphBlock && lastBlock &&
+        <p className={isObsolete ? 'warning' : ''}>
+          {isObsolete && "Data is obsolete. "}
+          Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
+          &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
+        </p>
+      }
       <div className="chart-grid">
         <div className="chart-cell half">
           <VolumeChart
@@ -209,6 +224,9 @@ function Arbitrum() {
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
+            <div className="chart-description">
+              <p>Uses last 1000 swaps</p>
+            </div>
           </ChartWrapper>
         </div>
       </div>

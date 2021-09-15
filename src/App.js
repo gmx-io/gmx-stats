@@ -10,12 +10,12 @@ const App = () => (
   <Switch>
     <div className="App">
       <nav>
-         <Link to="/" className="nav-link">BSC</Link> 
-         <Link to="/arbitrum" className="nav-link">Arbitrum</Link> 
+         <Link to="/" className="nav-link">Arbitrum</Link> 
+         <Link to="/bsc" className="nav-link">BSC</Link> 
       </nav>
       <div>
-        <Route exact path="/" component={Bsc} />
-        <Route exact path="/arbitrum" component={Arbitrum} />
+        <Route exact path="/" component={Arbitrum} />
+        <Route exact path="/bsc" component={Bsc} />
         <Route exact path="/trading" component={Trading} />
         <Route exact path="/bsc-orders" component={BscOrders} />
       </div>
