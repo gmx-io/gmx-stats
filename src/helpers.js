@@ -151,7 +151,7 @@ export function getProvider(chainId) {
   if (chainId === BSC) {
     rpc = 'https://bsc-dataseed1.defibit.io/'
   } else if (chainId === ARBITRUM) {
-    rpc = 'https://arb-mainnet.g.alchemy.com/v2/k5Sg-ThNip-VhTDMeYrr7STpTLfHuKB2'
+    rpc = 'https://arb1.arbitrum.io/rpc'
   }
   if (!rpc) {
     throw Error(`Unsupported chainId: ${chainId}`)

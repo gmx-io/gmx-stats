@@ -3,11 +3,13 @@ import { ethers } from 'ethers'
 import Vault from '../abis/v1/Vault'
 import Token from '../abis/v1/Token'
 import ChainlinkFeed from '../abis/ChainlinkFeed'
+import YieldToken from '../abis/YieldToken'
 import { getProvider } from './helpers'
 import { addresses, BSC, ARBITRUM } from './addresses'
 
 export const vaultAbi = Vault.abi
 export const tokenAbi = Token.abi
+export const yieldTokenAbi = YieldToken.abi
 const chainlinkFeedAbi = ChainlinkFeed.abi
 
 export function attachContract(address, abi, chainId) {
@@ -39,6 +41,7 @@ export const contracts = {
     chainlinkFeedContracts: {
       BTC: attachContract(addresses[ARBITRUM].ChainlinkBtcFeed, chainlinkFeedAbi, ARBITRUM),
       ETH: attachContract(addresses[ARBITRUM].ChainlinkEthFeed, chainlinkFeedAbi, ARBITRUM)
-    }
+    },
+    GMX: attachContract(addresses[ARBITRUM].GMX, yieldTokenAbi, ARBITRUM)
   }
 }

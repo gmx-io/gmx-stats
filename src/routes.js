@@ -7,11 +7,12 @@ import { StaticRouter } from 'react-router-dom';
 import { renderToString } from 'react-dom/server';
 
 import App from './App';
-import { getContract, findNearest, queryProviderLogs, callWithRetry, UsdgSupplyRecord, LogRecord, getLogger } from './helpers'
+import { findNearest, queryProviderLogs, callWithRetry, UsdgSupplyRecord, LogRecord, getLogger } from './helpers'
 import * as helpers from './helpers'
 import { TOKENS, TOKENS_BY_ADDRESS, TOKENS_BY_SYMBOL } from './tokens'
 import { db, dbAll } from './db'
 import { addresses, BSC, ARBITRUM } from './addresses'
+import { contracts } from './contracts'
 
 const assets = require(process.env.RAZZLE_ASSETS_MANIFEST);
 
@@ -80,6 +81,12 @@ function getPrice(address, timestamp) {
 
 export default function routes(app) {
   const GROUP_PERIOD = 86400
+
+  app.get('/api/gmx-supply', async (req, res) => {
+    const contract = contracts[ARBITRUM].GMX
+    const totalSupply = await contract.totalSupply()
+    res.send(formatUnits(totalSupply, 18))
+  })
 
   app.get('/api/usdgSupply', async (req, res) => {
     const period = Number(req.query.period) || GROUP_PERIOD

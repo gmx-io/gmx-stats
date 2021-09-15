@@ -18,6 +18,7 @@ export const addresses = {
 
     [ARBITRUM]: {
         ChainlinkBtcFeed: '0x6ce185860a4963106506C203335A2910413708e9',
-        ChainlinkEthFeed: '0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612'
+        ChainlinkEthFeed: '0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612',
+        GMX: '0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a'
     }
 }
