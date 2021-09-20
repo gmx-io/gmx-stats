@@ -182,7 +182,7 @@ export default function routes(app) {
     let to = Number(req.query.to) || Math.round(Date.now() / 1000)
     to = Math.ceil(to / 300) * 300
 
-    const validSymbols = new Set(['BTC', 'ETH', 'BNB'])
+    const validSymbols = new Set(['BTC', 'ETH', 'BNB', 'UNI', 'LINK'])
     const { symbol } = req.params
     if (!validSymbols.has(symbol)) {
       res.send(`Invalid symbol ${symbol}`)
@@ -229,7 +229,7 @@ export default function routes(app) {
   })
 
   app.get('/api/prices/:symbol', async (req, res) => {
-    const validSymbols = new Set(['BTC', 'ETH', 'BNB'])
+    const validSymbols = new Set(['BTC', 'ETH', 'BNB', 'LINK', 'UNI'])
     const from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 3
     const to = Number(req.query.to) || Math.round(Date.now() / 1000)
     const { symbol } = req.params

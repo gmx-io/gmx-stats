@@ -45,7 +45,7 @@ function getChainlinkJob(chainId, symbol, { backwards = BACKWARDS, disabled = fa
     run: async () => {
       await retrieveChainlinkPrices({ symbol, chainId, backwards })
     },
-    interval: 1000 * 60 * 10,
+    interval: 1000 * 60,
     disabled
   }
 }
@@ -61,45 +61,28 @@ function getJob(name, run, { interval = DEFAULT_JOB_INTERVAL, disabled = false, 
 
 export default function ({ db }) {
   const jobs = [
-    // getChainlinkJob(ARBITRUM, 'BTC'),
-    // getChainlinkJob(ARBITRUM, 'ETH'),
-    // getChainlinkJob(ARBITRUM, 'UNI', { backwards: true }),
-    // getChainlinkJob(ARBITRUM, 'LINK', { backwards: true }),
-    // getChainlinkJob(BSC, 'BTC'),
-    // getChainlinkJob(BSC, 'ETH'),
-    // getChainlinkJob(BSC, 'BNB'),
-    // getChainlinkJob(BSC, 'UNI', { backwards: true }),
-    // getChainlinkJob(BSC, 'LINK', { backwards: true }),
+    getChainlinkJob(ARBITRUM, 'BTC'),
+    getChainlinkJob(ARBITRUM, 'ETH'),
+    getChainlinkJob(ARBITRUM, 'UNI', { backwards: true }),
+    getChainlinkJob(ARBITRUM, 'LINK', { backwards: true }),
+    getChainlinkJob(BSC, 'BTC'),
+    getChainlinkJob(BSC, 'ETH'),
+    getChainlinkJob(BSC, 'BNB'),
+    getChainlinkJob(BSC, 'UNI', { backwards: true }),
+    getChainlinkJob(BSC, 'LINK', { backwards: true }),
     getJob('PoolStats', calculatePoolStats, { interval: DEFAULT_JOB_INTERVAL * 3}),
-    // {
-    //   name: 'VaultLogs',
-    //   run: async () => {
-    //     await retrieveVaultLogs({ backwards: BACKWARDS })
-    //     await retrieveQueuedBlocks({ tableName: 'vaultLogs' })
-    //     await retrieveQueuedTransactions({ tableName: 'vaultLogs' })
-    //   },
-    //   interval: DEFAULT_JOB_INTERVAL,
-    //   // disabled: true
-    // },
-    // {
-    //   name: 'Usdg',
-    //   run: async () => {
-    //     await retrieveUsdgLogs({ backwards: BACKWARDS })
-    //     await retrieveQueuedBlocks({ tableName: 'usdgLogs' })
-    //     await retrieveQueuedTransactions({ tableName: 'usdgLogs' })
-    //     await calculateUsdgSupply({ db, backwards: BACKWARDS })
-    //   },
-    //   interval: DEFAULT_JOB_INTERVAL * 3,
-    //   // disabled: true
-    // },
-    // {
-    //   name: 'CoingeckoPrices',
-    //   run: async () => {
-    //     await retrievePrices()
-    //   },
-    //   interval: DEFAULT_JOB_INTERVAL * 30,
-    //   // disabled: true
-    // }
+    getJob('VaultLogs', async () => {
+      await retrieveVaultLogs({ backwards: BACKWARDS })
+      await retrieveQueuedBlocks({ tableName: 'vaultLogs' })
+      await retrieveQueuedTransactions({ tableName: 'vaultLogs' })
+    }),
+    getJob('Usdg', async () => {
+      await retrieveUsdgLogs({ backwards: BACKWARDS })
+      await retrieveQueuedBlocks({ tableName: 'usdgLogs' })
+      await retrieveQueuedTransactions({ tableName: 'usdgLogs' })
+      await calculateUsdgSupply({ db, backwards: BACKWARDS })
+    }, { interval: DEFAULT_JOB_INTERVAL * 3 }),
+    getJob('CoingeckoPrices', retrievePrices, { interval: DEFAULT_JOB_INTERVAL * 30 })
   ]
 
   async function retrievePrices() {
