@@ -13,12 +13,16 @@ export const addresses = {
         MetamaskRouter: "0x1a1ec25DC08e98e5E93F1104B5e5cdD298707d31",
         ChainlinkBtcFeed: '0x264990fbd0A4796A3E3d8E37C4d5F87a3aCa5Ebf',
         ChainlinkEthFeed: '0x9ef1B8c0E4F7dc8bF5719Ea496883DC6401d5b2e',
-        ChainlinkBnbFeed: '0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE'
+        ChainlinkBnbFeed: '0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE',
+        ChainlinkLinkFeed: '0xca236e327f629f9fc2c30a4e95775ebf0b89fac8',
+        ChainlinkUniFeed: '0xb57f259e7c24e56a1da00f66b55a5640d9f9e7e4'
     },
 
     [ARBITRUM]: {
         ChainlinkBtcFeed: '0x6ce185860a4963106506C203335A2910413708e9',
         ChainlinkEthFeed: '0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612',
+        ChainlinkLinkFeed: '0x86e53cf1b870786351da77a57575e79cb55812cb',
+        ChainlinkUniFeed: '0x9c917083fdb403ab5adbec26ee294f6ecada2720',
         GMX: '0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a'
     }
 }

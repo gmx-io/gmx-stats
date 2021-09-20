@@ -3,7 +3,7 @@ import { ethers } from 'ethers'
 import got from 'got'
 
 import { TOKENS, TOKENS_BY_ADDRESS } from '../tokens'
-import { db, dbRun, dbAll, dbGet } from '../db'
+import { db, dbRun, dbAll, dbGet, getMeta, setMeta } from '../db'
 import { contracts } from '../contracts'
 import { vaultAbi, tokenAbi } from '../contracts'
 import { addresses, BSC, ARBITRUM } from '../addresses'
@@ -19,6 +19,7 @@ import {
 } from '../helpers'
 
 import { calculateUsdgSupply } from './usdg'
+import { retrieveChainlinkPrices } from './chainlinkPrices'
 
 const { formatUnits} = ethers.utils
 const { BigNumber } = ethers
@@ -26,113 +27,80 @@ const { AddressZero } = ethers.constants
 
 const logger = getLogger('jobs')
 
-const RUN_JOBS_LOCALY = process.env.RUN_JOBS_LOCALY ? !!JSON.parse(process.env.RUN_JOBS_LOCALY) : false
+const RUN_JOBS_LOCALLY = process.env.RUN_JOBS_LOCALLY ? !!JSON.parse(process.env.RUN_JOBS_LOCALLY) : false
 const DEFAULT_JOB_INTERVAL = 3000
 const BACKWARDS = false
 const BLOCKS_PER_JOB = 1000
 
+function getChainName(chainId) {
+  return {
+    [BSC]: 'BSC',
+    [ARBITRUM]: 'Arbitrum'
+  }[chainId]
+}
+
+function getChainlinkJob(chainId, symbol, { backwards = BACKWARDS, disabled = false } = {}) {
+  return {
+    name: `${symbol} ChainlinkPrices ${getChainName(chainId)}`,
+    run: async () => {
+      await retrieveChainlinkPrices({ symbol, chainId, backwards })
+    },
+    interval: 1000 * 60 * 10,
+    disabled
+  }
+}
+
+function getJob(name, run, { interval = DEFAULT_JOB_INTERVAL, disabled = false, ...opts } = {}) {
+  return {
+    name,
+    run: () => run(opts),
+    interval,
+    disabled
+  }
+}
+
 export default function ({ db }) {
   const jobs = [
-    {
-      name: 'BTC ChainlinkPrices Arbitrum',
-      run: async () => {
-        await retrieveChainlinkPrices({ symbol: 'BTC', chainId: ARBITRUM, backwards: BACKWARDS })
-      },
-      interval: 1000 * 60 * 10,
-      // disabled: true
-    },
-    {
-      name: 'ETH ChainlinkPrices Arbitrum',
-      run: async () => {
-        await retrieveChainlinkPrices({ symbol: 'ETH', chainId: ARBITRUM, backwards: BACKWARDS })
-      },
-      interval: 1000 * 60 * 10,
-      // disabled: true
-    },
-    {
-      name: 'BTC ChainlinkPrices BSC',
-      run: async () => {
-        await retrieveChainlinkPrices({ symbol: 'BTC', chainId: BSC, backwards: BACKWARDS })
-      },
-      interval: DEFAULT_JOB_INTERVAL * 10,
-      // disabled: true
-    },
-    {
-      name: 'ETH ChainlinkPrices BSC',
-      run: async () => {
-        await retrieveChainlinkPrices({ symbol: 'ETH', chainId: BSC, backwards: BACKWARDS })
-      },
-      interval: DEFAULT_JOB_INTERVAL * 10,
-      // disabled: true
-    },
-    {
-      name: 'BNB ChainlinkPrices BSC',
-      run: async () => {
-        await retrieveChainlinkPrices({ symbol: 'BNB', chainId: BSC, backwards: BACKWARDS })
-      },
-      interval: DEFAULT_JOB_INTERVAL * 10,
-      // disabled: true
-    },
-    {
-      name: 'PoolStats',
-      run: async () => {
-        calculatePoolStats({ backwards: BACKWARDS })
-      },
-      interval: DEFAULT_JOB_INTERVAL * 3,
-      // disabled: true
-    },
-    {
-      name: 'VaultLogs',
-      run: async () => {
-        await retrieveVaultLogs({ backwards: BACKWARDS })
-        await retrieveQueuedBlocks({ tableName: 'vaultLogs' })
-        await retrieveQueuedTransactions({ tableName: 'vaultLogs' })
-      },
-      interval: DEFAULT_JOB_INTERVAL,
-      // disabled: true
-    },
-    {
-      name: 'Usdg',
-      run: async () => {
-        await retrieveUsdgLogs({ backwards: BACKWARDS })
-        await retrieveQueuedBlocks({ tableName: 'usdgLogs' })
-        await retrieveQueuedTransactions({ tableName: 'usdgLogs' })
-        await calculateUsdgSupply({ db, backwards: BACKWARDS })
-      },
-      interval: DEFAULT_JOB_INTERVAL * 3,
-      // disabled: true
-    },
-    {
-      name: 'CoingeckoPrices',
-      run: async () => {
-        await retrievePrices()
-      },
-      interval: DEFAULT_JOB_INTERVAL * 30,
-      // disabled: true
-    }
+    // getChainlinkJob(ARBITRUM, 'BTC'),
+    // getChainlinkJob(ARBITRUM, 'ETH'),
+    // getChainlinkJob(ARBITRUM, 'UNI', { backwards: true }),
+    // getChainlinkJob(ARBITRUM, 'LINK', { backwards: true }),
+    // getChainlinkJob(BSC, 'BTC'),
+    // getChainlinkJob(BSC, 'ETH'),
+    // getChainlinkJob(BSC, 'BNB'),
+    // getChainlinkJob(BSC, 'UNI', { backwards: true }),
+    // getChainlinkJob(BSC, 'LINK', { backwards: true }),
+    getJob('PoolStats', calculatePoolStats, { interval: DEFAULT_JOB_INTERVAL * 3}),
+    // {
+    //   name: 'VaultLogs',
+    //   run: async () => {
+    //     await retrieveVaultLogs({ backwards: BACKWARDS })
+    //     await retrieveQueuedBlocks({ tableName: 'vaultLogs' })
+    //     await retrieveQueuedTransactions({ tableName: 'vaultLogs' })
+    //   },
+    //   interval: DEFAULT_JOB_INTERVAL,
+    //   // disabled: true
+    // },
+    // {
+    //   name: 'Usdg',
+    //   run: async () => {
+    //     await retrieveUsdgLogs({ backwards: BACKWARDS })
+    //     await retrieveQueuedBlocks({ tableName: 'usdgLogs' })
+    //     await retrieveQueuedTransactions({ tableName: 'usdgLogs' })
+    //     await calculateUsdgSupply({ db, backwards: BACKWARDS })
+    //   },
+    //   interval: DEFAULT_JOB_INTERVAL * 3,
+    //   // disabled: true
+    // },
+    // {
+    //   name: 'CoingeckoPrices',
+    //   run: async () => {
+    //     await retrievePrices()
+    //   },
+    //   interval: DEFAULT_JOB_INTERVAL * 30,
+    //   // disabled: true
+    // }
   ]
-
-  async function getMeta(key) {
-    const row = await dbGet('SELECT value FROM meta WHERE key = ?', [key]) 
-    if (!row) {
-      return null
-    }
-    const ret = JSON.parse(row.value)
-    if (ret.type === 'BigNumber') {
-      return BigNumber.from(ret.hex)
-    }
-    return ret
-  }
-
-  async function setMeta(key, value) {
-    const valueJson = JSON.stringify(value)
-    logger.info('setMeta %s %s %s', key, valueJson, typeof value)
-    await dbRun(`
-      INSERT INTO meta (key, value)
-      VALUES (?, ?)
-      ON CONFLICT(key) DO UPDATE SET value = ?
-    `, key, valueJson, valueJson)
-  }
 
   async function retrievePrices() {
     logger.info('retrieve prices')
@@ -162,91 +130,6 @@ export default function ({ db }) {
       logger.info('%s done', token.symbol)
     }
     logger.info('done')
-  }
-
-  async function retrieveChainlinkPrices({ symbol, chainId = BSC, backwards = false }) {
-    logger.info('Retrieve chainlink prices chainId: %s, symbol: %s, backwards: %s',
-      chainId,
-      symbol,
-      backwards
-    )
-    const { chainlinkFeedContracts } = contracts[chainId]
-    if (!(symbol in chainlinkFeedContracts)) {
-      logger.warn('unknown symbol %s. Skip', symbol) 
-      return
-    }
-    const feed = chainlinkFeedContracts[symbol]
-    const chainIdSuffix = chainId === BSC ? '' : `_${chainId}`
-    const tableName = `chainlinkPrices${chainIdSuffix}`
-    console.log('tableName: %s', tableName)
-
-    const latestRound = await feed.latestRound()
-
-    const metaKey = `chainlink_prices_${symbol}_${backwards ? 'oldest' : 'newest'}_round${chainIdSuffix}`
-    let lastProcessedRound = await getMeta(metaKey)
-
-    if (!lastProcessedRound) {
-      logger.info('meta %s is null, retrieve from existing prices', metaKey) 
-      const row = await dbGet(`
-        SELECT round
-        FROM ${tableName}
-        WHERE symbol = ?
-        ORDER BY timestamp ${backwards ? 'ASC' : 'DESC'}
-        LIMIT 1
-      `, [symbol])
-      if (row) {
-        lastProcessedRound = BigNumber.from(row.round)
-        logger.info('Record found, row round is: %s', row.round)
-      } else {
-        logger.info('No records')
-      }
-    }
-
-    logger.info('latestRound: %s, metaKey: %s, lastProcessedRound: %s',
-      latestRound,
-      metaKey,
-      lastProcessedRound
-    )
-
-    const anchorRound = lastProcessedRound
-      ? lastProcessedRound
-      : (backwards ? latestRound.add(1) : latestRound.sub(1))
-    const ROUNDS_PER_JOB = 100
-
-    logger.info('anchorRound: %s', anchorRound.toString())
-
-    let i = 0
-    let round = backwards ? anchorRound.sub(1) : anchorRound.add(1)
-    const roundDataPromises = []
-    while (i++ < ROUNDS_PER_JOB) {
-      if (round.gt(latestRound) || round.lt(0)) {
-        logger.info('round %s is out of rage. Stop', round.toString())
-        break
-      }
-
-      roundDataPromises.push(feed.getRoundData(round))
-      round = backwards ? round.sub(1) : round.add(1)
-    }
-
-    const roundDatas = await Promise.all(roundDataPromises)
-    if (roundDatas.length === 0) {
-      logger.info('0 rounds retrieved. Stop')
-      return
-    }
-
-    for (const roundData of roundDatas) {
-      if (!roundData[0]) {
-        logger.warn('No data for round %s. Stop', round)
-        break
-      }
-
-      await dbRun(`
-        INSERT OR IGNORE INTO ${tableName} (symbol, round, timestamp, price)
-        VALUES (?, ?, ?, ?)
-      `, [symbol, roundData.roundId, roundData.updatedAt, roundData.answer.toNumber()])
-    }
-
-    await setMeta(metaKey, roundDatas[roundDatas.length - 1].roundId)
   }
 
   function retrieveLogsFactory({ decoder, address, tableName, name = 'unknown' } = {}) {
@@ -656,11 +539,11 @@ export default function ({ db }) {
     logger.info('done')
   }
 
-  const shouldRunJobs = process.env.NODE_ENV === 'production' || RUN_JOBS_LOCALY
-  console.log('shouldRunJobs: %s, NODE_ENV: %s, RUN_JOBS_LOCALY: %s',
+  const shouldRunJobs = process.env.NODE_ENV === 'production' || RUN_JOBS_LOCALLY
+  console.log('shouldRunJobs: %s, NODE_ENV: %s, RUN_JOBS_LOCALLY: %s',
     shouldRunJobs,
     process.env.NODE_ENV,
-    RUN_JOBS_LOCALY
+    RUN_JOBS_LOCALLY
   )
   if (shouldRunJobs) {
     initJobs()

@@ -24,11 +24,15 @@ const usdgContract = attachContract(addresses[BSC].USDG, tokenAbi, BSC)
 const chainlinkBtcFeedContract = attachContract(addresses[BSC].ChainlinkBtcFeed, chainlinkFeedAbi, BSC)
 const chainlinkEthFeedContract = attachContract(addresses[BSC].ChainlinkEthFeed, chainlinkFeedAbi, BSC)
 const chainlinkBnbFeedContract = attachContract(addresses[BSC].ChainlinkBnbFeed, chainlinkFeedAbi, BSC)
+const chainlinkLinkFeedContract = attachContract(addresses[BSC].ChainlinkLinkFeed, chainlinkFeedAbi, BSC)
+const chainlinkUniFeedContract = attachContract(addresses[BSC].ChainlinkUniFeed, chainlinkFeedAbi, BSC)
 
 const chainlinkFeedContracts = {
   BTC: chainlinkBtcFeedContract,
   ETH: chainlinkEthFeedContract,
-  BNB: chainlinkBnbFeedContract
+  BNB: chainlinkBnbFeedContract,
+  LINK: chainlinkLinkFeedContract,
+  UNI: chainlinkUniFeedContract
 }
 
 export const contracts = {
@@ -40,7 +44,9 @@ export const contracts = {
   [ARBITRUM]: {
     chainlinkFeedContracts: {
       BTC: attachContract(addresses[ARBITRUM].ChainlinkBtcFeed, chainlinkFeedAbi, ARBITRUM),
-      ETH: attachContract(addresses[ARBITRUM].ChainlinkEthFeed, chainlinkFeedAbi, ARBITRUM)
+      ETH: attachContract(addresses[ARBITRUM].ChainlinkEthFeed, chainlinkFeedAbi, ARBITRUM),
+      LINK: attachContract(addresses[ARBITRUM].ChainlinkLinkFeed, chainlinkFeedAbi, ARBITRUM),
+      UNI: attachContract(addresses[ARBITRUM].ChainlinkUniFeed, chainlinkFeedAbi, ARBITRUM)
     },
     GMX: attachContract(addresses[ARBITRUM].GMX, yieldTokenAbi, ARBITRUM)
   }

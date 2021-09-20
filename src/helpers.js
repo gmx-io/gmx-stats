@@ -29,6 +29,56 @@ const logger = getLogger('helpers')
 const numberFmt = Intl.NumberFormat('en-US')
 const currencyFmt = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
+export function fillPeriods(arr, { period, from, to, interpolate = true, extrapolate = false }) {
+  let i = 0
+  let prevTimestamp = from ? from - period : arr[0].timestamp
+  let prevPeriodStep = Math.floor(prevTimestamp / period)
+  let prevItem
+  const ret = []
+
+  while (i < arr.length) {
+    const item = arr[i]
+    const periodStep = Math.floor(item.timestamp / period) 
+
+    if (periodStep - 1 > prevPeriodStep) {
+      const diff = periodStep - prevPeriodStep
+      let j = 1
+      while (j < diff) {
+        let newItem = { timestamp: (prevPeriodStep + j) * period }
+        if (interpolate) {
+          newItem = { ...prevItem, ...newItem }
+        }
+        ret.push(newItem)
+        j++
+      }
+    }
+
+    ret.push(item)
+
+    if (to && i === arr.length - 1) {
+      const lastPeriodStep = Math.floor(to / period)
+      if (lastPeriodStep > periodStep) {
+        const diff = lastPeriodStep - periodStep
+        let j = 0
+        while (j < diff) {
+          let newItem = { timestamp: (periodStep + j + 1) * period }
+          if (extrapolate) {
+            newItem = { ...item, ...newItem }
+          }
+          ret.push(newItem)
+          j++
+        }
+      }
+    }
+
+    prevItem = item
+    prevPeriodStep = periodStep
+    i++
+  }
+
+  return ret
+}
+
 export const formatNumber = (value, opts = {}) => {
   const currency = !!opts.currency
   const compact = !!opts.compact

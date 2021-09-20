@@ -3,7 +3,7 @@ import * as ethers from 'ethers'
 import * as strftime from 'strftime'
 
 import { urlWithParams, tsToIso } from './helpers'
-import { useRequest } from './dataProvider'
+import { useRequest, useGambitPoolStats } from './dataProvider'
 
 import {
   LineChart,
@@ -89,19 +89,6 @@ function Bsc() {
   const [displayPercentage, setDisplayPercentage] = useState(false)
   const dynamicUnit = displayPercentage ? '%' : ''
 
-  const [usdgSupplyData, usdgSupplyLoading] = useRequest(urlWithParams('/api/usdgSupply', params), [])
-  const usdgSupplyChartData = useMemo(() => {
-    return usdgSupplyData.map(item => {
-      const value = item.supply
-        ? parseInt(formatUnits(BigNumber.from(item.supply.hex), 18))
-        : null
-      return {
-        value,
-        date: new Date(item.timestamp * 1000)
-      }
-    })
-  }, [usdgSupplyData])
-
   const [usersData, usersLoading] = useRequest(urlWithParams('/api/users', params), [])
   const usersChartData = useMemo(() => {
     return usersData.map(item => {
@@ -164,24 +151,23 @@ function Bsc() {
     })
   }, [swapSourcesData, displayPercentage])
 
-  const [poolStatsType, setPoolStatsType] = useState('poolAmount')
-  const [poolStatsData, poolStatsLoading] = useRequest(urlWithParams('/api/poolStats2', params), [])
+  // const [poolStatsData, poolStatsLoading] = useRequest(urlWithParams('/api/poolStats2', params), [])
+  const [poolStatsData, poolStatsLoading] = useGambitPoolStats({ from: fromTs, to: toTs, groupPeriod: period })
   const poolAmountsChartData = useMemo(() => {
-    const getValueUsd = (item, symbol) => {
-      return (item[symbol] && item[symbol][poolStatsType]) ? item[symbol][poolStatsType].valueUsd : 0
+    if (!poolStatsData) {
+      return []
     }
 
     return poolStatsData.map(item => {
       const tokens = ['BTC', 'BNB', 'USDT', 'USDC', 'ETH', 'BUSD']
       const allValueUsd = tokens.reduce((memo, symbol) => {
-          const valueUsd = getValueUsd(item, symbol)
-          return memo + valueUsd
+          return memo + item[symbol]
       }, 0)
 
       if (displayPercentage) {
         return {
           ...tokens.reduce((memo, symbol) => {
-            const valueUsd = getValueUsd(item, symbol)
+            const valueUsd = item[symbol]
             memo[symbol] = valueUsd / allValueUsd * 100
             return memo
           }, {}),
@@ -192,7 +178,7 @@ function Bsc() {
 
       return {
         ...tokens.reduce((memo, symbol) => {
-          const valueUsd = getValueUsd(item, symbol)
+          const valueUsd = item[symbol]
           memo[symbol] = valueUsd
           return memo
         }, {}),
@@ -200,7 +186,25 @@ function Bsc() {
         date: new Date(item.timestamp * 1000)
       }
     })
-  }, [poolStatsData, displayPercentage, poolStatsType])
+  }, [poolStatsData, displayPercentage])
+
+  const usdgSupplyChartData = useMemo(() => {
+    if (!poolStatsData) {
+      return null
+    }
+    return poolStatsData.map(item => {
+      const tokens = ['BTC', 'BNB', 'USDT', 'USDC', 'ETH', 'BUSD']
+      const allValueUsd = tokens.reduce((memo, symbol) => {
+          return memo + item[symbol]
+      }, 0)
+      const price = allValueUsd / item.usdgSupply
+      return {
+        value: item.usdgSupply,
+        price,
+        date: new Date(item.timestamp * 1000)
+      }
+    })
+  }, [poolStatsData])
 
   const [volumeData, volumeLoading] = useRequest(urlWithParams('/api/volume', params), [])
   const volumeChartData = useMemo(() => {
@@ -445,16 +449,17 @@ function Bsc() {
         </div>
 
         <div className="chart-cell">
-          <h3>USDG Supply</h3>
-          { usdgSupplyLoading && <RiLoader5Fill size="3em" className="loader" /> }
+          <h3>USDG</h3>
+          { poolStatsLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <AreaChart
+            <ComposedChart
               data={usdgSupplyChartData}
               syncId="syncId"
             >
               <CartesianGrid strokeDasharray="10 10" />
               <XAxis dataKey="date" tickFormatter={tooltipLabelFormatter} />
               <YAxis dataKey="value" tickFormatter={tooltipFormatter} width={YAXIS_WIDTH} />
+              <YAxis dataKey="price" tickFormatter={tooltipFormatter} orientation="right" yAxisId="right" width={YAXIS_WIDTH} />
               <Tooltip
                 formatter={tooltipFormatter}
                 labelFormatter={tooltipLabelFormatter}
@@ -462,8 +467,9 @@ function Bsc() {
               />
               <ooltip />
               <Legend />
-              <Area type="monotone" dataKey="value" name="USDG Supply" stroke="#9984d8" fillOpacity={0.5} fill="#8884d8" strokeWidth={2} />
-            </AreaChart>
+              <Area type="monotone" dataKey="value" name="Supply" stroke="#9984d8" fillOpacity={0.5} fill="#8884d8" strokeWidth={2} />
+              <Line type="monotone" dot={false} dataKey="price" yAxisId="right" name="Price" stroke="#ee64b8" strokeWidth={2} />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
 
