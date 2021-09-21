@@ -13,9 +13,16 @@ const provider = new ethers.providers.JsonRpcProvider('https://arb1.arbitrum.io/
 const DEFAULT_GROUP_PERIOD = 86400
 
 const tokenDecimals = {
-  "0x82af49447d8a07e3bd95bd0d56f35241523fbab1": 18,
-  "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f": 8,
-  "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8": 6
+  "0x82af49447d8a07e3bd95bd0d56f35241523fbab1": 18, // WETH
+  "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f": 8, // BTC
+  "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8": 6, // USDC
+  "0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0": 18, // UNI
+  "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9": 6, // USDT
+  "0xf97f4df75117a78c1a5a0dbb814af92458539fb4": 18 // LINK
+}
+
+function getTokenDecimals(token) {
+  return tokenDecimals[token] || 18
 }
 
 const knownSwapSources = {
@@ -57,7 +64,7 @@ export function useCoingeckoPrices(symbol) {
 
   const url = `https://api.coingecko.com/api/v3/coins/${_symbol}/market_chart?vs_currency=usd&days=${days}&interval=daily`
 
-  const [data, loading, error] = useRequest(url)
+  let [data, loading, error] = useRequest(url)
 
   return [data ? data.prices.slice(0, -1).map(item => ({ timestamp: item[0] / 1000, value: item[1] })) : data, loading, error]
 }
@@ -171,7 +178,13 @@ export function useLastSubgraphBlock() {
 
 export function usePnlData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const [closedPositionsData, loading, error] = useGraph(`{
-    aggregatedTradeCloseds(first: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+    c1: aggregatedTradeCloseds(first: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+     settledPosition {
+       realisedPnl
+     },
+     settledBlockTimestamp
+   } 
+    c2: aggregatedTradeCloseds(first: 1000, skip: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
      settledPosition {
        realisedPnl
      },
@@ -180,7 +193,13 @@ export function usePnlData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   }`, { subgraph: 'nissoh/gmx-vault' })
 
   const [liquidatedPositionsData] = useGraph(`{
-    aggregatedTradeLiquidateds(first: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+    l1: aggregatedTradeLiquidateds(first: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+     settledPosition {
+       collateral
+     },
+     settledBlockTimestamp
+   } 
+    l2: aggregatedTradeLiquidateds(first: 1000, skip: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
      settledPosition {
        collateral
      },
@@ -191,11 +210,11 @@ export function usePnlData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   let ret = null
   if (closedPositionsData && liquidatedPositionsData) {
     ret = [
-      ...sortBy(closedPositionsData.aggregatedTradeCloseds, el => el.settledBlockTimestamp).map(item => ({
+      ...sortBy([...closedPositionsData.c1, ...closedPositionsData.c2], el => el.settledBlockTimestamp).map(item => ({
         timestamp: item.settledBlockTimestamp,
         pnl: Number(item.settledPosition.realisedPnl) / 1e30
       })),
-      ...sortBy(liquidatedPositionsData.aggregatedTradeLiquidateds, el => el.settledBlockTimestamp).map(item => ({
+      ...sortBy([...liquidatedPositionsData.l1, ...liquidatedPositionsData.l2], el => el.settledBlockTimestamp).map(item => ({
         timestamp: item.settledBlockTimestamp,
         pnl: -Number(item.settledPosition.collateral) / 1e30
       }))
@@ -221,13 +240,15 @@ export function usePnlData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
 
 export function useSwapSources({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const query = `{
-    swaps(first: 1000 orderBy: id orderDirection: desc) {
-      tokenIn
-      tokenInPrice
-      amountIn
-      transaction {
-        to
-      }
+    a: hourlyVolumeBySources(first: 1000 orderBy: timestamp orderDirection: desc) {
+      timestamp
+      source
+      swap
+    },
+    b: hourlyVolumeBySources(first: 1000 skip: 1000 orderBy: timestamp orderDirection: desc) {
+      timestamp
+      source
+      swap
     }
   }`
   const [graphData, loading, error] = useGraph(query)
@@ -238,23 +259,32 @@ export function useSwapSources({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       return null
     }
 
-    let ret = sortBy(graphData.swaps, item => item.timestamp).reduce((memo, item) => {
-      const to = knownSwapSources[item.transaction.to] || item.transaction.to
-      const denominator = BigNumber.from(10).pow(tokenDecimals[item.tokenIn])
-      const volume = BigNumber.from(item.amountIn)
-        .mul(item.tokenInPrice)
-        .div(denominator)
+    let ret = chain([...graphData.a, ...graphData.b])
+      .groupBy(item => parseInt(item.timestamp / groupPeriod) * groupPeriod)
+      .map((values, timestamp) => {
+        let all = 0
+        const retItem = {
+          timestamp: Number(timestamp),
+          ...values.reduce((memo, item) => {
+            const source = knownSwapSources[item.source] || item.source
+            if (item.swap != 0) {
+              const volume = item.swap / 1e30
+              memo[source] = memo[source] || 0
+              memo[source] += volume
+              all += volume
+            }
+            return memo
+          }, {})
+        } 
 
-      memo[to] = memo[to] || 0
-      memo[to] += Number(volume.toString()) / 1e30
-      total += Number(volume.toString()) / 1e30
-      return memo
-    }, {})
+        retItem.all = all
 
-    return sortBy(Object.keys(ret).map(key => ({
-      name: key,
-      value: ret[key] / total * 100
-    })), item => -item.value)
+        return retItem
+      })
+      .sortBy(item => item.timestamp)
+      .value()
+
+    return ret
   }, [graphData])
 
   return [data, loading, error]
@@ -307,17 +337,7 @@ export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   return [data, loading, error]
 }
 
-
-export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
-  const PROPS = 'margin liquidation swap mint burn'.split(' ')
-  // const feesQuery = `{
-  //   hourlyFees(first: 1000 orderBy: id) {
-  //     id
-  //     ${PROPS.join('\n')}
-  //   }
-  // }`
-  // let [feesData, loading, error] = useGraph(feesQuery)
-
+export function useFeesData2({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   let [graphData, loading, error] = useGraph(`{
     m1: collectMarginFees (first: 1000, orderBy: timestamp, orderDirection: desc) {
       id
@@ -374,46 +394,69 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       .value()
   }, [graphData])
 
-  // const feesChartData = useMemo(() => {
-  //   if (!feesData) {
-  //     return null
-  //   }
+  return [feesChartData, loading, error]
+}
 
-  //   let chartData =  feesData.hourlyFees.map(item => {
-  //     const ret = { timestamp: item.id };
-  //     let all = 0;
-  //     PROPS.forEach(prop => {
-  //       ret[prop] = item[prop] / 1e30
-  //       all += item[prop] / 1e30
-  //     })
-  //     ret.all = all
-  //     return ret
-  //   })
+export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+  const PROPS = 'margin liquidation swap mint burn'.split(' ')
+  const feesQuery = `{
+    hourlyFees(first: 1000 orderBy: id) {
+      id
+      ${PROPS.join('\n')}
+    }
+  }`
+  let [feesData, loading, error] = useGraph(feesQuery)
 
-  //   let cumulative = 0
-  //   return chain(chartData)
-  //     .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
-  //     .map((values, timestamp) => {
-  //       const all = sumBy(values, 'all')
-  //       cumulative += all
-  //       const ret = {
-  //         timestamp,
-  //         all,
-  //         cumulative
-  //       }
-  //       PROPS.forEach(prop => {
-  //          ret[prop] = sumBy(values, prop)
-  //       })
-  //       return ret
-  //     }).value()
-  // }, [feesData])
+  const feesChartData = useMemo(() => {
+    if (!feesData) {
+      return null
+    }
+
+    let chartData =  feesData.hourlyFees.map(item => {
+      const ret = { timestamp: item.id };
+      let all = 0;
+      PROPS.forEach(prop => {
+        ret[prop] = item[prop] / 1e30
+        all += item[prop] / 1e30
+      })
+      ret.all = all
+      return ret
+    })
+
+    let cumulative = 0
+    return chain(chartData)
+      .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
+      .map((values, timestamp) => {
+        const all = sumBy(values, 'all')
+        cumulative += all
+        const ret = {
+          timestamp,
+          all,
+          cumulative
+        }
+        PROPS.forEach(prop => {
+           ret[prop] = sumBy(values, prop)
+        })
+        return ret
+      }).value()
+  }, [feesData])
 
   return [feesChartData, loading, error]
 }
 
 export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const query = `{
-    hourlyGlpStats(first: 1000, orderBy: id, orderDirection: desc) {
+    d1: hourlyGlpStats(first: 1000, orderBy: id, orderDirection: desc) {
+      id
+      aumInUsdg
+      glpSupply
+    }
+    d2: hourlyGlpStats(first: 1000, skip: 1000, orderBy: id, orderDirection: desc) {
+      id
+      aumInUsdg
+      glpSupply
+    }
+    d3: hourlyGlpStats(first: 1000, skip: 2000, orderBy: id, orderDirection: desc) {
       id
       aumInUsdg
       glpSupply
@@ -421,22 +464,14 @@ export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   }`
   let [data, loading, error] = useGraph(query)
 
-  // let [data, loading, error] = useGraph(`{
-  //   hourlyGlpStats: addLiquidities(first: 1000, orderBy: timestamp, orderDirection: desc) {
-  //     id: timestamp,
-  //     aumInUsdg,
-  //     glpSupply 
-  //   }
-  // }`, { subgraph: 'gkrasulya/gmx-raw' })
-
   const glpChartData = useMemo(() => {
     if (!data) {
       return null
     }
-
+    
     let prevGlpSupply
     let prevAum
-    return sortBy(data.hourlyGlpStats, item => item.id).reduce((memo, item) => {
+    return sortBy([...data.d1, ...data.d2, ...data.d3], item => item.id).reduce((memo, item) => {
       const last = memo[memo.length - 1]
 
       const aum = Number(item.aumInUsdg) / 1e18
@@ -483,6 +518,11 @@ export function useGlpPerformanceData(glpData, { groupPeriod = DEFAULT_GROUP_PER
       return null
     }
 
+    const glpDataById = glpData.reduce((memo, item) => {
+      memo[item.timestamp] = item
+      return memo
+    }, {})
+
     const BTC_WEIGHT = 0.25
     const ETH_WEIGHT = 0.25
     const GLP_START_PRICE = 1.19
@@ -493,9 +533,9 @@ export function useGlpPerformanceData(glpData, { groupPeriod = DEFAULT_GROUP_PER
     for (let i = 0; i < btcPrices.length; i++) {
       const btcPrice = btcPrices[i].value
       const ethPrice = ethPrices[i].value
-      const glpPrice = glpData[i]?.glpPrice 
 
-      console.log('glpPrice', glpPrice)
+      const timestampGroup = parseInt(btcPrices[i].timestamp / 86400) * 86400
+      const glpPrice = glpDataById[timestampGroup]?.glpPrice 
 
       const syntheticPrice = btcCount * btcPrice + ethCount * ethPrice + GLP_START_PRICE / 2
 

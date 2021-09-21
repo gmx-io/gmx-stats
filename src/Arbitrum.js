@@ -55,6 +55,57 @@ const { BigNumber } = ethers
 const { formatUnits} = ethers.utils
 const COLORS = ['#ee64b8', '#22c761', '#ab6100', '#c90000', '#8884ff']
 
+const CHART_HEIGHT = 400
+const YAXIS_WIDTH = 65
+
+function GenericChart(props) {
+  const {
+    loading,
+    title,
+    data,
+    description,
+    height = CHART_HEIGHT,
+    yaxisWidth = YAXIS_WIDTH,
+    yaxisDataKey = 'all',
+    yaxisTickFormatter = yaxisFormatter,
+    xaxisDataKey = 'timestamp',
+    xaxisTickFormatter = tooltipLabelFormatter,
+    tooltipFormatter_ = tooltipFormatter,
+    tooltipLabelFormatter_ = tooltipLabelFormatter,
+    items
+  } = props
+
+  return <ChartWrapper title={title} loading={loading}>
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="10 10" />
+        <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} />
+        <YAxis dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} />
+        <Tooltip
+          formatter={tooltipFormatter_}
+          labelFormatter={tooltipLabelFormatter_}
+          contentStyle={{ textAlign: 'left' }}
+        />
+        <Legend />
+        {items && items.map((item, i) => {
+          return <Bar
+            type="monotone"
+            dataKey={item.key}
+            stackId="a"
+            name={item.name || item.key}
+            fill={item.color || COLORS[i % COLORS.length]}
+          />
+        })}
+      </BarChart>
+    </ResponsiveContainer>
+    {description && (
+      <div className="chart-description">
+        {description}
+      </div>
+    )}
+  </ChartWrapper>
+}
+
 function Arbitrum() {
   const GROUP_PERIOD = 86400
 
@@ -64,14 +115,18 @@ function Arbitrum() {
   const [feesData, feesLoading] = useFeesData({ groupPeriod: GROUP_PERIOD })
   const [pnlData, pnlLoading] = usePnlData({ groupPeriod: GROUP_PERIOD })
   const [swapSources, swapSourcesLoading] = useSwapSources({ groupPeriod: GROUP_PERIOD })
+  const swapSourcesKeys = Object.keys((swapSources || []).reduce((memo, el) => {
+    Object.keys(el).forEach(key => {
+      if (key === 'all' || key === 'timestamp') return
+      memo[key] = true
+    })
+    return memo
+  }, {}))
 
   const [lastSubgraphBlock] = useLastSubgraphBlock()
   const [lastBlock] = useLastBlock()
 
   const isObsolete = lastSubgraphBlock && lastBlock && lastBlock.timestamp - lastSubgraphBlock.timestamp > 3600
-
-  const CHART_HEIGHT = 300
-  const YAXIS_WIDTH = 65
 
   return (
     <div className="Home">
@@ -111,7 +166,7 @@ function Arbitrum() {
         <div className="chart-cell half">
           <ChartWrapper title="AUM / Glp Price" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <ComposedChart syncId="syncId" data={glpData}>
+              <ComposedChart data={glpData}>
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis dataKey="aum" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
@@ -131,7 +186,7 @@ function Arbitrum() {
         <div className="chart-cell half">
           <ChartWrapper title="Glp Supply" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <ComposedChart syncId="syncId" data={glpData}>
+              <ComposedChart data={glpData}>
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis dataKey="glpSupply" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
@@ -155,7 +210,7 @@ function Arbitrum() {
         <div className="chart-cell half">
           <ChartWrapper title="Glp Index Performance" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <LineChart syncId="syncId" data={glpPerformanceData}>
+              <LineChart data={glpPerformanceData}>
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis dataKey="ratio" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
@@ -179,7 +234,7 @@ function Arbitrum() {
         <div className="chart-cell half">
           <ChartWrapper title="Traders PnL" loading={pnlLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <ComposedChart syncId="syncId" data={pnlData}>
+              <ComposedChart data={pnlData}>
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis dataKey="pnl" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
@@ -208,26 +263,13 @@ function Arbitrum() {
           </ChartWrapper>
         </div>
         <div className="chart-cell half">
-          <ChartWrapper title="Swap Sources" loading={swapSourcesLoading}>
-            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <PieChart syncId="syncId" data={swapSources}>
-                <Tooltip
-                  formatter={tooltipFormatterPercent}
-                  labelFormatter={tooltipLabelFormatter}
-                  contentStyle={{ textAlign: 'left' }}
-                />
-                <Legend />
-                <Pie data={swapSources} dataKey="value" cx="50%" cy="50%" outerRadius={120} fill="#8884d8">
-                  {(swapSources || []).map((item, i) => {
-                    return <Cell key={`cell-${i}`} fill={COLORS[i]} />
-                  })}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="chart-description">
-              <p>Uses last 1000 swaps</p>
-            </div>
-          </ChartWrapper>
+           <GenericChart
+              loading={swapSourcesLoading}
+              title="Swap Sources"
+              data={swapSources}
+              description={<p>Uses last 1000 swaps</p>}
+              items={swapSourcesKeys.map(key => ({ key }))}
+            />
         </div>
       </div>
     </div>

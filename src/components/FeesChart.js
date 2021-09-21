@@ -27,7 +27,7 @@ export default function FeesChart(props) {
 
   return <ChartWrapper title="Fees" loading={loading}>
     <ResponsiveContainer width="100%" height={chartHeight}>
-      <ComposedChart syncId="syncId" data={data}>
+      <ComposedChart data={data}>
         <CartesianGrid strokeDasharray="10 10" />
         <XAxis dataKey="timestamp" tickFormatter={xaxisTickFormatter} minTickGap={30} />
         <YAxis dataKey="all" tickFormatter={yaxisTickFormatter} width={yaxisWidth} />

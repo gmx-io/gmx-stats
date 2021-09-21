@@ -45,7 +45,7 @@ function getChainlinkJob(chainId, symbol, { backwards = BACKWARDS, disabled = fa
     run: async () => {
       await retrieveChainlinkPrices({ symbol, chainId, backwards })
     },
-    interval: 1000 * 60,
+    interval: 1000 * 60 * 3,
     disabled
   }
 }
@@ -65,6 +65,8 @@ export default function ({ db }) {
     getChainlinkJob(ARBITRUM, 'ETH'),
     getChainlinkJob(ARBITRUM, 'UNI', { backwards: true }),
     getChainlinkJob(ARBITRUM, 'LINK', { backwards: true }),
+    getChainlinkJob(ARBITRUM, 'UNI'),
+    getChainlinkJob(ARBITRUM, 'LINK'),
     getChainlinkJob(BSC, 'BTC'),
     getChainlinkJob(BSC, 'ETH'),
     getChainlinkJob(BSC, 'BNB'),
