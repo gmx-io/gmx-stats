@@ -63,15 +63,13 @@ export default function ({ db }) {
   const jobs = [
     getChainlinkJob(ARBITRUM, 'BTC'),
     getChainlinkJob(ARBITRUM, 'ETH'),
-    getChainlinkJob(ARBITRUM, 'UNI', { backwards: true }),
-    getChainlinkJob(ARBITRUM, 'LINK', { backwards: true }),
     getChainlinkJob(ARBITRUM, 'UNI'),
     getChainlinkJob(ARBITRUM, 'LINK'),
     getChainlinkJob(BSC, 'BTC'),
     getChainlinkJob(BSC, 'ETH'),
     getChainlinkJob(BSC, 'BNB'),
-    getChainlinkJob(BSC, 'UNI', { backwards: true }),
-    getChainlinkJob(BSC, 'LINK', { backwards: true }),
+    getChainlinkJob(BSC, 'UNI'),
+    getChainlinkJob(BSC, 'LINK'),
     getJob('PoolStats', calculatePoolStats, { interval: DEFAULT_JOB_INTERVAL * 3}),
     getJob('VaultLogs', async () => {
       await retrieveVaultLogs({ backwards: BACKWARDS })
