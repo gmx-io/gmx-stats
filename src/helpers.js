@@ -8,6 +8,10 @@ import { BSC, ARBITRUM } from './addresses'
 
 const { BigNumber } = ethers
 
+export const CHART_HEIGHT = 400
+export const YAXIS_WIDTH = 65
+export const COLORS = ['#ee64b8', '#22c761', '#ab6100', '#c90000', '#8884ff']
+
 const levelColor = {
   'debug': 'grey',
   'error': 'red',

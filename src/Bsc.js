@@ -310,7 +310,7 @@ function Bsc() {
 
   return (
     <div className="Bsc">
-      <h1>Gambit Dashboard / BSC</h1>
+      <h1>Gambit Analytics / BSC</h1>
       <div className="form">
         <p>
           <label>Period</label>

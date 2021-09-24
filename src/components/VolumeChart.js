@@ -26,7 +26,7 @@ export default function VolumeChart(props) {
 
   return <ChartWrapper title="Volume" loading={loading}>
     <ResponsiveContainer width="100%" height={chartHeight}>
-      <ComposedChart data={data}>
+      <ComposedChart data={data} syncId="syncA">
         <CartesianGrid strokeDasharray="10 10" />
         <XAxis dataKey="timestamp" tickFormatter={xaxisTickFormatter} minTickGap={30} />
         <YAxis dataKey="all" tickFormatter={yaxisTickFormatter} width={yaxisWidth} />
@@ -45,5 +45,8 @@ export default function VolumeChart(props) {
         <Line type="monotone" dot={false} strokeWidth={2} stroke="#ee64b8" dataKey="cumulative" yAxisId="right" name="Cumulative" />
       </ComposedChart>
     </ResponsiveContainer>
+    <div className="chart-description">
+      * Volumes might be different from the dashboard because of differences in the calculation of token price
+    </div>
   </ChartWrapper>
 }

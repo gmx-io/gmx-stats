@@ -69,7 +69,7 @@ export function useCoingeckoPrices(symbol) {
   return [data ? data.prices.slice(0, -1).map(item => ({ timestamp: item[0] / 1000, value: item[1] })) : data, loading, error]
 }
 
-export function useGraph(querySource, { subgraph = 'gkrasulya/gmx' } = {}) {
+export function useGraph(querySource, { subgraph = 'gmx-io/gmx-stats' } = {}) {
   const query = gql(querySource)
 
   const subgraphUrl = `https://api.thegraph.com/subgraphs/name/${subgraph}`;
@@ -397,15 +397,17 @@ export function useFeesData2({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   return [feesChartData, loading, error]
 }
 
-export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.now() / 1000 - 86400 * 90 } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const feesQuery = `{
-    hourlyFees(first: 1000 orderBy: id) {
+    hourlyFees(first: 1000, orderBy: id) {
       id
       ${PROPS.join('\n')}
     }
   }`
   let [feesData, loading, error] = useGraph(feesQuery)
+
+  console.log('from', from)
 
   const feesChartData = useMemo(() => {
     if (!feesData) {
@@ -430,7 +432,7 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
         const all = sumBy(values, 'all')
         cumulative += all
         const ret = {
-          timestamp,
+          timestamp: Number(timestamp),
           all,
           cumulative
         }
@@ -438,7 +440,9 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
            ret[prop] = sumBy(values, prop)
         })
         return ret
-      }).value()
+      })
+      .value()
+      .filter(item => item.timestamp >= from)
   }, [feesData])
 
   return [feesChartData, loading, error]
@@ -543,7 +547,7 @@ export function useGlpPerformanceData(glpData, { groupPeriod = DEFAULT_GROUP_PER
         timestamp: btcPrices[i].timestamp,
         syntheticPrice,
         glpPrice,
-        ratio: glpPrice / syntheticPrice
+        ratio: glpPrice / syntheticPrice * 100
       })
     }
 

@@ -9,7 +9,10 @@ import {
   tooltipLabelFormatter,
   tooltipFormatter,
   tooltipFormatterNumber,
-  tooltipFormatterPercent
+  tooltipFormatterPercent,
+  CHART_HEIGHT,
+  YAXIS_WIDTH,
+  COLORS
 } from './helpers'
 import './Home.css';
 
@@ -38,6 +41,7 @@ import {
 import ChartWrapper from './components/ChartWrapper'
 import VolumeChart from './components/VolumeChart'
 import FeesChart from './components/FeesChart'
+import GenericChart from './components/GenericChart'
 
 import {
   useVolumeData,
@@ -53,68 +57,17 @@ import {
 
 const { BigNumber } = ethers
 const { formatUnits} = ethers.utils
-const COLORS = ['#ee64b8', '#22c761', '#ab6100', '#c90000', '#8884ff']
-
-const CHART_HEIGHT = 400
-const YAXIS_WIDTH = 65
-
-function GenericChart(props) {
-  const {
-    loading,
-    title,
-    data,
-    description,
-    height = CHART_HEIGHT,
-    yaxisWidth = YAXIS_WIDTH,
-    yaxisDataKey = 'all',
-    yaxisTickFormatter = yaxisFormatter,
-    xaxisDataKey = 'timestamp',
-    xaxisTickFormatter = tooltipLabelFormatter,
-    tooltipFormatter_ = tooltipFormatter,
-    tooltipLabelFormatter_ = tooltipLabelFormatter,
-    items
-  } = props
-
-  return <ChartWrapper title={title} loading={loading}>
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data}>
-        <CartesianGrid strokeDasharray="10 10" />
-        <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} />
-        <YAxis dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} />
-        <Tooltip
-          formatter={tooltipFormatter_}
-          labelFormatter={tooltipLabelFormatter_}
-          contentStyle={{ textAlign: 'left' }}
-        />
-        <Legend />
-        {items && items.map((item, i) => {
-          return <Bar
-            type="monotone"
-            dataKey={item.key}
-            stackId="a"
-            name={item.name || item.key}
-            fill={item.color || COLORS[i % COLORS.length]}
-          />
-        })}
-      </BarChart>
-    </ResponsiveContainer>
-    {description && (
-      <div className="chart-description">
-        {description}
-      </div>
-    )}
-  </ChartWrapper>
-}
 
 function Arbitrum() {
-  const GROUP_PERIOD = 86400
+  const DEFAULT_GROUP_PERIOD = 86400
+  const [groupPeriod, setGroupPeriod] = useState(DEFAULT_GROUP_PERIOD)
 
-  const [glpData, glpLoading] = useGlpData({ groupPeriod: GROUP_PERIOD })
-  const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, { groupPeriod: GROUP_PERIOD })
-  const [volumeData, volumeLoading] = useVolumeData({ groupPeriod: GROUP_PERIOD })
-  const [feesData, feesLoading] = useFeesData({ groupPeriod: GROUP_PERIOD })
-  const [pnlData, pnlLoading] = usePnlData({ groupPeriod: GROUP_PERIOD })
-  const [swapSources, swapSourcesLoading] = useSwapSources({ groupPeriod: GROUP_PERIOD })
+  const [glpData, glpLoading] = useGlpData({ groupPeriod })
+  const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, { groupPeriod })
+  const [volumeData, volumeLoading] = useVolumeData({ groupPeriod })
+  const [feesData, feesLoading] = useFeesData({ groupPeriod })
+  const [pnlData, pnlLoading] = usePnlData({ groupPeriod })
+  const [swapSources, swapSourcesLoading] = useSwapSources({ groupPeriod })
   const swapSourcesKeys = Object.keys((swapSources || []).reduce((memo, el) => {
     Object.keys(el).forEach(key => {
       if (key === 'all' || key === 'timestamp') return
@@ -130,7 +83,7 @@ function Arbitrum() {
 
   return (
     <div className="Home">
-      <h1>GMX Dashboard / Arbitrum</h1>
+      <h1>GMX Analytics / Arbitrum</h1>
       {lastSubgraphBlock && lastBlock &&
         <p className={isObsolete ? 'warning' : ''}>
           {isObsolete && "Data is obsolete. "}
@@ -166,7 +119,7 @@ function Arbitrum() {
         <div className="chart-cell half">
           <ChartWrapper title="AUM / Glp Price" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <ComposedChart data={glpData}>
+              <ComposedChart data={glpData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis dataKey="aum" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
@@ -186,7 +139,7 @@ function Arbitrum() {
         <div className="chart-cell half">
           <ChartWrapper title="Glp Supply" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <ComposedChart data={glpData}>
+              <ComposedChart data={glpData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis dataKey="glpSupply" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
@@ -208,25 +161,28 @@ function Arbitrum() {
           </ChartWrapper>
         </div>
         <div className="chart-cell half">
-          <ChartWrapper title="Glp Index Performance" loading={glpLoading}>
+          <ChartWrapper title="Glp Performance" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <LineChart data={glpPerformanceData}>
+              <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="ratio" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="ratio" domain={[0, 200]} tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="glpPrice" orientation="right" yAxisId="right" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line type="monotone" strokeWidth={3} dot={false} dataKey="ratio" stackId="a" name="Performance" stroke="#ee64b8" />
+                <Line type="monotone" strokeWidth={3} dot={false} dataKey="ratio" name="Performance" stroke="#ee64b8" />
+                <Line type="monotone" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Synthetic Index Price" stroke={COLORS[2]} />
+                <Line type="monotone" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} />
               </LineChart>
             </ResponsiveContainer>
             <div className="chart-description">
               <p>
-                Formula = glp price / synthetic index price <br/>
-                synthetic index price = 25% BTC, 25% ETH, 50% USDC
+                Performance = Glp Price / Synthetic Index Price * 100<br/>
+                Synthetic Index Price = 25% BTC, 25% ETH, 50% USDC
               </p>
             </div>
           </ChartWrapper>
@@ -267,7 +223,6 @@ function Arbitrum() {
               loading={swapSourcesLoading}
               title="Swap Sources"
               data={swapSources}
-              description={<p>Uses last 1000 swaps</p>}
               items={swapSourcesKeys.map(key => ({ key }))}
             />
         </div>
