@@ -453,26 +453,33 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.no
 export function useAumPerformanceData({ groupPeriod }) {
   const [feesData, feesLoading] = useFeesData({ groupPeriod })
   const [glpData, glpLoading] = useGlpData({ groupPeriod })
+  const [volumeData, volumeLoading] = useVolumeData({ groupPeriod })
+
+  const dailyCoef = 86400 / groupPeriod
 
   const data = useMemo(() => {
-    if (!feesData || !glpData) {
+    if (!feesData || !glpData || !volumeData) {
       return null
     }
 
     const ret = feesData.map((feeItem, i) => {
       const glpItem = glpData[i]
+      const volumeItem = volumeData[i]
 
       return {
         timestamp: feeItem.timestamp,
-        apr: feeItem.all /  glpItem.aum * 100 * 365
+        apr: feeItem.all /  glpItem.aum * 100 * 365 * dailyCoef,
+        usage: volumeItem.all / glpItem.aum * 100 * dailyCoef
       }
     })
     const averageApr = ret.reduce((memo, item) => item.apr + memo, 0) / ret.length
     ret.forEach(item => item.averageApr = averageApr)
+    const averageUsage = ret.reduce((memo, item) => item.usage + memo, 0) / ret.length
+    ret.forEach(item => item.averageUsage = averageUsage)
     return ret
-  }, [feesData, glpData])
+  }, [feesData, glpData, volumeData])
 
-  return [data, feesLoading || glpLoading]
+  return [data, feesLoading || glpLoading || volumeLoading]
 }
 
 export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {

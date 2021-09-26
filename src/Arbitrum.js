@@ -139,20 +139,6 @@ function Arbitrum() {
           </ChartWrapper>
         </div>
         <div className="chart-cell half">
-           <GenericChart
-              syncId="syncGlp"
-              loading={aumPerformanceLoading}
-              title="AUM Performance"
-              data={aumPerformanceData}
-              yaxisDataKey="apr"
-              yaxisTickFormatter={yaxisFormatterPercent}
-              tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'apr', name: 'APR' }, { key: 'averageApr', name: 'Average APR', type: 'Line' }]}
-              description="Fees / AUM * 365 * 100%"
-              type="Composed"
-            />
-        </div>
-        <div className="chart-cell half">
           <ChartWrapper title="Glp Supply" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
               <ComposedChart data={glpData} syncId="syncGlp">
@@ -175,6 +161,34 @@ function Arbitrum() {
               </ComposedChart>
             </ResponsiveContainer>
           </ChartWrapper>
+        </div>
+        <div className="chart-cell half">
+           <GenericChart
+              syncId="syncGlp"
+              loading={aumPerformanceLoading}
+              title="AUM Performance"
+              data={aumPerformanceData}
+              yaxisDataKey="apr"
+              yaxisTickFormatter={yaxisFormatterPercent}
+              tooltipFormatter={tooltipFormatterPercent}
+              items={[{ key: 'apr', name: 'APR' }, { key: 'averageApr', name: 'Average APR', type: 'Line' }]}
+              description="Annualised Yield APR. Formula = Daily Fees / AUM * 365 days * 100%"
+              type="Composed"
+            />
+        </div>
+        <div className="chart-cell half">
+           <GenericChart
+              syncId="syncGlp"
+              loading={aumPerformanceLoading}
+              title="AUM Daily Usage"
+              data={aumPerformanceData}
+              yaxisDataKey="usage"
+              yaxisTickFormatter={yaxisFormatterPercent}
+              tooltipFormatter={tooltipFormatterPercent}
+              items={[{ key: 'usage', name: 'Daily Usage', color: COLORS[4] }, { key: 'averageUsage', name: 'Average Daily Usage', type: 'Line', color: COLORS[3] }]}
+              description="Formula = Daily Volume / AUM * 100%"
+              type="Composed"
+            />
         </div>
         <div className="chart-cell half">
           <ChartWrapper title="Glp Price Comparison" loading={glpLoading}>
@@ -202,7 +216,7 @@ function Arbitrum() {
                 * Does not include fees
               </p>
               <p>
-                Performance = Glp Price / Synthetic Index Price * 100<br/>
+                Performance Formula = Glp Price / Synthetic Index Price * 100<br/>
                 Synthetic Index Price = 25% BTC, 25% ETH, 50% USDC
               </p>
             </div>

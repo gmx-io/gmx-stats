@@ -12,6 +12,10 @@ import {
 } from 'recharts';
 import ChartWrapper from './ChartWrapper'
 
+import {
+  COLORS
+} from '../helpers'
+
 export default function VolumeChart(props) {
   const {
     data,
@@ -42,7 +46,7 @@ export default function VolumeChart(props) {
         <Bar type="monotone" dataKey="burn" stackId="a" name="Burn USDG" fill="#ab6100" />
         <Bar type="monotone" dataKey="liquidation" stackId="a" name="Liquidation" fill="#c90000" />
         <Bar type="monotone" dataKey="margin" stackId="a" name="Margin trading" fill="#8884ff" />
-        <Line type="monotone" dot={false} strokeWidth={2} stroke="#ee64b8" dataKey="cumulative" yAxisId="right" name="Cumulative" />
+        <Line type="monotone" dot={false} strokeWidth={2} stroke={COLORS[5]} dataKey="cumulative" yAxisId="right" name="Cumulative" />
       </ComposedChart>
     </ResponsiveContainer>
     <div className="chart-description">

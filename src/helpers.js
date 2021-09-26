@@ -10,7 +10,17 @@ const { BigNumber } = ethers
 
 export const CHART_HEIGHT = 400
 export const YAXIS_WIDTH = 65
-export const COLORS = ['#ee64b8', '#22c761', '#ab6100', '#c90000', '#8884ff']
+export const COLORS = [
+  '#ee64b8',
+  '#22c761',
+  '#ab6100',
+  '#c90000',
+  '#8884ff',
+  '#00bfea',
+  '#ff8d00',
+  '#c000ff',
+  '#7b7b7b'
+]
 
 const levelColor = {
   'debug': 'grey',

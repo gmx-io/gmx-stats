@@ -13,6 +13,10 @@ import {
 
 import ChartWrapper from './ChartWrapper'
 
+import {
+  COLORS
+} from '../helpers'
+
 export default function FeesChart(props) {
   const {
     data,
@@ -43,8 +47,11 @@ export default function FeesChart(props) {
         <Bar type="monotone" dataKey="burn" stackId="a" name="Burn USDG" fill="#ab6100" />
         <Bar type="monotone" dataKey="liquidation" stackId="a" name="Liquidation" fill="#c90000" />
         <Bar type="monotone" dataKey="margin" stackId="a" name="Margin trading" fill="#8884ff" />
-        <Line type="monotone" strokeWidth={2} dot={false} stroke="#ee64b8" dataKey="cumulative" yAxisId="right" name="Cumulative" />
+        <Line type="monotone" strokeWidth={2} dot={false} stroke={COLORS[5]} dataKey="cumulative" yAxisId="right" name="Cumulative" />
       </ComposedChart>
     </ResponsiveContainer>
+    <div className="chart-description">
+      Collected fees. USD value is calculated with token price at the moment of swap, trade, minting or redeeming GLP
+    </div>
   </ChartWrapper>
 }

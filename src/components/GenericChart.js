@@ -71,6 +71,7 @@ export default function GenericChart(props) {
       stackId: "a",
       name: item.name || item.key,
       fill: item.color || COLORS[i % COLORS.length],
+      stroke: item.color || COLORS[i % COLORS.length],
       dot: item.dot || false,
       key: 'item-' + i
     }
