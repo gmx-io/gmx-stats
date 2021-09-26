@@ -47,6 +47,7 @@ import {
   useVolumeData,
   useFeesData,
   useGlpData,
+  useAumPerformanceData,
   useCoingeckoPrices,
   useGlpPerformanceData,
   usePnlData,
@@ -62,10 +63,11 @@ function Arbitrum() {
   const DEFAULT_GROUP_PERIOD = 86400
   const [groupPeriod, setGroupPeriod] = useState(DEFAULT_GROUP_PERIOD)
 
-  const [glpData, glpLoading] = useGlpData({ groupPeriod })
-  const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, { groupPeriod })
   const [volumeData, volumeLoading] = useVolumeData({ groupPeriod })
   const [feesData, feesLoading] = useFeesData({ groupPeriod })
+  const [glpData, glpLoading] = useGlpData({ groupPeriod })
+  const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData({ groupPeriod })
+  const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, { groupPeriod })
   const [pnlData, pnlLoading] = usePnlData({ groupPeriod })
   const [swapSources, swapSourcesLoading] = useSwapSources({ groupPeriod })
   const swapSourcesKeys = Object.keys((swapSources || []).reduce((memo, el) => {
@@ -137,6 +139,20 @@ function Arbitrum() {
           </ChartWrapper>
         </div>
         <div className="chart-cell half">
+           <GenericChart
+              syncId="syncGlp"
+              loading={aumPerformanceLoading}
+              title="AUM Performance"
+              data={aumPerformanceData}
+              yaxisDataKey="apr"
+              yaxisTickFormatter={yaxisFormatterPercent}
+              tooltipFormatter={tooltipFormatterPercent}
+              items={[{ key: 'apr', name: 'APR' }, { key: 'averageApr', name: 'Average APR', type: 'Line' }]}
+              description="Fees / AUM * 365 * 100%"
+              type="Composed"
+            />
+        </div>
+        <div className="chart-cell half">
           <ChartWrapper title="Glp Supply" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
               <ComposedChart data={glpData} syncId="syncGlp">
@@ -161,7 +177,7 @@ function Arbitrum() {
           </ChartWrapper>
         </div>
         <div className="chart-cell half">
-          <ChartWrapper title="Glp Performance" loading={glpLoading}>
+          <ChartWrapper title="Glp Price Comparison" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
@@ -175,11 +191,16 @@ function Arbitrum() {
                 />
                 <Legend />
                 <Line type="monotone" strokeWidth={3} dot={false} dataKey="ratio" name="Performance" stroke="#ee64b8" />
-                <Line type="monotone" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Synthetic Index Price" stroke={COLORS[2]} />
+                <Line type="monotone" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
                 <Line type="monotone" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} />
+                <Line type="monotone" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
+                <Line type="monotone" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[3]} />
               </LineChart>
             </ResponsiveContainer>
             <div className="chart-description">
+              <p>
+                * Does not include fees
+              </p>
               <p>
                 Performance = Glp Price / Synthetic Index Price * 100<br/>
                 Synthetic Index Price = 25% BTC, 25% ETH, 50% USDC

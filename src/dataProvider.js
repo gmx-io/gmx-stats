@@ -69,6 +69,10 @@ export function useCoingeckoPrices(symbol) {
   return [data ? data.prices.slice(0, -1).map(item => ({ timestamp: item[0] / 1000, value: item[1] })) : data, loading, error]
 }
 
+function getImpermanentLoss(change) {
+  return 2 * Math.sqrt(change) / (1 + change) - 1
+} 
+
 export function useGraph(querySource, { subgraph = 'gmx-io/gmx-stats' } = {}) {
   const query = gql(querySource)
 
@@ -407,8 +411,6 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.no
   }`
   let [feesData, loading, error] = useGraph(feesQuery)
 
-  console.log('from', from)
-
   const feesChartData = useMemo(() => {
     if (!feesData) {
       return null
@@ -446,6 +448,31 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.no
   }, [feesData])
 
   return [feesChartData, loading, error]
+}
+
+export function useAumPerformanceData({ groupPeriod }) {
+  const [feesData, feesLoading] = useFeesData({ groupPeriod })
+  const [glpData, glpLoading] = useGlpData({ groupPeriod })
+
+  const data = useMemo(() => {
+    if (!feesData || !glpData) {
+      return null
+    }
+
+    const ret = feesData.map((feeItem, i) => {
+      const glpItem = glpData[i]
+
+      return {
+        timestamp: feeItem.timestamp,
+        apr: feeItem.all /  glpItem.aum * 100 * 365
+      }
+    })
+    const averageApr = ret.reduce((memo, item) => item.apr + memo, 0) / ret.length
+    ret.forEach(item => item.averageApr = averageApr)
+    return ret
+  }, [feesData, glpData])
+
+  return [data, feesLoading || glpLoading]
 }
 
 export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
@@ -513,12 +540,12 @@ export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   return [glpChartData, loading, error]
 }
 
-export function useGlpPerformanceData(glpData, { groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const [btcPrices] = useCoingeckoPrices('BTC')
   const [ethPrices] = useCoingeckoPrices('ETH')
 
   const glpPerformanceChartData = useMemo(() => {
-    if (!btcPrices || !ethPrices || !glpData) {
+    if (!btcPrices || !ethPrices || !glpData || !feesData) {
       return null
     }
 
@@ -527,11 +554,23 @@ export function useGlpPerformanceData(glpData, { groupPeriod = DEFAULT_GROUP_PER
       return memo
     }, {})
 
+    const feesDataById = feesData.reduce((memo, item) => {
+      memo[item.timestamp] = item
+      return memo
+    })
+
     const BTC_WEIGHT = 0.25
     const ETH_WEIGHT = 0.25
-    const GLP_START_PRICE = 1.19
-    const btcCount = GLP_START_PRICE * BTC_WEIGHT / btcPrices[0].value
-    const ethCount = GLP_START_PRICE * ETH_WEIGHT / ethPrices[0].value
+    const GLP_START_PRICE = glpDataById[btcPrices[0].timestamp]?.glpPrice || 1.19
+
+    const btcFirstPrice = btcPrices[0].value
+    const ethFirstPrice = ethPrices[0].value
+
+    const indexBtcCount = GLP_START_PRICE * BTC_WEIGHT / btcFirstPrice
+    const indexEthCount = GLP_START_PRICE * ETH_WEIGHT / ethFirstPrice
+
+    const lpBtcCount = GLP_START_PRICE * 0.5 / btcFirstPrice
+    const lpEthCount = GLP_START_PRICE * 0.5 / ethFirstPrice
 
     const ret = []
     for (let i = 0; i < btcPrices.length; i++) {
@@ -539,20 +578,32 @@ export function useGlpPerformanceData(glpData, { groupPeriod = DEFAULT_GROUP_PER
       const ethPrice = ethPrices[i].value
 
       const timestampGroup = parseInt(btcPrices[i].timestamp / 86400) * 86400
-      const glpPrice = glpDataById[timestampGroup]?.glpPrice 
+      const glpPrice = glpDataById[timestampGroup]?.glpPrice ?? 0
+      const glpSupply = glpDataById[timestampGroup]?.glpSupply
+      const feesToDate = feesDataById[timestampGroup]?.cumulative
+      const syntheticPrice = indexBtcCount * btcPrice + indexEthCount * ethPrice + GLP_START_PRICE / 2
+      const lpBtcPrice = (lpBtcCount * btcPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(btcPrice / btcFirstPrice))
+      const lpEthPrice = (lpEthCount * ethPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(ethPrice / ethFirstPrice))
 
-      const syntheticPrice = btcCount * btcPrice + ethCount * ethPrice + GLP_START_PRICE / 2
+      let glpPlusFees
+      // if (glpPrice && glpSupply && feesToDate) {
+      //   const GLP_REWARDS_SHARE = 0.5 // 50% goes to GLP
+      //   glpPlusFees = glpPrice + feesToDate * GLP_REWARDS_SHARE / glpSupply
+      // }
 
       ret.push({
         timestamp: btcPrices[i].timestamp,
         syntheticPrice,
+        lpBtcPrice,
+        lpEthPrice,
         glpPrice,
-        ratio: glpPrice / syntheticPrice * 100
+        glpPlusFees,
+        ratio: glpPlusFees ? (glpPlusFees / syntheticPrice * 100) : glpPrice / syntheticPrice * 100
       })
     }
 
     return ret
-  }, [btcPrices, ethPrices, glpData])
+  }, [btcPrices, ethPrices, glpData, feesData])
 
   return [glpPerformanceChartData]
 }

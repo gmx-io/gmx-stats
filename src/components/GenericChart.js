@@ -24,8 +24,8 @@ import {
   yaxisFormatterNumber,
   yaxisFormatterPercent,
   yaxisFormatter,
-  tooltipLabelFormatter,
-  tooltipFormatter,
+  tooltipLabelFormatter as tooltipLabelFormatter_,
+  tooltipFormatter as tooltipFormatter_,
   tooltipFormatterNumber,
   tooltipFormatterPercent,
   CHART_HEIGHT,
@@ -46,34 +46,56 @@ export default function GenericChart(props) {
     yaxisDataKey = 'all',
     yaxisTickFormatter = yaxisFormatter,
     xaxisDataKey = 'timestamp',
-    xaxisTickFormatter = tooltipLabelFormatter,
-    tooltipFormatter_ = tooltipFormatter,
-    tooltipLabelFormatter_ = tooltipLabelFormatter,
-    items
+    xaxisTickFormatter = tooltipLabelFormatter_,
+    tooltipFormatter = tooltipFormatter_,
+    tooltipLabelFormatter = tooltipLabelFormatter_,
+    items,
+    type,
+    syncId,
+    children
   } = props
+
+  let ChartComponent
+  if (type === 'Line') {
+    ChartComponent = LineChart
+  } else if (type === 'Bar') {
+    ChartComponent = BarChart
+  } else {
+    ChartComponent = ComposedChart
+  }
+
+  const htmlItems = (items || []).map((item, i) => {
+    const props = {
+      type: "monotone",
+      dataKey: item.key,
+      stackId: "a",
+      name: item.name || item.key,
+      fill: item.color || COLORS[i % COLORS.length],
+      dot: item.dot || false,
+      key: 'item-' + i
+    }
+    if (item.type === 'Line') {
+      return <Line {...props} />
+    }
+    return <Bar {...props} />
+  })
 
   return <ChartWrapper title={title} loading={loading}>
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data}>
-        <CartesianGrid strokeDasharray="10 10" />
-        <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} />
-        <YAxis dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} />
+      {React.createElement(ChartComponent, { data, syncId }, [
+        <CartesianGrid strokeDasharray="10 10" key="a" />,
+        <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} key="b" />,
+        <YAxis dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} key="c" />,
         <Tooltip
-          formatter={tooltipFormatter_}
-          labelFormatter={tooltipLabelFormatter_}
+          formatter={tooltipFormatter}
+          labelFormatter={tooltipLabelFormatter}
           contentStyle={{ textAlign: 'left' }}
-        />
-        <Legend />
-        {items && items.map((item, i) => {
-          return <Bar
-            type="monotone"
-            dataKey={item.key}
-            stackId="a"
-            name={item.name || item.key}
-            fill={item.color || COLORS[i % COLORS.length]}
-          />
-        })}
-      </BarChart>
+          key="d"
+        />,
+        <Legend key="e" />,
+        ...htmlItems,
+        children
+      ])}
     </ResponsiveContainer>
     {description && (
       <div className="chart-description">
