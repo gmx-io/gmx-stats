@@ -50,7 +50,7 @@ import {
   useAumPerformanceData,
   useCoingeckoPrices,
   useGlpPerformanceData,
-  usePnlData,
+  useTradersData,
   useSwapSources,
   useLastSubgraphBlock,
   useLastBlock
@@ -68,7 +68,7 @@ function Arbitrum() {
   const [glpData, glpLoading] = useGlpData({ groupPeriod })
   const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData({ groupPeriod })
   const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, { groupPeriod })
-  const [pnlData, pnlLoading] = usePnlData({ groupPeriod })
+  const [tradersData, tradersLoading] = useTradersData({ groupPeriod })
   const [swapSources, swapSourcesLoading] = useSwapSources({ groupPeriod })
   const swapSourcesKeys = Object.keys((swapSources || []).reduce((memo, el) => {
     Object.keys(el).forEach(key => {
@@ -119,46 +119,21 @@ function Arbitrum() {
           />
         </div>
         <div className="chart-cell half">
-          <ChartWrapper title="AUM / Glp Price" loading={glpLoading}>
+          <ChartWrapper title="AUM & Glp Supply" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <ComposedChart data={glpData} syncId="syncGlp">
+              <LineChart data={glpData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis dataKey="aum" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
-                <YAxis orientation="right" dataKey="glpPrice" tickFormatter={yaxisFormatter} yAxisId="right" width={YAXIS_WIDTH} />
-                <Tooltip
-                  formatter={tooltipFormatter}
-                  labelFormatter={tooltipLabelFormatter}
-                  contentStyle={{ textAlign: 'left' }}
-                />
-                <Legend />
-                <Area type="monotone" dataKey="aum" stackId="a" name="AUM" />
-                <Line type="monotone" yAxisId="right" strokeWidth={2} dot={false} dataKey="glpPrice" stackId="a" name="GLP Price" stroke="#ee64b8" />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </ChartWrapper>
-        </div>
-        <div className="chart-cell half">
-          <ChartWrapper title="Glp Supply" loading={glpLoading}>
-            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <ComposedChart data={glpData} syncId="syncGlp">
-                <CartesianGrid strokeDasharray="10 10" />
-                <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="glpSupply" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
-                <YAxis dataKey="glpSupplyChange" tickFormatter={yaxisFormatterPercent} orientation="right" yAxisId="right" width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Bar type="monotone" yAxisId="right" dataKey="glpSupplyChange" name="Change %" fill="#444">
-                  {(glpData || []).map((item, i) => {
-                    return <Cell key={`cell-${i}`} fill={item.glpSupplyChange > 0 ? '#22c761' : '#f93333'} />
-                  })}
-                </Bar>
-                <Line type="monotone" dot={false} strokeWidth={3} dataKey="glpSupply" stackId="a" name="GLP Supply" stroke="#8884ff" />
-              </ComposedChart>
+                <Line type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke={COLORS[0]} />
+                <Line type="monotone" strokeWidth={2} dot={false} dataKey="glpSupply" stackId="a" name="Glp Supply" stroke={COLORS[1]} />
+              </LineChart>
             </ResponsiveContainer>
           </ChartWrapper>
         </div>
@@ -171,8 +146,8 @@ function Arbitrum() {
               yaxisDataKey="apr"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'apr', name: 'APR' }, { key: 'averageApr', name: 'Average APR', type: 'Line' }]}
-              description="Annualised Yield APR. Formula = Daily Fees / AUM * 365 days * 100%"
+              items={[{ key: 'apr', name: 'APR' }]}
+              description="Formula = Daily Fees / AUM * 365 days * 100%"
               type="Composed"
             />
         </div>
@@ -185,7 +160,7 @@ function Arbitrum() {
               yaxisDataKey="usage"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'usage', name: 'Daily Usage', color: COLORS[4] }, { key: 'averageUsage', name: 'Average Daily Usage', type: 'Line', color: COLORS[3] }]}
+              items={[{ key: 'usage', name: 'Daily Usage', color: COLORS[4] }]}
               description="Formula = Daily Volume / AUM * 100%"
               type="Composed"
             />
@@ -223,9 +198,9 @@ function Arbitrum() {
           </ChartWrapper>
         </div>
         <div className="chart-cell half">
-          <ChartWrapper title="Traders PnL" loading={pnlLoading}>
+          <ChartWrapper title="Traders Net PnL" loading={tradersLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <ComposedChart data={pnlData}>
+              <ComposedChart data={tradersData?.data}>
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis dataKey="pnl" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
@@ -236,8 +211,8 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="PnL">
-                  {(pnlData || []).map((item, i) => {
+                <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="Net PnL">
+                  {(tradersData?.data || []).map((item, i) => {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#22c761' : '#f93333'} />
                   })}
                 </Bar>
@@ -249,6 +224,34 @@ function Arbitrum() {
               <p>
                 Doesn't include trading fees <br />
                 Cumulative PnL uses data from selected time period only
+              </p>
+            </div>
+          </ChartWrapper>
+        </div>
+        <div className="chart-cell half">
+          <ChartWrapper title="Traders Detailed PnL" loading={tradersLoading}>
+            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+              <ComposedChart data={tradersData?.data} barGap={0}>
+                <CartesianGrid strokeDasharray="10 10" />
+                <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
+                <YAxis domain={[-tradersData?.stats.maxProfitLoss * 1.1, tradersData?.stats.maxProfitLoss * 1.1]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
+                <YAxis domain={[-tradersData?.stats.maxCumulativeProfitLoss * 1.1, tradersData?.stats.maxCumulativeProfitLoss * 1.1]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
+                <Tooltip
+                  formatter={tooltipFormatter}
+                  labelFormatter={tooltipLabelFormatter}
+                  contentStyle={{ textAlign: 'left' }}
+                />
+                <Legend />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#88eba1" dataKey="cumulativeProfit" name="Cumulative Profit" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#f98888" dataKey="cumulativeLoss" name="Cumulative Loss" />
+                <Bar type="monotone" fill="#22c761" dot={false} dataKey="profit" name="Profit" />
+                <Bar type="monotone" fill="#f93333" dot={false} dataKey="loss" name="Loss" />
+              </ComposedChart>
+            </ResponsiveContainer>
+            <div className="chart-description">
+              <p>Considers settled (closed) positions</p>
+              <p>
+                Doesn't include trading fees
               </p>
             </div>
           </ChartWrapper>

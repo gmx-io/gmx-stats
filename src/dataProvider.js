@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { ApolloClient, InMemoryCache, gql, HttpLink } from '@apollo/client'
-import { chain, sumBy, sortBy } from 'lodash'
+import { chain, sumBy, sortBy, maxBy, minBy } from 'lodash'
 import fetch from 'cross-fetch';
 import * as ethers from 'ethers'
 
@@ -180,7 +180,7 @@ export function useLastSubgraphBlock() {
   return [block, loading, error]
 }
 
-export function usePnlData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const [closedPositionsData, loading, error] = useGraph(`{
     c1: aggregatedTradeCloseds(first: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
      settledPosition {
@@ -188,7 +188,13 @@ export function usePnlData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
      },
      settledBlockTimestamp
    } 
-    c2: aggregatedTradeCloseds(first: 1000, skip: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+   c2: aggregatedTradeCloseds(first: 1000, skip: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+     settledPosition {
+       realisedPnl
+     },
+     settledBlockTimestamp
+   } 
+   c3: aggregatedTradeCloseds(first: 1000, skip: 2000, orderBy: settledBlockTimestamp, orderDirection: desc) {
      settledPosition {
        realisedPnl
      },
@@ -203,7 +209,13 @@ export function usePnlData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
      },
      settledBlockTimestamp
    } 
-    l2: aggregatedTradeLiquidateds(first: 1000, skip: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+   l2: aggregatedTradeLiquidateds(first: 1000, skip: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+     settledPosition {
+       collateral
+     },
+     settledBlockTimestamp
+   } 
+   l3: aggregatedTradeLiquidateds(first: 1000, skip: 2000, orderBy: settledBlockTimestamp, orderDirection: desc) {
      settledPosition {
        collateral
      },
@@ -213,30 +225,60 @@ export function usePnlData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
 
   let ret = null
   if (closedPositionsData && liquidatedPositionsData) {
-    ret = [
-      ...sortBy([...closedPositionsData.c1, ...closedPositionsData.c2], el => el.settledBlockTimestamp).map(item => ({
+    let data = [
+      ...sortBy([...closedPositionsData.c1, ...closedPositionsData.c2, ...closedPositionsData.c3], el => el.settledBlockTimestamp).map(item => {
+        const pnl = Number(item.settledPosition?.realisedPnl || 0) / 1e30
+        return {
+          timestamp: item.settledBlockTimestamp,
+          pnl,
+          profit: pnl > 0 ? pnl : 0,
+          loss: pnl < 0 ? pnl : 0
+        }
+      }),
+      ...sortBy([...liquidatedPositionsData.l1, ...liquidatedPositionsData.l2, ...liquidatedPositionsData.l3], el => el.settledBlockTimestamp).map(item => ({
         timestamp: item.settledBlockTimestamp,
-        pnl: Number(item.settledPosition.realisedPnl) / 1e30
-      })),
-      ...sortBy([...liquidatedPositionsData.l1, ...liquidatedPositionsData.l2], el => el.settledBlockTimestamp).map(item => ({
-        timestamp: item.settledBlockTimestamp,
-        pnl: -Number(item.settledPosition.collateral) / 1e30
+        pnl: -Number(item.settledPosition?.collateral || 0) / 1e30
       }))
      ]
 
     let cumulativePnl = 0 
-    ret = chain(ret)
+    let cumulativeProfit = 0
+    let cumulativeLoss = 0
+    data = chain(data)
       .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
       .map((values, timestamp) => {
         const pnl = sumBy(values, 'pnl')
+        const profit = sumBy(values, 'profit')
+        const loss = sumBy(values, 'loss')
         cumulativePnl += pnl
+        cumulativeProfit += profit
+        cumulativeLoss += loss
         return {
           pnl,
           cumulativePnl,
+          cumulativeLoss,
+          cumulativeProfit,
+          profit,
+          loss,
           timestamp: Number(timestamp)
         }
       })
       .value()
+
+    const maxProfit = maxBy(data, item => item.profit).profit
+    const maxLoss = minBy(data, item => item.loss).loss
+    const maxProfitLoss = Math.max(maxProfit, -maxLoss)
+    ret = {
+      data,
+      stats: {
+        maxProfit,
+        maxLoss,
+        maxProfitLoss,
+        cumulativeProfit,
+        cumulativeLoss,
+        maxCumulativeProfitLoss: Math.max(cumulativeProfit, -cumulativeLoss)
+      }
+    }
   }
 
   return [ret, loading]

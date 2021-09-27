@@ -27,8 +27,8 @@ let passphrase
 
 if (isProduction) {
   httpsPort = 443
-  certPath = '/etc/letsencrypt/live/stats.gambit.financial/cert.pem'
-  keyPath = '/etc/letsencrypt/live/stats.gambit.financial/privkey.pem'
+  certPath = '/etc/letsencrypt/live/stats.gmx.io/cert.pem'
+  keyPath = '/etc/letsencrypt/live/stats.gmx.io/privkey.pem'
 } else {
   httpsPort = Number(port) + 10
   keyPath = './key.pem'
