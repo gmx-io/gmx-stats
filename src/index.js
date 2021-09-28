@@ -19,7 +19,7 @@ if (module.hot) {
 }
 
 const port = process.env.PORT || 3105;
-const isProduction = process.env.NODE_ENV === 'production'
+const isProduction = process.env.NODE_ENV === 'production' && !process.env.DEV
 let httpsPort
 let keyPath
 let certPath

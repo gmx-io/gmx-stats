@@ -410,7 +410,7 @@ export function useUsersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   }`
   const [graphData, loading, error] = useGraph(query)
 
-  const data = graphData ? sortBy(graphData.userStats, 'timestamp') : null
+  const data = graphData ? sortBy(graphData.userStats, 'timestamp').map(item => ({ all: item.uniqueCount, ...item })) : null
 
   return [data, loading, error]
 }

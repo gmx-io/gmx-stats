@@ -522,11 +522,17 @@ export default function ({ db }) {
     logger.info('done')
   }
 
-  const shouldRunJobs = process.env.NODE_ENV === 'production' || RUN_JOBS_LOCALLY
-  console.log('shouldRunJobs: %s, NODE_ENV: %s, RUN_JOBS_LOCALLY: %s',
+  let shouldRunJobs = false
+  if (process.env.NODE_ENV === 'production' && (process.env.pm_id === undefined || process.env.pm_id === '0')) {
+    shouldRunJobs = true
+  } else if (process.env.NODE_ENV !== 'production' && RUN_JOBS_LOCALLY) {
+    shouldRunJobs = true 
+  }
+  console.log('shouldRunJobs: %s, NODE_ENV: %s, RUN_JOBS_LOCALLY: %s, pm_id: %s',
     shouldRunJobs,
     process.env.NODE_ENV,
-    RUN_JOBS_LOCALLY
+    RUN_JOBS_LOCALLY,
+    process.env.pm_id    
   )
   if (shouldRunJobs) {
     initJobs()

@@ -13,12 +13,11 @@ export const YAXIS_WIDTH = 65
 export const COLORS = [
   '#ee64b8',
   '#22c761',
+  '#ff8d00',
+  '#00bfea',
+  '#8884ff',
   '#ab6100',
   '#c90000',
-  '#8884ff',
-  '#00bfea',
-  '#ff8d00',
-  '#c000ff',
   '#7b7b7b'
 ]
 
@@ -133,7 +132,7 @@ export const tooltipLabelFormatter = (label, args) => {
   const item = args && args[0] && args[0].payload && args[0]
   const dateFmtString = '%d.%m'
   const date = strftime(dateFmtString, label)
-  const all = item && (item.payload.all || item.payload.uniqueCount)
+  const all = item && (item.payload.all)
   if (all) {
     if (item && item.unit === '%') {
       return date
@@ -187,7 +186,7 @@ export const tooltipLabelFormatterUnits = (label, args) => {
     return date
   }
 
-  const all = item && (item.payload.all || item.payload.uniqueCount)
+  const all = item && (item.payload.all)
 
   if (label.constructor !== Date) {
     return `${label}, total: ${all}`

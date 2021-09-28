@@ -3,11 +3,12 @@
   "version": "4.0.5",
   "license": "MIT",
   "scripts": {
-    "start": "PORT=3113 razzle start",
-    "build": "PORT=80 razzle build",
+    "build:prod": "PORT=80 razzle build",
+    "build:dev": "PORT=3113 razzle build",
     "build-upload": "PORT=80 razzle build && tar -zcvf build.tar.gz build && scp build.tar.gz do:~/gmx-stats",
     "test": "razzle test --env=jsdom",
-    "start:prod": "NODE_ENV=production forever start -a -o app.log -e error.log build/server.js"
+    "start": "PORT=3113 razzle start",
+    "start:prod": "pm2 start -i 4 build/server.js"
   },
   "dependencies": {
     "@apollo/client": "^3.4.10",
@@ -23,6 +24,7 @@
     "graphql": "^15.5.3",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
+    "pm2": "^5.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-icons": "^4.2.0",

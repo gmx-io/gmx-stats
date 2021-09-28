@@ -107,7 +107,7 @@ function Arbitrum() {
             yaxisWidth={YAXIS_WIDTH}
             xaxisTickFormatter={tooltipLabelFormatter}
             yaxisTickFormatter={yaxisFormatter}
-            tooltipLabelFormatter={tooltipLabelFormatterUnits}
+            tooltipLabelFormatter={tooltipLabelFormatter}
             tooltipFormatter={tooltipFormatter}
           />
         </div>
@@ -278,6 +278,7 @@ function Arbitrum() {
               yaxisDataKey="uniqueCount"
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
+              tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[{ key: 'uniqueSwapCount', name: 'Swaps' }, { key: 'uniqueMarginCount', name: 'Margin trading' }, { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP' }]}
               description="Formula = Daily Fees / AUM * 365 days * 100"
               type="Composed"
