@@ -189,8 +189,7 @@ export default function routes(app) {
       res.status(400)
       return
     }
-    // const preferableChainId = Number(req.query.preferableChainId ?? BSC)
-    const preferableChainId = BSC
+    const preferableChainId = Number(req.query.preferableChainId || BSC)
     const validSources = new Set([BSC, ARBITRUM])
     if (!validSources.has(preferableChainId)) {
       res.send(`Invalid preferableChainId ${preferableChainId}`)

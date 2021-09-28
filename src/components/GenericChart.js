@@ -75,7 +75,7 @@ export default function GenericChart(props) {
       dot: item.dot || false,
       key: 'item-' + i
     }
-    if (item.type === 'Line') {
+    if (item.type === 'Line' || type === 'Line') {
       return <Line {...props} />
     }
     return <Bar {...props} />

@@ -49,8 +49,5 @@ export default function VolumeChart(props) {
         <Line type="monotone" dot={false} strokeWidth={2} stroke={COLORS[5]} dataKey="cumulative" yAxisId="right" name="Cumulative" />
       </ComposedChart>
     </ResponsiveContainer>
-    <div className="chart-description">
-      * Volumes might be different from the dashboard because of differences in the calculation of token price
-    </div>
   </ChartWrapper>
 }

@@ -7,6 +7,7 @@ import {
   yaxisFormatterPercent,
   yaxisFormatter,
   tooltipLabelFormatter,
+  tooltipLabelFormatterUnits,
   tooltipFormatter,
   tooltipFormatterNumber,
   tooltipFormatterPercent,
@@ -45,6 +46,7 @@ import GenericChart from './components/GenericChart'
 
 import {
   useVolumeData,
+  useVolumeDataFromServer,
   useFeesData,
   useGlpData,
   useAumPerformanceData,
@@ -52,6 +54,7 @@ import {
   useGlpPerformanceData,
   useTradersData,
   useSwapSources,
+  useUsersData,
   useLastSubgraphBlock,
   useLastBlock
 } from './dataProvider'
@@ -63,7 +66,7 @@ function Arbitrum() {
   const DEFAULT_GROUP_PERIOD = 86400
   const [groupPeriod, setGroupPeriod] = useState(DEFAULT_GROUP_PERIOD)
 
-  const [volumeData, volumeLoading] = useVolumeData({ groupPeriod })
+  const [volumeData, volumeLoading] = useVolumeDataFromServer({ groupPeriod })
   const [feesData, feesLoading] = useFeesData({ groupPeriod })
   const [glpData, glpLoading] = useGlpData({ groupPeriod })
   const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData({ groupPeriod })
@@ -77,6 +80,8 @@ function Arbitrum() {
     })
     return memo
   }, {}))
+
+  const [usersData, usersLoading] = useUsersData({ groupPeriod })
 
   const [lastSubgraphBlock] = useLastSubgraphBlock()
   const [lastBlock] = useLastBlock()
@@ -102,7 +107,7 @@ function Arbitrum() {
             yaxisWidth={YAXIS_WIDTH}
             xaxisTickFormatter={tooltipLabelFormatter}
             yaxisTickFormatter={yaxisFormatter}
-            tooltipLabelFormatter={tooltipLabelFormatter}
+            tooltipLabelFormatter={tooltipLabelFormatterUnits}
             tooltipFormatter={tooltipFormatter}
           />
         </div>
@@ -147,7 +152,7 @@ function Arbitrum() {
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
               items={[{ key: 'apr', name: 'APR' }]}
-              description="Formula = Daily Fees / AUM * 365 days * 100%"
+              description="Formula = Daily Fees / AUM * 365 days * 100"
               type="Composed"
             />
         </div>
@@ -161,7 +166,7 @@ function Arbitrum() {
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
               items={[{ key: 'usage', name: 'Daily Usage', color: COLORS[4] }]}
-              description="Formula = Daily Volume / AUM * 100%"
+              description="Formula = Daily Volume / AUM * 100"
               type="Composed"
             />
         </div>
@@ -199,7 +204,7 @@ function Arbitrum() {
         </div>
         <div className="chart-cell half">
           <ChartWrapper title="Traders Net PnL" loading={tradersLoading}>
-            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+            <ResponsiveContainer width="100%" syncId="tradersId" height={CHART_HEIGHT}>
               <ComposedChart data={tradersData?.data}>
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
@@ -230,7 +235,7 @@ function Arbitrum() {
         </div>
         <div className="chart-cell half">
           <ChartWrapper title="Traders Detailed PnL" loading={tradersLoading}>
-            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+            <ResponsiveContainer width="100%" syncId="tradersId" height={CHART_HEIGHT}>
               <ComposedChart data={tradersData?.data} barGap={0}>
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
@@ -262,6 +267,20 @@ function Arbitrum() {
               title="Swap Sources"
               data={swapSources}
               items={swapSourcesKeys.map(key => ({ key }))}
+            />
+        </div>
+        <div className="chart-cell half">
+           <GenericChart
+              syncId="syncGlp"
+              loading={usersLoading}
+              title="Unique Users"
+              data={usersData}
+              yaxisDataKey="uniqueCount"
+              yaxisTickFormatter={yaxisFormatterNumber}
+              tooltipFormatter={tooltipFormatterNumber}
+              items={[{ key: 'uniqueSwapCount', name: 'Swaps' }, { key: 'uniqueMarginCount', name: 'Margin trading' }, { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP' }]}
+              description="Formula = Daily Fees / AUM * 365 days * 100"
+              type="Composed"
             />
         </div>
       </div>
