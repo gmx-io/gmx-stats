@@ -185,61 +185,61 @@ export function useLastSubgraphBlock() {
 
 export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const [closedPositionsData, loading, error] = useGraph(`{
-    c1: aggregatedTradeCloseds(first: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+    c1: aggregatedTradeCloseds(first: 1000, orderBy: indexedAt, orderDirection: desc) {
      settledPosition {
        realisedPnl
      },
-     settledBlockTimestamp
+     indexedAt
    } 
-   c2: aggregatedTradeCloseds(first: 1000, skip: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+   c2: aggregatedTradeCloseds(first: 1000, skip: 1000, orderBy: indexedAt, orderDirection: desc) {
      settledPosition {
        realisedPnl
      },
-     settledBlockTimestamp
+     indexedAt
    } 
-   c3: aggregatedTradeCloseds(first: 1000, skip: 2000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+   c3: aggregatedTradeCloseds(first: 1000, skip: 2000, orderBy: indexedAt, orderDirection: desc) {
      settledPosition {
        realisedPnl
      },
-     settledBlockTimestamp
+     indexedAt
    } 
   }`, { subgraph: 'nissoh/gmx-vault' })
 
   const [liquidatedPositionsData] = useGraph(`{
-    l1: aggregatedTradeLiquidateds(first: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+    l1: aggregatedTradeLiquidateds(first: 1000, orderBy: indexedAt, orderDirection: desc) {
      settledPosition {
        collateral
      },
-     settledBlockTimestamp
+     indexedAt
    } 
-   l2: aggregatedTradeLiquidateds(first: 1000, skip: 1000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+   l2: aggregatedTradeLiquidateds(first: 1000, skip: 1000, orderBy: indexedAt, orderDirection: desc) {
      settledPosition {
        collateral
      },
-     settledBlockTimestamp
+     indexedAt
    } 
-   l3: aggregatedTradeLiquidateds(first: 1000, skip: 2000, orderBy: settledBlockTimestamp, orderDirection: desc) {
+   l3: aggregatedTradeLiquidateds(first: 1000, skip: 2000, orderBy: indexedAt, orderDirection: desc) {
      settledPosition {
        collateral
      },
-     settledBlockTimestamp
+     indexedAt
    } 
   }`, { subgraph: 'nissoh/gmx-vault' })
 
   let ret = null
   if (closedPositionsData && liquidatedPositionsData) {
     let data = [
-      ...sortBy([...closedPositionsData.c1, ...closedPositionsData.c2, ...closedPositionsData.c3], el => el.settledBlockTimestamp).map(item => {
+      ...sortBy([...closedPositionsData.c1, ...closedPositionsData.c2, ...closedPositionsData.c3], el => el.indexedAt).map(item => {
         const pnl = Number(item.settledPosition?.realisedPnl || 0) / 1e30
         return {
-          timestamp: item.settledBlockTimestamp,
+          timestamp: item.indexedAt,
           pnl,
           profit: pnl > 0 ? pnl : 0,
           loss: pnl < 0 ? pnl : 0
         }
       }),
-      ...sortBy([...liquidatedPositionsData.l1, ...liquidatedPositionsData.l2, ...liquidatedPositionsData.l3], el => el.settledBlockTimestamp).map(item => ({
-        timestamp: item.settledBlockTimestamp,
+      ...sortBy([...liquidatedPositionsData.l1, ...liquidatedPositionsData.l2, ...liquidatedPositionsData.l3], el => el.indexedAt).map(item => ({
+        timestamp: item.indexedAt,
         pnl: -Number(item.settledPosition?.collateral || 0) / 1e30
       }))
      ]
