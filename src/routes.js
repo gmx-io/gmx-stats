@@ -83,6 +83,10 @@ export default function routes(app) {
   const GROUP_PERIOD = 86400
 
   app.get('/api/gmx-supply', async (req, res) => {
+    // TODO remove hardcode later
+    res.send('6500429.318655280000000001')
+    return
+
     const contract = contracts[ARBITRUM].GMX
     const totalSupply = await contract.totalSupply()
     res.send(formatUnits(totalSupply, 18))

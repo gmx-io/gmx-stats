@@ -589,8 +589,8 @@ export function useAumPerformanceData({ groupPeriod }) {
 
       return {
         timestamp: feeItem.timestamp,
-        apr: feeItem.all /  glpItem.aum * 100 * 365 * dailyCoef,
-        usage: volumeItem.all / glpItem.aum * 100 * dailyCoef
+        apr: (feeItem && glpItem) ? feeItem.all /  glpItem.aum * 100 * 365 * dailyCoef : null,
+        usage: (volumeItem && glpItem) ? volumeItem.all / glpItem.aum * 100 * dailyCoef : null
       }
     })
     const averageApr = ret.reduce((memo, item) => item.apr + memo, 0) / ret.length
@@ -703,7 +703,7 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
     const ret = []
     for (let i = 0; i < btcPrices.length; i++) {
       const btcPrice = btcPrices[i].value
-      const ethPrice = ethPrices[i].value
+      const ethPrice = ethPrices[i]?.value ?? 3400
 
       const timestampGroup = parseInt(btcPrices[i].timestamp / 86400) * 86400
       const glpPrice = glpDataById[timestampGroup]?.glpPrice ?? 0
