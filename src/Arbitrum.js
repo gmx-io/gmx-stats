@@ -280,7 +280,6 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[{ key: 'uniqueSwapCount', name: 'Swaps' }, { key: 'uniqueMarginCount', name: 'Margin trading' }, { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP' }]}
-              description="Formula = Daily Fees / AUM * 365 days * 100"
               type="Composed"
             />
         </div>
