@@ -92,7 +92,7 @@ function Arbitrum() {
     <div className="Home">
       <h1>GMX Analytics / Arbitrum</h1>
       {lastSubgraphBlock && lastBlock &&
-        <p className={isObsolete ? 'warning' : ''}>
+        <p className={isObsolete ? 'warning' : ''} style={{ marginTop: '-1rem' }}>
           {isObsolete && "Data is obsolete. "}
           Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
           &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
@@ -234,7 +234,7 @@ function Arbitrum() {
           </ChartWrapper>
         </div>
         <div className="chart-cell half">
-          <ChartWrapper title="Traders Detailed PnL" loading={tradersLoading}>
+          <ChartWrapper title="Traders Profit vs. Loss" loading={tradersLoading}>
             <ResponsiveContainer width="100%" syncId="tradersId" height={CHART_HEIGHT}>
               <ComposedChart data={tradersData?.data} barGap={0}>
                 <CartesianGrid strokeDasharray="10 10" />
@@ -280,6 +280,20 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[{ key: 'uniqueSwapCount', name: 'Swaps' }, { key: 'uniqueMarginCount', name: 'Margin trading' }, { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP' }]}
+              type="Composed"
+            />
+        </div>
+        <div className="chart-cell half">
+           <GenericChart
+              syncId="syncGlp"
+              loading={usersLoading}
+              title="User Actions"
+              data={(usersData || []).map(item => ({ ...item, all: item.actionCount }))}
+              yaxisDataKey="actionCount"
+              yaxisTickFormatter={yaxisFormatterNumber}
+              tooltipFormatter={tooltipFormatterNumber}
+              tooltipLabelFormatter={tooltipLabelFormatterUnits}
+              items={[{ key: 'actionSwapCount', name: 'Swaps' }, { key: 'actionMarginCount', name: 'Margin trading' }, { key: 'actionMintBurnCount', name: 'Mint & Burn GLP' }]}
               type="Composed"
             />
         </div>

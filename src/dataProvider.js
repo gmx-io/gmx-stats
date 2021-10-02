@@ -405,12 +405,21 @@ export function useUsersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       uniqueSwapCount
       uniqueMarginCount
       uniqueMintBurnCount
+      actionCount
+      actionSwapCount
+      actionMarginCount
+      actionMintBurnCount
       timestamp
     }
   }`
   const [graphData, loading, error] = useGraph(query)
 
-  const data = graphData ? sortBy(graphData.userStats, 'timestamp').map(item => ({ all: item.uniqueCount, ...item })) : null
+  const data = graphData ? sortBy(graphData.userStats, 'timestamp').map(item => {
+    return {
+      all: item.uniqueCount,
+      ...item
+    }
+  }) : null
 
   return [data, loading, error]
 }

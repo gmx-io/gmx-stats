@@ -70,7 +70,7 @@ export default function ({ db }) {
     getChainlinkJob(BSC, 'BNB'),
     getChainlinkJob(BSC, 'UNI'),
     getChainlinkJob(BSC, 'LINK'),
-    getJob('PoolStats', calculatePoolStats, { interval: DEFAULT_JOB_INTERVAL * 3}),
+    // getJob('PoolStats', calculatePoolStats, { interval: DEFAULT_JOB_INTERVAL * 3}),
     getJob('VaultLogs', async () => {
       await retrieveVaultLogs({ backwards: BACKWARDS })
       await retrieveQueuedBlocks({ tableName: 'vaultLogs' })
