@@ -250,9 +250,9 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
     data = chain(data)
       .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
       .map((values, timestamp) => {
-        const pnl = sumBy(values, 'pnl')
-        const profit = sumBy(values, 'profit')
-        const loss = sumBy(values, 'loss')
+        const pnl = sumBy(values, 'pnl') || 0
+        const profit = sumBy(values, 'profit') || 0
+        const loss = sumBy(values, 'loss') || 0
         cumulativePnl += pnl
         cumulativeProfit += profit
         cumulativeLoss += loss
