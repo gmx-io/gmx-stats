@@ -60,14 +60,26 @@ export function useCoingeckoPrices(symbol) {
   }[symbol]
 
   const now = Date.now() / 1000
-  const fromTs = +new Date(2021, 7, 31) / 1000
+  const fromTs = +new Date(2021, 8, 1) / 1000
   const days = Math.floor(now / 86400) - Math.floor(fromTs / 86400)
 
   const url = `https://api.coingecko.com/api/v3/coins/${_symbol}/market_chart?vs_currency=usd&days=${days}&interval=daily`
 
   let [data, loading, error] = useRequest(url)
 
-  return [data ? data.prices.slice(0, -1).map(item => ({ timestamp: item[0] / 1000, value: item[1] })) : data, loading, error]
+  if (data && data.prices.length > 1) {
+    data = data.prices.map(item => {
+      // -1 is for shifting to previous day
+      // because CG uses first price of the day, but for GLP we store last price of the day
+      const groupTs = parseInt((item[0] - 1) / 1000 / 86400) * 86400
+      return {
+        timestamp: groupTs,
+        value: item[1]
+      }
+    })
+  }
+
+  return [data, loading, error]
 }
 
 function getImpermanentLoss(change) {
@@ -185,51 +197,68 @@ export function useLastSubgraphBlock() {
 
 export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const [closedPositionsData, loading, error] = useGraph(`{
-    c1: aggregatedTradeCloseds(first: 1000, orderBy: indexedAt, orderDirection: desc) {
-     settledPosition {
-       realisedPnl
-     },
-     indexedAt
-   } 
-   c2: aggregatedTradeCloseds(first: 1000, skip: 1000, orderBy: indexedAt, orderDirection: desc) {
-     settledPosition {
-       realisedPnl
-     },
-     indexedAt
-   } 
-   c3: aggregatedTradeCloseds(first: 1000, skip: 2000, orderBy: indexedAt, orderDirection: desc) {
-     settledPosition {
-       realisedPnl
-     },
-     indexedAt
-   } 
+     c1: aggregatedTradeCloseds(first: 1000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        realisedPnl
+      },
+      indexedAt
+    } 
+    c2: aggregatedTradeCloseds(first: 1000, skip: 1000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        realisedPnl
+      },
+      indexedAt
+    } 
+    c3: aggregatedTradeCloseds(first: 1000, skip: 2000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        realisedPnl
+      },
+      indexedAt
+    } 
+    c4: aggregatedTradeCloseds(first: 1000, skip: 3000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        realisedPnl
+      },
+      indexedAt
+    } 
   }`, { subgraph: 'nissoh/gmx-vault' })
 
   const [liquidatedPositionsData] = useGraph(`{
     l1: aggregatedTradeLiquidateds(first: 1000, orderBy: indexedAt, orderDirection: desc) {
-     settledPosition {
-       collateral
-     },
-     indexedAt
-   } 
-   l2: aggregatedTradeLiquidateds(first: 1000, skip: 1000, orderBy: indexedAt, orderDirection: desc) {
-     settledPosition {
-       collateral
-     },
-     indexedAt
-   } 
-   l3: aggregatedTradeLiquidateds(first: 1000, skip: 2000, orderBy: indexedAt, orderDirection: desc) {
-     settledPosition {
-       collateral
-     },
-     indexedAt
-   } 
+      settledPosition {
+        collateral
+      },
+      indexedAt
+    } 
+    l2: aggregatedTradeLiquidateds(first: 1000, skip: 1000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        collateral
+      },
+      indexedAt
+    } 
+    l3: aggregatedTradeLiquidateds(first: 1000, skip: 2000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        collateral
+      },
+      indexedAt
+    }
+    l4: aggregatedTradeLiquidateds(first: 1000, skip: 3000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        collateral
+      },
+      indexedAt
+    }
   }`, { subgraph: 'nissoh/gmx-vault' })
 
   let ret = null
   if (closedPositionsData && liquidatedPositionsData) {
     let data = [
-      ...sortBy([...closedPositionsData.c1, ...closedPositionsData.c2, ...closedPositionsData.c3], el => el.indexedAt).map(item => {
+      ...sortBy([
+        ...closedPositionsData.c1,
+        ...closedPositionsData.c2,
+        ...closedPositionsData.c3,
+        ...closedPositionsData.c4
+      ], el => el.indexedAt).map(item => {
         const pnl = Number(item.settledPosition?.realisedPnl || 0) / 1e30
         return {
           timestamp: item.indexedAt,
@@ -238,7 +267,12 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
           loss: pnl < 0 ? pnl : 0
         }
       }),
-      ...sortBy([...liquidatedPositionsData.l1, ...liquidatedPositionsData.l2, ...liquidatedPositionsData.l3], el => el.indexedAt).map(item => ({
+      ...sortBy([
+        ...liquidatedPositionsData.l1, 
+        ...liquidatedPositionsData.l2, 
+        ...liquidatedPositionsData.l3,
+        ...liquidatedPositionsData.l4
+      ], el => el.indexedAt).map(item => ({
         timestamp: item.indexedAt,
         pnl: -Number(item.settledPosition?.collateral || 0) / 1e30
       }))
@@ -271,6 +305,12 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
     const maxProfit = maxBy(data, item => item.profit).profit
     const maxLoss = minBy(data, item => item.loss).loss
     const maxProfitLoss = Math.max(maxProfit, -maxLoss)
+
+    const maxPnl = maxBy(data, item => item.pnl).pnl
+    const minPnl = minBy(data, item => item.pnl).pnl
+    const maxCumulativePnl = maxBy(data, item => item.cumulativePnl).cumulativePnl
+    const minCumulativePnl = minBy(data, item => item.cumulativePnl).cumulativePnl
+
     ret = {
       data,
       stats: {
@@ -279,7 +319,14 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
         maxProfitLoss,
         cumulativeProfit,
         cumulativeLoss,
-        maxCumulativeProfitLoss: Math.max(cumulativeProfit, -cumulativeLoss)
+        maxCumulativeProfitLoss: Math.max(cumulativeProfit, -cumulativeLoss),
+
+        maxAbsOfPnlAndCumulativePnl: Math.max(
+          Math.abs(maxPnl),
+          Math.abs(maxCumulativePnl),
+          Math.abs(minPnl), 
+          Math.abs(minCumulativePnl)
+        ),
       }
     }
   }
@@ -471,66 +518,6 @@ export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   return [data, loading, error]
 }
 
-export function useFeesData2({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
-  let [graphData, loading, error] = useGraph(`{
-    m1: collectMarginFees (first: 1000, orderBy: timestamp, orderDirection: desc) {
-      id
-      timestamp
-      feeUsd
-    }
-    m2: collectMarginFees (first: 1000, skip: 1000, orderBy: timestamp, orderDirection: desc) {
-      id
-      timestamp
-      feeUsd
-    }
-    c1: collectSwapFees (first: 1000, orderBy: timestamp, orderDirection: desc) {
-      id
-      timestamp
-      feeUsd
-    }
-    c2: collectSwapFees (first: 1000, skip: 1000, orderBy: timestamp, orderDirection: desc) {
-      id
-      timestamp
-      feeUsd
-    }
-  }`, { subgraph: 'gkrasulya/gmx-raw' })
-
-  const feesChartData = useMemo(() => {
-    if (!graphData) {
-      return null
-    }
-    const marginFees = [...graphData.m1, ...graphData.m2].map(item => ({
-      timestamp: item.timestamp,
-      margin: Number(formatUnits(BigNumber.from(item.feeUsd), 30))
-    }))
-    const swapFees = [...graphData.c1, ...graphData.c2].map(item => ({
-      timestamp: item.timestamp,
-      swap: Number(formatUnits(BigNumber.from(item.feeUsd), 30))
-    }))
-
-    let cumulative = 0
-    return chain([...marginFees, ...swapFees])
-      .sortBy('timestamp')
-      .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
-      .map((values, timestamp) => {
-        const margin = sumBy(values, 'margin') || 0
-        const swap = sumBy(values, 'swap') || 0
-        const all = margin + swap
-        cumulative += all
-        return {
-          timestamp,
-          all,
-          margin,
-          swap,
-          cumulative
-        }
-      })
-      .value()
-  }, [graphData])
-
-  return [feesChartData, loading, error]
-}
-
 export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.now() / 1000 - 86400 * 90 } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const feesQuery = `{
@@ -710,6 +697,7 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
     const lpEthCount = GLP_START_PRICE * 0.5 / ethFirstPrice
 
     const ret = []
+    let cumulativeFeesPerGlp = 0
     for (let i = 0; i < btcPrices.length; i++) {
       const btcPrice = btcPrices[i].value
       const ethPrice = ethPrices[i]?.value ?? 3400
@@ -717,16 +705,20 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
       const timestampGroup = parseInt(btcPrices[i].timestamp / 86400) * 86400
       const glpPrice = glpDataById[timestampGroup]?.glpPrice ?? 0
       const glpSupply = glpDataById[timestampGroup]?.glpSupply
-      const feesToDate = feesDataById[timestampGroup]?.cumulative
+      const dailyFees = feesDataById[timestampGroup]?.all
       const syntheticPrice = indexBtcCount * btcPrice + indexEthCount * ethPrice + GLP_START_PRICE / 2
       const lpBtcPrice = (lpBtcCount * btcPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(btcPrice / btcFirstPrice))
       const lpEthPrice = (lpEthCount * ethPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(ethPrice / ethFirstPrice))
 
+      if (dailyFees && glpSupply) {
+        const GLP_REWARDS_SHARE = 0.5 // 50% goes to GLP
+        cumulativeFeesPerGlp += dailyFees / glpSupply * GLP_REWARDS_SHARE
+      }
+
       let glpPlusFees
-      // if (glpPrice && glpSupply && feesToDate) {
-      //   const GLP_REWARDS_SHARE = 0.5 // 50% goes to GLP
-      //   glpPlusFees = glpPrice + feesToDate * GLP_REWARDS_SHARE / glpSupply
-      // }
+      if (glpPrice && glpSupply && cumulativeFeesPerGlp) {
+        glpPlusFees = glpPrice + cumulativeFeesPerGlp
+      }
 
       ret.push({
         timestamp: btcPrices[i].timestamp,
@@ -734,8 +726,10 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
         lpBtcPrice,
         lpEthPrice,
         glpPrice,
+        btcPrice,
+        ethPrice,
         glpPlusFees,
-        ratio: glpPlusFees ? (glpPlusFees / syntheticPrice * 100) : glpPrice / syntheticPrice * 100
+        ratio: (glpPlusFees && false ? (glpPlusFees / syntheticPrice * 100) : glpPrice / syntheticPrice * 100).toFixed(2)
       })
     }
 
