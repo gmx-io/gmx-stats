@@ -176,7 +176,7 @@ function Arbitrum() {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="ratio" domain={[0, 300]} tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="ratio" domain={[0, 300]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <YAxis dataKey="glpPrice" domain={[0.5, 1.5]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
@@ -189,9 +189,6 @@ function Arbitrum() {
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} />
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[3]} />
-                {localStorage.getItem('_showGlpPlusFees')
-                  && <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPlusFees" name="GLP + Fees" stroke={COLORS[4]} />
-                }
               </LineChart>
             </ResponsiveContainer>
             <div className="chart-description">

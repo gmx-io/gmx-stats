@@ -42,8 +42,8 @@ export default function VolumeChart(props) {
         />
         <Legend />
         <Bar type="monotone" dataKey="swap" stackId="a" name="Swap" fill={COLORS[0]} />
-        <Bar type="monotone" dataKey="mint" stackId="a" name="Mint USDG" fill={COLORS[1]} />
-        <Bar type="monotone" dataKey="burn" stackId="a" name="Burn USDG" fill={COLORS[2]} />
+        <Bar type="monotone" dataKey="mint" stackId="a" name="Mint GLP" fill={COLORS[1]} />
+        <Bar type="monotone" dataKey="burn" stackId="a" name="Burn GLP" fill={COLORS[2]} />
         <Bar type="monotone" dataKey="liquidation" stackId="a" name="Liquidation" fill={COLORS[3]} />
         <Bar type="monotone" dataKey="margin" stackId="a" name="Margin trading" fill={COLORS[4]} />
         <Line type="monotone" dot={false} strokeWidth={3} stroke={COLORS[0]} dataKey="cumulative" yAxisId="right" name="Cumulative" />

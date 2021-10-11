@@ -5,6 +5,7 @@ import React from 'react';
 import Logger from 'console-log-level'
 import { StaticRouter } from 'react-router-dom';
 import { renderToString } from 'react-dom/server';
+import got from 'got'
 
 import App from './App';
 import { findNearest, queryProviderLogs, callWithRetry, UsdgSupplyRecord, LogRecord, getLogger, fillPeriods } from './helpers'
@@ -83,13 +84,8 @@ export default function routes(app) {
   const GROUP_PERIOD = 86400
 
   app.get('/api/gmx-supply', async (req, res) => {
-    // TODO remove hardcode later
-    res.send('6500429.318655280000000001')
-    return
-
-    const contract = contracts[ARBITRUM].GMX
-    const totalSupply = await contract.totalSupply()
-    res.send(formatUnits(totalSupply, 18))
+    const data = await (await got('https://api.gmx.io/gmx_supply')).body
+    res.send(formatUnits(data))
   })
 
   app.get('/api/usdgSupply', async (req, res) => {
