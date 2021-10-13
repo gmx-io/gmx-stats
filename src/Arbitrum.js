@@ -176,7 +176,7 @@ function Arbitrum() {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="ratio" domain={[0, 300]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="performanceSynthetic" domain={[60, 210]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <YAxis dataKey="glpPrice" domain={[0.5, 1.5]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
@@ -184,9 +184,11 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line type="monotone" unit="%" strokeWidth={3} dot={false} dataKey="ratio" name="Performance" stroke="#ee64b8" />
+                <Line type="monotone" unit="%" strokeWidth={2} dataKey="performanceSynthetic" name="% of Index" stroke={COLORS[0]} strokeDashArray="4 1 2" />
+                <Line type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEth" name="% of LP ETH-USDC" stroke={COLORS[4]} />
+
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
-                <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} />
+                <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} strokeWidth={2} />
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[3]} />
               </LineChart>

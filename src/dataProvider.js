@@ -474,7 +474,11 @@ export function useUsersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
 export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
 	const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const query = `{
-    hourlyVolumes(first: 1000 orderBy: id) {
+    h1: hourlyVolumes(first: 1000, orderBy: id, orderDirection: desc) {
+      id
+      ${PROPS.join('\n')}
+    }
+    h2: hourlyVolumes(first: 1000, skip: 1000, orderBy: id, orderDirection: desc) {
       id
       ${PROPS.join('\n')}
     }
@@ -486,7 +490,7 @@ export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       return null
     }
 
-    let ret =  graphData.hourlyVolumes.map(item => {
+    let ret =  sortBy([...graphData.h1, ...graphData.h2], 'id').map(item => {
       const ret = { timestamp: item.id };
       let all = 0;
       PROPS.forEach(prop => {
@@ -521,7 +525,11 @@ export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
 export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.now() / 1000 - 86400 * 90 } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const feesQuery = `{
-    hourlyFees(first: 1000, orderBy: id) {
+    f1: hourlyFees(first: 1000, orderBy: id, orderDirection: desc) {
+      id
+      ${PROPS.join('\n')}
+    }
+    f2: hourlyFees(first: 1000, skip: 1000, orderBy: id, orderDirection: desc) {
       id
       ${PROPS.join('\n')}
     }
@@ -533,7 +541,7 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.no
       return null
     }
 
-    let chartData =  feesData.hourlyFees.map(item => {
+    let chartData = sortBy([...feesData.f1, ...feesData.f2], 'id').map(item => {
       const ret = { timestamp: item.id };
       let all = 0;
       PROPS.forEach(prop => {
@@ -729,7 +737,8 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
         btcPrice,
         ethPrice,
         glpPlusFees,
-        ratio: (glpPlusFees && false ? (glpPlusFees / syntheticPrice * 100) : glpPrice / syntheticPrice * 100).toFixed(2)
+        performanceSynthetic: (glpPrice / syntheticPrice * 100).toFixed(2),
+        performanceLpEth: (glpPrice / lpEthPrice * 100).toFixed(2)
       })
     }
 
