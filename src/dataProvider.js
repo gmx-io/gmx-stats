@@ -221,6 +221,18 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       },
       indexedAt
     } 
+    c5: aggregatedTradeCloseds(first: 1000, skip: 4000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        realisedPnl
+      },
+      indexedAt
+    }
+    c6: aggregatedTradeCloseds(first: 1000, skip: 5000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        realisedPnl
+      },
+      indexedAt
+    }
   }`, { subgraph: 'nissoh/gmx-vault' })
 
   const [liquidatedPositionsData] = useGraph(`{
@@ -248,6 +260,18 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       },
       indexedAt
     }
+    l5: aggregatedTradeLiquidateds(first: 1000, skip: 4000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        collateral
+      },
+      indexedAt
+    }
+    l6: aggregatedTradeLiquidateds(first: 1000, skip: 5000, orderBy: indexedAt, orderDirection: desc) {
+      settledPosition {
+        collateral
+      },
+      indexedAt
+    }
   }`, { subgraph: 'nissoh/gmx-vault' })
 
   let ret = null
@@ -257,7 +281,9 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
         ...closedPositionsData.c1,
         ...closedPositionsData.c2,
         ...closedPositionsData.c3,
-        ...closedPositionsData.c4
+        ...closedPositionsData.c4,
+        ...closedPositionsData.c5,
+        ...closedPositionsData.c6
       ], el => el.indexedAt).map(item => {
         const pnl = Number(item.settledPosition?.realisedPnl || 0) / 1e30
         return {
@@ -271,7 +297,9 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
         ...liquidatedPositionsData.l1, 
         ...liquidatedPositionsData.l2, 
         ...liquidatedPositionsData.l3,
-        ...liquidatedPositionsData.l4
+        ...liquidatedPositionsData.l4,
+        ...liquidatedPositionsData.l5,
+        ...liquidatedPositionsData.l6
       ], el => el.indexedAt).map(item => ({
         timestamp: item.indexedAt,
         pnl: -Number(item.settledPosition?.collateral || 0) / 1e30
