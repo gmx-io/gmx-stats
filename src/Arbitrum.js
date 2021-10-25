@@ -188,7 +188,8 @@ function Arbitrum() {
                 <Line type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEth" name="% of LP ETH-USDC" stroke={COLORS[4]} />
 
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
-                <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} strokeWidth={2} />
+                <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} strokeWidth={1} />
+                <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPlusFees" name="Glp with fees" stroke={COLORS[4]} strokeWidth={1} />
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[3]} />
               </LineChart>
@@ -198,8 +199,9 @@ function Arbitrum() {
                 * Does not include fees
               </p>
               <p>
-                Performance Formula = Glp Price / Synthetic Index Price * 100<br/>
-                Synthetic Index Price = 25% BTC, 25% ETH, 50% USDC
+                % of Index = Glp Price / Index Price * 100<br/>
+                % of LP ETH-USDC = Glp Price / LP ETH-USDC * 100<br/>
+                Index Price = 25% BTC, 25% ETH, 50% USDC
               </p>
             </div>
           </ChartWrapper>
