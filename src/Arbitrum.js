@@ -54,6 +54,7 @@ import {
   useGlpPerformanceData,
   useTradersData,
   useSwapSources,
+  useFundingRateData,
   useUsersData,
   useLastSubgraphBlock,
   useLastBlock
@@ -66,6 +67,7 @@ function Arbitrum() {
   const DEFAULT_GROUP_PERIOD = 86400
   const [groupPeriod, setGroupPeriod] = useState(DEFAULT_GROUP_PERIOD)
 
+  const [fundingRateData, fundingRateLoading] = useFundingRateData()
   const [volumeData, volumeLoading] = useVolumeDataFromServer({ groupPeriod })
   const [feesData, feesLoading] = useFeesData({ groupPeriod })
   const [glpData, glpLoading] = useGlpData({ groupPeriod })
@@ -296,6 +298,19 @@ function Arbitrum() {
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[{ key: 'actionSwapCount', name: 'Swaps' }, { key: 'actionMarginCount', name: 'Margin trading' }, { key: 'actionMintBurnCount', name: 'Mint & Burn GLP' }]}
               type="Composed"
+            />
+        </div>
+        <div className="chart-cell half">
+           <GenericChart
+              loading={fundingRateLoading}
+              title="Annualized Funding Rate"
+              data={fundingRateData}
+              yaxisDataKey="ETH"
+              yaxisTickFormatter={yaxisFormatterPercent}
+              tooltipFormatter={tooltipFormatterPercent}
+              items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }]}
+              type="Line"
+              yaxisDomain={[0, 100]}
             />
         </div>
       </div>

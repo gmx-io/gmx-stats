@@ -21,6 +21,15 @@ const tokenDecimals = {
   "0xf97f4df75117a78c1a5a0dbb814af92458539fb4": 18 // LINK
 }
 
+const tokenSymbols = {
+  '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f': 'BTC',
+  '0x82af49447d8a07e3bd95bd0d56f35241523fbab1': 'ETH',
+  '0xf97f4df75117a78c1a5a0dbb814af92458539fb4': 'LINK',
+  '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0': 'UNI',
+  '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8': 'USDC',
+  '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 'USDT'
+}
+
 function getTokenDecimals(token) {
   return tokenDecimals[token] || 18
 }
@@ -495,6 +504,45 @@ export function useUsersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       ...item
     }
   }) : null
+
+  return [data, loading, error]
+}
+
+export function useFundingRateData() {
+  const query = `{
+    fundingRates(
+      first: 1000,
+      orderBy: timestamp,
+      orderDirection: desc,
+      where: { period: "daily" }
+    ) {
+      token,
+      timestamp,
+      startFundingRate,
+      endFundingRate
+    }
+  }`
+  const [graphData, loading, error] = useGraph(query, {
+    subgraph: 'gkrasulya/gmx'
+  })
+
+  const data = useMemo(() => {
+    if (!graphData) {
+      return null
+    }
+
+    const groups = graphData.fundingRates.reduce((memo, item) => {
+      const symbol = tokenSymbols[item.token]
+      memo[item.timestamp] = memo[item.timestamp] || {
+        timestamp: item.timestamp
+      }
+      const group = memo[item.timestamp]
+      group[symbol] = (item.endFundingRate - item.startFundingRate) / 10000 * 365
+      return memo
+    }, {})
+
+    return sortBy(Object.values(groups), 'timestamp')
+  }, [graphData])
 
   return [data, loading, error]
 }

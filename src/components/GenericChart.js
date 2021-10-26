@@ -45,6 +45,7 @@ export default function GenericChart(props) {
     yaxisWidth = YAXIS_WIDTH,
     yaxisDataKey = 'all',
     yaxisTickFormatter = yaxisFormatter,
+    yaxisDomain,
     xaxisDataKey = 'timestamp',
     xaxisTickFormatter = tooltipLabelFormatter_,
     tooltipFormatter = tooltipFormatter_,
@@ -76,9 +77,9 @@ export default function GenericChart(props) {
       key: 'item-' + i
     }
     if (item.type === 'Line' || type === 'Line') {
-      return <Line {...props} />
+      return <Line {...props} isAnimationActive={false} />
     }
-    return <Bar {...props} />
+    return <Bar {...props} isAnimationActive={false} />
   })
 
   return <ChartWrapper title={title} loading={loading}>
@@ -86,7 +87,7 @@ export default function GenericChart(props) {
       {React.createElement(ChartComponent, { data, syncId }, [
         <CartesianGrid strokeDasharray="10 10" key="a" />,
         <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} key="b" />,
-        <YAxis dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} key="c" />,
+        <YAxis domain={yaxisDomain} dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} key="c" />,
         <Tooltip
           formatter={tooltipFormatter}
           labelFormatter={tooltipLabelFormatter}
