@@ -765,8 +765,8 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
         btcPrice,
         ethPrice,
         glpPlusFees,
-        performanceSynthetic: (glpPrice / syntheticPrice * 100).toFixed(2),
-        performanceLpEth: (glpPrice / lpEthPrice * 100).toFixed(2)
+        performanceSynthetic: glpPlusFees ? (glpPlusFees / syntheticPrice * 100).toFixed(2) : null,
+        performanceLpEth: glpPlusFees ? (glpPlusFees / lpEthPrice * 100).toFixed(2) : null
       })
     }
 

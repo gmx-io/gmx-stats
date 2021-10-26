@@ -184,24 +184,22 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line type="monotone" unit="%" strokeWidth={2} dataKey="performanceSynthetic" name="% of Index" stroke={COLORS[0]} strokeDashArray="4 1 2" />
-                <Line type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEth" name="% of LP ETH-USDC" stroke={COLORS[4]} />
+                <Line type="monotone" unit="%" strokeWidth={2} dataKey="performanceSynthetic" name="% Index (w/ fees)" stroke={COLORS[0]} />
+                <Line type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEth" name="% LP ETH-USDC (w/ fees)" stroke={COLORS[4]} />
 
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} strokeWidth={1} />
-                <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPlusFees" name="Glp with fees" stroke={COLORS[4]} strokeWidth={1} />
+                <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={COLORS[3]} strokeWidth={1} />
                 <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
-                <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[3]} />
+                <Line type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[4]} />
               </LineChart>
             </ResponsiveContainer>
             <div className="chart-description">
               <p>
-                * Does not include fees
-              </p>
-              <p>
-                % of Index = Glp Price / Index Price * 100<br/>
-                % of LP ETH-USDC = Glp Price / LP ETH-USDC * 100<br/>
-                Index Price = 25% BTC, 25% ETH, 50% USDC
+                <span style={{color: COLORS[3]}}>Glp with fees</span> is based on 50% of fees received and excluding esGMX rewards<br/>
+                <span style={{color: COLORS[0]}}>% of Index (with fees)</span> is Glp with fees / Index Price * 100<br/>
+                <span style={{color: COLORS[4]}}>% of LP ETH-USDC (with fees)</span> is Glp Price with fees / LP ETH-USDC * 100<br/>
+                <span style={{color: COLORS[2]}}>Index Price</span> is 25% BTC, 25% ETH, 50% USDC
               </p>
             </div>
           </ChartWrapper>
