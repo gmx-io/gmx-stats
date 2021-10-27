@@ -35,8 +35,9 @@ function getTokenDecimals(token) {
 }
 
 const knownSwapSources = {
-  "0xabbc5f99639c9b6bcb58544ddf04efa6802f4064": 'GMX',
-  "0x3b6067d4caa8a14c63fdbe6318f27a0bbc9f9237": 'Dodo'
+  '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX',
+  '0x3b6067d4caa8a14c63fdbe6318f27a0bbc9f9237': 'Dodo',
+  '0x11111112542D85B3EF69AE05771c2dCCff4fAa26': '1inch'
 }
 
 const defaultFetcher = url => fetch(url).then(res => res.json())
