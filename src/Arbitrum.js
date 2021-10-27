@@ -303,7 +303,7 @@ function Arbitrum() {
         <div className="chart-cell half">
            <GenericChart
               loading={fundingRateLoading}
-              title="Annualized Funding Rate"
+              title="Annualized Borrowing Rate"
               data={fundingRateData}
               yaxisDataKey="ETH"
               yaxisTickFormatter={yaxisFormatterPercent}

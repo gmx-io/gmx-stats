@@ -531,13 +531,19 @@ export function useFundingRateData() {
       return null
     }
 
+    const today = parseInt(Date.now() / 86400000) * 86400
+    const now = parseInt(Date.now() / 1000)
     const groups = graphData.fundingRates.reduce((memo, item) => {
       const symbol = tokenSymbols[item.token]
       memo[item.timestamp] = memo[item.timestamp] || {
         timestamp: item.timestamp
       }
       const group = memo[item.timestamp]
-      group[symbol] = (item.endFundingRate - item.startFundingRate) / 10000 * 365
+      let fundingRate = (item.endFundingRate - item.startFundingRate) / 10000 * 365
+      if (item.timestamp === today) {
+        fundingRate = fundingRate / (now % 86400) * 86400
+      }
+      group[symbol] = fundingRate
       return memo
     }, {})
 
