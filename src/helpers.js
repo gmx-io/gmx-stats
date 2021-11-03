@@ -18,7 +18,10 @@ export const COLORS = [
   '#8884ff',
   '#ab6100',
   '#c90000',
-  '#7b7b7b'
+  '#7b7b7b',
+  'darkblue',
+  'purple',
+  'darkgreen'
 ]
 
 const levelColor = {

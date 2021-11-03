@@ -12,6 +12,22 @@ const provider = new ethers.providers.JsonRpcProvider('https://arb1.arbitrum.io/
 
 const DEFAULT_GROUP_PERIOD = 86400
 
+function fillNa(arr, keys) {
+  const prevValues = {}
+  for (const el of arr) {
+    for (const key of keys) {
+      if (!el[key]) {
+        if (prevValues[key]) {
+          el[key] = prevValues[key]
+        }
+      } else {
+        prevValues[key] = el[key]
+      }
+    }
+  }
+  return arr
+}
+
 const tokenDecimals = {
   "0x82af49447d8a07e3bd95bd0d56f35241523fbab1": 18, // WETH
   "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f": 8, // BTC
@@ -37,7 +53,7 @@ function getTokenDecimals(token) {
 const knownSwapSources = {
   '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX',
   '0x3b6067d4caa8a14c63fdbe6318f27a0bbc9f9237': 'Dodo',
-  '0x11111112542D85B3EF69AE05771c2dCCff4fAa26': '1inch'
+  '0x11111112542d85b3ef69ae05771c2dccff4faa26': '1inch'
 }
 
 const defaultFetcher = url => fetch(url).then(res => res.json())
@@ -207,139 +223,40 @@ export function useLastSubgraphBlock() {
 
 export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const [closedPositionsData, loading, error] = useGraph(`{
-     c1: aggregatedTradeCloseds(first: 1000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        realisedPnl
-      },
-      indexedAt
-    } 
-    c2: aggregatedTradeCloseds(first: 1000, skip: 1000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        realisedPnl
-      },
-      indexedAt
-    } 
-    c3: aggregatedTradeCloseds(first: 1000, skip: 2000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        realisedPnl
-      },
-      indexedAt
-    } 
-    c4: aggregatedTradeCloseds(first: 1000, skip: 3000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        realisedPnl
-      },
-      indexedAt
-    } 
-    c5: aggregatedTradeCloseds(first: 1000, skip: 4000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        realisedPnl
-      },
-      indexedAt
+    tradingStats(
+      first: 1000
+      orderBy: "timestamp"
+      orderDirection: desc
+      where: {period: "daily"}
+    ) {
+      timestamp
+      profit
+      loss
+      cumulativeProfit
+      cumulativeLoss
     }
-    c6: aggregatedTradeCloseds(first: 1000, skip: 5000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        realisedPnl
-      },
-      indexedAt
-    }
-  }`, { subgraph: 'nissoh/gmx-vault' })
-
-  const [liquidatedPositionsData] = useGraph(`{
-    l1: aggregatedTradeLiquidateds(first: 1000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        collateral
-      },
-      indexedAt
-    } 
-    l2: aggregatedTradeLiquidateds(first: 1000, skip: 1000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        collateral
-      },
-      indexedAt
-    } 
-    l3: aggregatedTradeLiquidateds(first: 1000, skip: 2000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        collateral
-      },
-      indexedAt
-    }
-    l4: aggregatedTradeLiquidateds(first: 1000, skip: 3000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        collateral
-      },
-      indexedAt
-    }
-    l5: aggregatedTradeLiquidateds(first: 1000, skip: 4000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        collateral
-      },
-      indexedAt
-    }
-    l6: aggregatedTradeLiquidateds(first: 1000, skip: 5000, orderBy: indexedAt, orderDirection: desc) {
-      settledPosition {
-        collateral
-      },
-      indexedAt
-    }
-  }`, { subgraph: 'nissoh/gmx-vault' })
+  }`, { subgraph: 'gkrasulya/gmx' })
 
   let ret = null
-  if (closedPositionsData && liquidatedPositionsData) {
-    let data = [
-      ...sortBy([
-        ...closedPositionsData.c1,
-        ...closedPositionsData.c2,
-        ...closedPositionsData.c3,
-        ...closedPositionsData.c4,
-        ...closedPositionsData.c5,
-        ...closedPositionsData.c6
-      ], el => el.indexedAt).map(item => {
-        const pnl = Number(item.settledPosition?.realisedPnl || 0) / 1e30
-        return {
-          timestamp: item.indexedAt,
-          pnl,
-          profit: pnl > 0 ? pnl : 0,
-          loss: pnl < 0 ? pnl : 0
-        }
-      }),
-      ...sortBy([
-        ...liquidatedPositionsData.l1, 
-        ...liquidatedPositionsData.l2, 
-        ...liquidatedPositionsData.l3,
-        ...liquidatedPositionsData.l4,
-        ...liquidatedPositionsData.l5,
-        ...liquidatedPositionsData.l6
-      ], el => el.indexedAt).map(item => ({
-        timestamp: item.indexedAt,
-        pnl: -Number(item.settledPosition?.collateral || 0) / 1e30
-      }))
-     ]
+  const data = closedPositionsData ? sortBy(closedPositionsData.tradingStats, i => i.timestamp).map(dataItem => {
+    const profit = dataItem.profit / 1e30
+    const loss = dataItem.loss / 1e30
+    const cumulativeProfit = dataItem.cumulativeProfit / 1e30
+    const cumulativeLoss = dataItem.cumulativeLoss / 1e30
+    const cumulativePnl = cumulativeProfit - cumulativeLoss
+    const pnl = profit - loss
+    return {
+      profit,
+      loss: -loss,
+      cumulativeProfit,
+      cumulativeLoss: -cumulativeLoss,
+      pnl,
+      cumulativePnl,
+      timestamp: dataItem.timestamp
+    }
+  }) : null
 
-    let cumulativePnl = 0 
-    let cumulativeProfit = 0
-    let cumulativeLoss = 0
-    data = chain(data)
-      .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
-      .map((values, timestamp) => {
-        const pnl = sumBy(values, 'pnl') || 0
-        const profit = sumBy(values, 'profit') || 0
-        const loss = sumBy(values, 'loss') || 0
-        cumulativePnl += pnl
-        cumulativeProfit += profit
-        cumulativeLoss += loss
-        return {
-          pnl,
-          cumulativePnl,
-          cumulativeLoss,
-          cumulativeProfit,
-          profit,
-          loss,
-          timestamp: Number(timestamp)
-        }
-      })
-      .value()
-
+  if (data) {
     const maxProfit = maxBy(data, item => item.profit).profit
     const maxLoss = minBy(data, item => item.loss).loss
     const maxProfitLoss = Math.max(maxProfit, -maxLoss)
@@ -349,23 +266,27 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
     const maxCumulativePnl = maxBy(data, item => item.cumulativePnl).cumulativePnl
     const minCumulativePnl = minBy(data, item => item.cumulativePnl).cumulativePnl
 
+    const cumulativeProfit = data[data.length - 1].cumulativeProfit
+    const cumulativeLoss = data[data.length - 1].cumulativeLoss
+    const stats = {
+      maxProfit,
+      maxLoss,
+      maxProfitLoss,
+      cumulativeProfit,
+      cumulativeLoss,
+      maxCumulativeProfitLoss: Math.max(cumulativeProfit, -cumulativeLoss),
+
+      maxAbsOfPnlAndCumulativePnl: Math.max(
+        Math.abs(maxPnl),
+        Math.abs(maxCumulativePnl),
+        Math.abs(minPnl),
+        Math.abs(minCumulativePnl)
+      ),
+    }
+
     ret = {
       data,
-      stats: {
-        maxProfit,
-        maxLoss,
-        maxProfitLoss,
-        cumulativeProfit,
-        cumulativeLoss,
-        maxCumulativeProfitLoss: Math.max(cumulativeProfit, -cumulativeLoss),
-
-        maxAbsOfPnlAndCumulativePnl: Math.max(
-          Math.abs(maxPnl),
-          Math.abs(maxCumulativePnl),
-          Math.abs(minPnl), 
-          Math.abs(minCumulativePnl)
-        ),
-      }
+      stats
     }
   }
 
@@ -464,17 +385,27 @@ export function useVolumeDataFromServer() {
      }, {})
 
     let cumulative = 0
+    const cumulativeByTs = {}
     return Object.keys(tmp).sort().map(timestamp => {
       const item = tmp[timestamp]
       let all = 0
+
+      let movingAverageAll
+      const movingAverageTs = timestamp - MOVING_AVERAGE_PERIOD
+      if (movingAverageTs in cumulativeByTs) {
+        movingAverageAll = (cumulative - cumulativeByTs[movingAverageTs]) / MOVING_AVERAGE_DAYS
+      }
+
       PROPS.forEach(prop => {
         if (item[prop]) all += item[prop]
       })
       cumulative += all
+      cumulativeByTs[timestamp] = cumulative
       return {
         timestamp,
         all,
         cumulative,
+        movingAverageAll,
         ...item
       }
     })
@@ -517,10 +448,13 @@ export function useFundingRateData() {
       orderDirection: desc,
       where: { period: "daily" }
     ) {
+      id,
       token,
       timestamp,
       startFundingRate,
-      endFundingRate
+      startTimestamp,
+      endFundingRate,
+      endTimestamp
     }
   }`
   const [graphData, loading, error] = useGraph(query, {
@@ -532,27 +466,29 @@ export function useFundingRateData() {
       return null
     }
 
-    const today = parseInt(Date.now() / 86400000) * 86400
-    const now = parseInt(Date.now() / 1000)
     const groups = graphData.fundingRates.reduce((memo, item) => {
       const symbol = tokenSymbols[item.token]
       memo[item.timestamp] = memo[item.timestamp] || {
         timestamp: item.timestamp
       }
       const group = memo[item.timestamp]
-      let fundingRate = (item.endFundingRate - item.startFundingRate) / 10000 * 365
-      if (item.timestamp === today) {
-        fundingRate = fundingRate / (now % 86400) * 86400
-      }
+      const timeDelta = parseInt((item.endTimestamp - item.startTimestamp) / 3600) * 3600
+
+      const fundingDelta = item.endFundingRate - item.startFundingRate
+      const divisor = timeDelta / 86400
+      const fundingRate = fundingDelta / divisor / 10000 * 365
       group[symbol] = fundingRate
       return memo
     }, {})
 
-    return sortBy(Object.values(groups), 'timestamp')
+    return fillNa(sortBy(Object.values(groups), 'timestamp'), ['ETH', 'USDC', 'USDT', 'BTC', 'LINK', 'UNI'])
   }, [graphData])
 
   return [data, loading, error]
 }
+
+const MOVING_AVERAGE_DAYS = 7
+const MOVING_AVERAGE_PERIOD = 86400 * MOVING_AVERAGE_DAYS
 
 export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
 	const PROPS = 'margin liquidation swap mint burn'.split(' ')
@@ -585,19 +521,29 @@ export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
     })
 
     let cumulative = 0
+    const cumulativeByTs = {}
     return chain(ret)
       .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
       .map((values, timestamp) => {
         const all = sumBy(values, 'all')
         cumulative += all
+
+        let movingAverageAll
+        const movingAverageTs = timestamp - MOVING_AVERAGE_PERIOD
+        if (movingAverageTs in cumulativeByTs) {
+          movingAverageAll = (cumulative - cumulativeByTs[movingAverageTs]) / MOVING_AVERAGE_DAYS
+        }
+
         const ret = {
           timestamp,
           all,
-          cumulative
+          cumulative,
+          movingAverageAll
         }
         PROPS.forEach(prop => {
            ret[prop] = sumBy(values, prop)
         })
+        cumulativeByTs[timestamp] = cumulative
         return ret
       }).value()
   }, [graphData])
@@ -627,6 +573,7 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.no
     let chartData = sortBy([...feesData.f1, ...feesData.f2], 'id').map(item => {
       const ret = { timestamp: item.id };
       let all = 0;
+
       PROPS.forEach(prop => {
         ret[prop] = item[prop] / 1e30
         all += item[prop] / 1e30
@@ -636,19 +583,29 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.no
     })
 
     let cumulative = 0
+    const cumulativeByTs = {}
     return chain(chartData)
       .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
       .map((values, timestamp) => {
         const all = sumBy(values, 'all')
         cumulative += all
+
+        let movingAverageAll
+        const movingAverageTs = timestamp - MOVING_AVERAGE_PERIOD
+        if (movingAverageTs in cumulativeByTs) {
+          movingAverageAll = (cumulative - cumulativeByTs[movingAverageTs]) / MOVING_AVERAGE_DAYS
+        }
+
         const ret = {
           timestamp: Number(timestamp),
           all,
-          cumulative
+          cumulative,
+          movingAverageAll
         }
         PROPS.forEach(prop => {
            ret[prop] = sumBy(values, prop)
         })
+        cumulativeByTs[timestamp] = cumulative
         return ret
       })
       .value()

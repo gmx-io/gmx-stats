@@ -229,10 +229,6 @@ function Arbitrum() {
             </ResponsiveContainer>
             <div className="chart-description">
               <p>Considers settled (closed) positions</p>
-              <p>
-                Doesn't include trading fees <br />
-                Cumulative PnL uses data from selected time period only
-              </p>
             </div>
           </ChartWrapper>
         </div>
@@ -258,9 +254,6 @@ function Arbitrum() {
             </ResponsiveContainer>
             <div className="chart-description">
               <p>Considers settled (closed) positions</p>
-              <p>
-                Doesn't include trading fees
-              </p>
             </div>
           </ChartWrapper>
         </div>
@@ -310,7 +303,7 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterPercent}
               items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }]}
               type="Line"
-              yaxisDomain={[0, 100]}
+              yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
             />
         </div>
       </div>
