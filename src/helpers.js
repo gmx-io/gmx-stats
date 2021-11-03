@@ -10,9 +10,12 @@ const { BigNumber } = ethers
 
 export const CHART_HEIGHT = 400
 export const YAXIS_WIDTH = 65
+
+export const GREEN = '#22c761'
+export const RED = '#f93333'
 export const COLORS = [
   '#ee64b8',
-  '#22c761',
+  GREEN,
   '#ff8d00',
   '#00bfea',
   '#8884ff',
@@ -21,7 +24,8 @@ export const COLORS = [
   '#7b7b7b',
   'darkblue',
   'purple',
-  'darkgreen'
+  'darkgreen',
+  RED
 ]
 
 const levelColor = {
@@ -135,7 +139,7 @@ export const tooltipLabelFormatter = (label, args) => {
   const item = args && args[0] && args[0].payload && args[0]
   const dateFmtString = '%d.%m'
   const date = strftime(dateFmtString, label)
-  const all = item && (item.payload.all)
+  const all = item && (item.payload.all || item.payload.openInterest)
   if (all) {
     if (item && item.unit === '%') {
       return date

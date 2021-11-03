@@ -234,11 +234,17 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       loss
       cumulativeProfit
       cumulativeLoss
+      longOpenInterest
+      shortOpenInterest
     }
   }`, { subgraph: 'gkrasulya/gmx' })
 
   let ret = null
   const data = closedPositionsData ? sortBy(closedPositionsData.tradingStats, i => i.timestamp).map(dataItem => {
+    const longOpenInterest = dataItem.longOpenInterest / 1e30
+    const shortOpenInterest = dataItem.shortOpenInterest / 1e30
+    const openInterest = longOpenInterest + shortOpenInterest
+
     const profit = dataItem.profit / 1e30
     const loss = dataItem.loss / 1e30
     const cumulativeProfit = dataItem.cumulativeProfit / 1e30
@@ -246,6 +252,9 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
     const cumulativePnl = cumulativeProfit - cumulativeLoss
     const pnl = profit - loss
     return {
+      longOpenInterest,
+      shortOpenInterest,
+      openInterest,
       profit,
       loss: -loss,
       cumulativeProfit,

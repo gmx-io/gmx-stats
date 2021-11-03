@@ -13,7 +13,9 @@ import {
   tooltipFormatterPercent,
   CHART_HEIGHT,
   YAXIS_WIDTH,
-  COLORS
+  COLORS,
+  GREEN,
+  RED
 } from './helpers'
 import './Home.css';
 
@@ -259,6 +261,29 @@ function Arbitrum() {
         </div>
         <div className="chart-cell half">
            <GenericChart
+              loading={fundingRateLoading}
+              title="Annualized Borrowing Rate"
+              data={fundingRateData}
+              yaxisDataKey="ETH"
+              yaxisTickFormatter={yaxisFormatterPercent}
+              tooltipFormatter={tooltipFormatterPercent}
+              items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }]}
+              type="Line"
+              yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
+            />
+        </div>
+        <div className="chart-cell half">
+           <GenericChart
+              loading={tradersLoading}
+              title="Open Interest"
+              data={tradersData?.data}
+              yaxisDataKey="openInterest"
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: GREEN }]}
+              type="Bar"
+            />
+        </div>
+        <div className="chart-cell half">
+           <GenericChart
               loading={swapSourcesLoading}
               title="Swap Sources"
               data={swapSources}
@@ -291,19 +316,6 @@ function Arbitrum() {
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[{ key: 'actionSwapCount', name: 'Swaps' }, { key: 'actionMarginCount', name: 'Margin trading' }, { key: 'actionMintBurnCount', name: 'Mint & Burn GLP' }]}
               type="Composed"
-            />
-        </div>
-        <div className="chart-cell half">
-           <GenericChart
-              loading={fundingRateLoading}
-              title="Annualized Borrowing Rate"
-              data={fundingRateData}
-              yaxisDataKey="ETH"
-              yaxisTickFormatter={yaxisFormatterPercent}
-              tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }]}
-              type="Line"
-              yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
             />
         </div>
       </div>
