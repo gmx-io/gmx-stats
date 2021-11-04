@@ -147,34 +147,6 @@ function Arbitrum() {
           </ChartWrapper>
         </div>
         <div className="chart-cell half">
-           <GenericChart
-              syncId="syncGlp"
-              loading={aumPerformanceLoading}
-              title="AUM Performance"
-              data={aumPerformanceData}
-              yaxisDataKey="apr"
-              yaxisTickFormatter={yaxisFormatterPercent}
-              tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'apr', name: 'APR' }]}
-              description="Formula = Daily Fees / AUM * 365 days * 100"
-              type="Composed"
-            />
-        </div>
-        <div className="chart-cell half">
-           <GenericChart
-              syncId="syncGlp"
-              loading={aumPerformanceLoading}
-              title="AUM Daily Usage"
-              data={aumPerformanceData}
-              yaxisDataKey="usage"
-              yaxisTickFormatter={yaxisFormatterPercent}
-              tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'usage', name: 'Daily Usage', color: COLORS[4] }]}
-              description="Formula = Daily Volume / AUM * 100"
-              type="Composed"
-            />
-        </div>
-        <div className="chart-cell half">
           <ChartWrapper title="Glp Price Comparison" loading={glpLoading}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
               <LineChart data={glpPerformanceData} syncId="syncGlp">
@@ -262,7 +234,7 @@ function Arbitrum() {
         <div className="chart-cell half">
            <GenericChart
               loading={fundingRateLoading}
-              title="Annualized Borrowing Rate"
+              title="Borrowing Rate Annualized"
               data={fundingRateData}
               yaxisDataKey="ETH"
               yaxisTickFormatter={yaxisFormatterPercent}
@@ -280,6 +252,34 @@ function Arbitrum() {
               yaxisDataKey="openInterest"
               items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: GREEN }]}
               type="Bar"
+            />
+        </div>
+        <div className="chart-cell half">
+           <GenericChart
+              syncId="syncGlp"
+              loading={aumPerformanceLoading}
+              title="AUM Performance Annualized"
+              data={aumPerformanceData}
+              yaxisDataKey="apr"
+              yaxisTickFormatter={yaxisFormatterPercent}
+              tooltipFormatter={tooltipFormatterPercent}
+              items={[{ key: 'apr', name: 'APR' }]}
+              description="Formula = Daily Fees / GLP Pool * 365 days * 100"
+              type="Composed"
+            />
+        </div>
+        <div className="chart-cell half">
+           <GenericChart
+              syncId="syncGlp"
+              loading={aumPerformanceLoading}
+              title="AUM Daily Usage"
+              data={aumPerformanceData}
+              yaxisDataKey="usage"
+              yaxisTickFormatter={yaxisFormatterPercent}
+              tooltipFormatter={tooltipFormatterPercent}
+              items={[{ key: 'usage', name: 'Daily Usage', color: COLORS[4] }]}
+              description="Formula = Daily Volume / GLP Pool * 100"
+              type="Composed"
             />
         </div>
         <div className="chart-cell half">
