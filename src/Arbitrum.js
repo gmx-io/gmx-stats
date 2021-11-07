@@ -198,7 +198,7 @@ function Arbitrum() {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#22c761' : '#f93333'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke="#8884ff" dataKey="cumulativePnl" name="Cumulative PnL" />
+                <Line type="monotone" strokeWidth={2} stroke="#8884ff" dataKey="pnlCumulative" name="Cumulative PnL" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -220,8 +220,8 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#88eba1" dataKey="cumulativeProfit" name="Cumulative Profit" />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#f98888" dataKey="cumulativeLoss" name="Cumulative Loss" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#88eba1" dataKey="profitCumulative" name="Cumulative Profit" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#f98888" dataKey="lossCumulative" name="Cumulative Loss" />
                 <Bar type="monotone" fill="#22c761" dot={false} dataKey="profit" name="Profit" />
                 <Bar type="monotone" fill="#f93333" dot={false} dataKey="loss" name="Loss" />
               </ComposedChart>
@@ -248,7 +248,7 @@ function Arbitrum() {
            <GenericChart
               loading={tradersLoading}
               title="Open Interest"
-              data={tradersData?.data}
+              data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
               yaxisDataKey="openInterest"
               items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: GREEN }]}
               type="Bar"

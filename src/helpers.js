@@ -139,7 +139,7 @@ export const tooltipLabelFormatter = (label, args) => {
   const item = args && args[0] && args[0].payload && args[0]
   const dateFmtString = '%d.%m'
   const date = strftime(dateFmtString, label)
-  const all = item && (item.payload.all || item.payload.openInterest)
+  const all = item && (item.payload.all)
   if (all) {
     if (item && item.unit === '%') {
       return date

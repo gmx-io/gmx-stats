@@ -232,8 +232,8 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       timestamp
       profit
       loss
-      cumulativeProfit
-      cumulativeLoss
+      profitCumulative
+      lossCumulative
       longOpenInterest
       shortOpenInterest
     }
@@ -247,9 +247,9 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
 
     const profit = dataItem.profit / 1e30
     const loss = dataItem.loss / 1e30
-    const cumulativeProfit = dataItem.cumulativeProfit / 1e30
-    const cumulativeLoss = dataItem.cumulativeLoss / 1e30
-    const cumulativePnl = cumulativeProfit - cumulativeLoss
+    const profitCumulative = dataItem.profitCumulative / 1e30
+    const lossCumulative = dataItem.lossCumulative / 1e30
+    const pnlCumulative = profitCumulative - lossCumulative
     const pnl = profit - loss
     return {
       longOpenInterest,
@@ -257,10 +257,10 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       openInterest,
       profit,
       loss: -loss,
-      cumulativeProfit,
-      cumulativeLoss: -cumulativeLoss,
+      profitCumulative,
+      lossCumulative: -lossCumulative,
       pnl,
-      cumulativePnl,
+      pnlCumulative,
       timestamp: dataItem.timestamp
     }
   }) : null
@@ -272,18 +272,18 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
 
     const maxPnl = maxBy(data, item => item.pnl).pnl
     const minPnl = minBy(data, item => item.pnl).pnl
-    const maxCumulativePnl = maxBy(data, item => item.cumulativePnl).cumulativePnl
-    const minCumulativePnl = minBy(data, item => item.cumulativePnl).cumulativePnl
+    const maxCumulativePnl = maxBy(data, item => item.pnlCumulative).pnlCumulative
+    const minCumulativePnl = minBy(data, item => item.pnlCumulative).pnlCumulative
 
-    const cumulativeProfit = data[data.length - 1].cumulativeProfit
-    const cumulativeLoss = data[data.length - 1].cumulativeLoss
+    const profitCumulative = data[data.length - 1].profitCumulative
+    const lossCumulative = data[data.length - 1].lossCumulative
     const stats = {
       maxProfit,
       maxLoss,
       maxProfitLoss,
-      cumulativeProfit,
-      cumulativeLoss,
-      maxCumulativeProfitLoss: Math.max(cumulativeProfit, -cumulativeLoss),
+      profitCumulative,
+      lossCumulative,
+      maxCumulativeProfitLoss: Math.max(profitCumulative, -lossCumulative),
 
       maxAbsOfPnlAndCumulativePnl: Math.max(
         Math.abs(maxPnl),
@@ -563,30 +563,36 @@ export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
 export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.now() / 1000 - 86400 * 90 } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const feesQuery = `{
-    f1: hourlyFees(first: 1000, orderBy: id, orderDirection: desc) {
+    feeStats(first: 1000, orderBy: id, orderDirection: desc, where: { period: daily }) {
       id
-      ${PROPS.join('\n')}
-    }
-    f2: hourlyFees(first: 1000, skip: 1000, orderBy: id, orderDirection: desc) {
-      id
-      ${PROPS.join('\n')}
+      margin
+      marginAndLiquidation
+      swap
+      mint
+      burn
     }
   }`
-  let [feesData, loading, error] = useGraph(feesQuery)
+  let [feesData, loading, error] = useGraph(feesQuery, {
+    subgraph: 'gkrasulya/gmx'
+  })
 
   const feesChartData = useMemo(() => {
     if (!feesData) {
       return null
     }
 
-    let chartData = sortBy([...feesData.f1, ...feesData.f2], 'id').map(item => {
+    let chartData = sortBy(feesData.feeStats, 'id').map(item => {
       const ret = { timestamp: item.id };
       let all = 0;
 
       PROPS.forEach(prop => {
-        ret[prop] = item[prop] / 1e30
-        all += item[prop] / 1e30
+        if (item[prop]) {
+          ret[prop] = item[prop] / 1e30
+          all += item[prop] / 1e30
+        }
       })
+
+      ret.liquidation = item.marginAndLiquidation / 1e30 - item.margin / 1e30
       ret.all = all
       return ret
     })
