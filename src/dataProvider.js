@@ -135,6 +135,24 @@ export function useGraph(querySource, { subgraph = 'gmx-io/gmx-stats', subgraphU
   return [data, loading]
 }
 
+export function useGambitVolumeStats({ from, to }) {
+  const [data, loading, error] = useGraph(`{
+    volumeStats(
+      first: 1000,
+      where: { id_gte: ${from}, id_lte: ${to}, period: daily }
+      orderBy: id
+      orderDirection: desc
+    ) {
+      id
+      margin
+      swap
+      liquidation
+      mint
+      burn
+    }
+  }`, { subgraph: 'gkrasulya/gambit' })
+}
+
 export function useGambitPoolStats({ from, to, groupPeriod }) {
   const [data, loading, error] = useGraph(`{
     hourlyPoolStats (
@@ -237,7 +255,7 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       longOpenInterest
       shortOpenInterest
     }
-  }`, { subgraph: 'gkrasulya/gmx' })
+  }`)
 
   let ret = null
   const data = closedPositionsData ? sortBy(closedPositionsData.tradingStats, i => i.timestamp).map(dataItem => {
@@ -466,9 +484,7 @@ export function useFundingRateData() {
       endTimestamp
     }
   }`
-  const [graphData, loading, error] = useGraph(query, {
-    subgraph: 'gkrasulya/gmx'
-  })
+  const [graphData, loading, error] = useGraph(query)
 
   const data = useMemo(() => {
     if (!graphData) {
@@ -572,9 +588,7 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.no
       burn
     }
   }`
-  let [feesData, loading, error] = useGraph(feesQuery, {
-    subgraph: 'gkrasulya/gmx'
-  })
+  let [feesData, loading, error] = useGraph(feesQuery)
 
   const feesChartData = useMemo(() => {
     if (!feesData) {
@@ -776,7 +790,8 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
       const lpEthPrice = (lpEthCount * ethPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(ethPrice / ethFirstPrice))
 
       if (dailyFees && glpSupply) {
-        const GLP_REWARDS_SHARE = 0.5 // 50% goes to GLP
+        const INCREASED_GLP_REWARDS_TIMESTAMP = 1635714000
+        const GLP_REWARDS_SHARE = timestampGroup >= INCREASED_GLP_REWARDS_TIMESTAMP ? 0.7 : 0.5
         cumulativeFeesPerGlp += dailyFees / glpSupply * GLP_REWARDS_SHARE
       }
 
