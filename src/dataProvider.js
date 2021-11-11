@@ -443,7 +443,7 @@ export function useVolumeDataFromServer() {
 
 export function useUsersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const query = `{
-    userStats(first: 1000 orderBy: timestamp orderDirection: desc where: { period_not: "total" }) {
+    userStats(first: 1000 orderBy: timestamp orderDirection: desc where: { period: "daily" }) {
       uniqueCount
       uniqueSwapCount
       uniqueMarginCount
