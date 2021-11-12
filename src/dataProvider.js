@@ -135,8 +135,8 @@ export function useGraph(querySource, { subgraph = 'gmx-io/gmx-stats', subgraphU
   return [data, loading]
 }
 
-export function useGambitVolumeStats({ from, to }) {
-  const [data, loading, error] = useGraph(`{
+export function useGambitVolumeData({ from, to }) {
+  const [graphData, loading, error] = useGraph(`{
     volumeStats(
       first: 1000,
       where: { id_gte: ${from}, id_lte: ${to}, period: daily }
@@ -150,7 +150,32 @@ export function useGambitVolumeStats({ from, to }) {
       mint
       burn
     }
-  }`, { subgraph: 'gkrasulya/gambit' })
+  }`, {
+    subgraph: 'gkrasulya/gambit'
+  })
+
+  let data
+  if (graphData) {
+    data = sortBy(graphData.volumeStats, item => item.id).map(({ id, margin, swap, liquidation, mint, burn }) => {
+      margin = margin / 1e30
+      swap = swap / 1e30
+      liquidation = liquidation / 1e30
+      mint = mint / 1e30
+      burn = burn / 1e30
+      const all = margin + swap + liquidation + mint + burn
+      return {
+        timestamp: id,
+        all,
+        margin,
+        swap,
+        liquidation,
+        mint,
+        burn
+      }
+    })
+  }
+
+  return [data, loading]
 }
 
 export function useGambitPoolStats({ from, to, groupPeriod }) {
@@ -443,11 +468,20 @@ export function useVolumeDataFromServer() {
 
 export function useUsersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const query = `{
-    userStats(first: 1000 orderBy: timestamp orderDirection: desc where: { period: "daily" }) {
+    userStats(
+      first: 1000
+      orderBy: timestamp
+      orderDirection: desc
+      where: { period: "daily" }
+    ) {
       uniqueCount
       uniqueSwapCount
       uniqueMarginCount
       uniqueMintBurnCount
+      uniqueCountCumulative
+      uniqueSwapCountCumulative
+      uniqueMarginCountCumulative
+      uniqueMintBurnCountCumulative
       actionCount
       actionSwapCount
       actionMarginCount
@@ -457,9 +491,21 @@ export function useUsersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   }`
   const [graphData, loading, error] = useGraph(query)
 
+  const prevUniqueCountCumulative = {}
   const data = graphData ? sortBy(graphData.userStats, 'timestamp').map(item => {
+    const newCountData = ['', 'Swap', 'Margin', 'MintBurn'].reduce((memo, type) => {
+      memo[`new${type}Count`] = item[`unique${type}CountCumulative`] - (prevUniqueCountCumulative[type] || 0)
+      prevUniqueCountCumulative[type] = item[`unique${type}CountCumulative`]
+      return memo
+    }, {})
+    const oldCount = item.uniqueCount - newCountData.newCount
+    const oldPercent = (oldCount / item.uniqueCount * 100).toFixed(2)
     return {
       all: item.uniqueCount,
+      uniqueSum: item.uniqueSwapCount + item.uniqueMarginCount + item.uniqueMintBurnCount + 100,
+      oldCount,
+      oldPercent,
+      ...newCountData,
       ...item
     }
   }) : null
@@ -515,14 +561,15 @@ export function useFundingRateData() {
 const MOVING_AVERAGE_DAYS = 7
 const MOVING_AVERAGE_PERIOD = 86400 * MOVING_AVERAGE_DAYS
 
-export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+export function useVolumeData() {
 	const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const query = `{
-    h1: hourlyVolumes(first: 1000, orderBy: id, orderDirection: desc) {
-      id
-      ${PROPS.join('\n')}
-    }
-    h2: hourlyVolumes(first: 1000, skip: 1000, orderBy: id, orderDirection: desc) {
+    volumeStats(
+      first: 1000,
+      orderBy: id,
+      orderDirection: desc
+      where: {period: daily}
+    ) {
       id
       ${PROPS.join('\n')}
     }
@@ -534,12 +581,12 @@ export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       return null
     }
 
-    let ret =  sortBy([...graphData.h1, ...graphData.h2], 'id').map(item => {
+    let ret =  sortBy(graphData.volumeStats, 'id').map(item => {
       const ret = { timestamp: item.id };
       let all = 0;
       PROPS.forEach(prop => {
         ret[prop] = item[prop] / 1e30
-        all += item[prop] / 1e30
+        all += ret[prop]
       })
       ret.all = all
       return ret
@@ -547,30 +594,21 @@ export function useVolumeData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
 
     let cumulative = 0
     const cumulativeByTs = {}
-    return chain(ret)
-      .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
-      .map((values, timestamp) => {
-        const all = sumBy(values, 'all')
-        cumulative += all
+    return ret.map(item => {
+      cumulative += item.all
 
-        let movingAverageAll
-        const movingAverageTs = timestamp - MOVING_AVERAGE_PERIOD
-        if (movingAverageTs in cumulativeByTs) {
-          movingAverageAll = (cumulative - cumulativeByTs[movingAverageTs]) / MOVING_AVERAGE_DAYS
-        }
+      let movingAverageAll
+      const movingAverageTs = item.timestamp - MOVING_AVERAGE_PERIOD
+      if (movingAverageTs in cumulativeByTs) {
+        movingAverageAll = (cumulative - cumulativeByTs[movingAverageTs]) / MOVING_AVERAGE_DAYS
+      }
 
-        const ret = {
-          timestamp,
-          all,
-          cumulative,
-          movingAverageAll
-        }
-        PROPS.forEach(prop => {
-           ret[prop] = sumBy(values, prop)
-        })
-        cumulativeByTs[timestamp] = cumulative
-        return ret
-      }).value()
+      return {
+        movingAverageAll,
+        cumulative,
+        ...item
+      }
+    })
   }, [graphData])
 
   return [data, loading, error]
@@ -678,24 +716,23 @@ export function useAumPerformanceData({ groupPeriod }) {
 
 export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const query = `{
-    d1: hourlyGlpStats(first: 1000, orderBy: id, orderDirection: desc) {
+    glpStats(
+      first: 1000
+      orderBy: id
+      orderDirection: desc
+      where: {period: daily}
+    ) {
       id
       aumInUsdg
       glpSupply
-    }
-    d2: hourlyGlpStats(first: 1000, skip: 1000, orderBy: id, orderDirection: desc) {
-      id
-      aumInUsdg
-      glpSupply
-    }
-    d3: hourlyGlpStats(first: 1000, skip: 2000, orderBy: id, orderDirection: desc) {
-      id
-      aumInUsdg
-      glpSupply
+      distributedUsd
+      distributedEth
     }
   }`
   let [data, loading, error] = useGraph(query)
 
+  let cumulativeDistributedUsdPerGlp = 0
+  let cumulativeDistributedEthPerGlp = 0
   const glpChartData = useMemo(() => {
     if (!data) {
       return null
@@ -703,11 +740,20 @@ export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
     
     let prevGlpSupply
     let prevAum
-    return sortBy([...data.d1, ...data.d2, ...data.d3], item => item.id).reduce((memo, item) => {
+    return sortBy(data.glpStats, item => item.id).filter(item => item.id % 86400 === 0).reduce((memo, item) => {
       const last = memo[memo.length - 1]
 
       const aum = Number(item.aumInUsdg) / 1e18
       const glpSupply = Number(item.glpSupply) / 1e18
+
+      const distributedUsd = Number(item.distributedUsd) / 1e30
+      const distributedUsdPerGlp = distributedUsd / glpSupply
+      cumulativeDistributedUsdPerGlp += distributedUsdPerGlp
+
+      const distributedEth = Number(item.distributedEth) / 1e18
+      const distributedEthPerGlp = distributedEth / glpSupply
+      cumulativeDistributedEthPerGlp += distributedEthPerGlp
+
       const glpPrice = aum / glpSupply
       const timestamp = Math.floor(item.id / groupPeriod) * groupPeriod
 
@@ -715,7 +761,11 @@ export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
         timestamp,
         aum,
         glpSupply,
-        glpPrice
+        glpPrice,
+        cumulativeDistributedEthPerGlp,
+        cumulativeDistributedUsdPerGlp,
+        distributedUsdPerGlp,
+        distributedEthPerGlp
       }
 
       if (last && last.timestamp === timestamp) {
@@ -762,6 +812,7 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
 
     const BTC_WEIGHT = 0.25
     const ETH_WEIGHT = 0.25
+    const STABLE_WEIGHT = 1 - BTC_WEIGHT - ETH_WEIGHT
     const GLP_START_PRICE = glpDataById[btcPrices[0].timestamp]?.glpPrice || 1.19
 
     const btcFirstPrice = btcPrices[0].value
@@ -775,29 +826,48 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
 
     const ret = []
     let cumulativeFeesPerGlp = 0
+    let cumulativeEsgmxRewardsPerGlp = 0
     let lastGlpPrice = 0
+
     for (let i = 0; i < btcPrices.length; i++) {
       const btcPrice = btcPrices[i].value
       const ethPrice = ethPrices[i]?.value ?? 3400
 
       const timestampGroup = parseInt(btcPrices[i].timestamp / 86400) * 86400
-      const glpPrice = glpDataById[timestampGroup]?.glpPrice ?? lastGlpPrice
+      const glpItem = glpDataById[timestampGroup]
+      const glpPrice = glpItem?.glpPrice ?? lastGlpPrice
       lastGlpPrice = glpPrice
       const glpSupply = glpDataById[timestampGroup]?.glpSupply
       const dailyFees = feesDataById[timestampGroup]?.all
-      const syntheticPrice = indexBtcCount * btcPrice + indexEthCount * ethPrice + GLP_START_PRICE / 2
+      const syntheticPrice = indexBtcCount * btcPrice + indexEthCount * ethPrice + GLP_START_PRICE * STABLE_WEIGHT
       const lpBtcPrice = (lpBtcCount * btcPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(btcPrice / btcFirstPrice))
       const lpEthPrice = (lpEthCount * ethPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(ethPrice / ethFirstPrice))
 
       if (dailyFees && glpSupply) {
         const INCREASED_GLP_REWARDS_TIMESTAMP = 1635714000
         const GLP_REWARDS_SHARE = timestampGroup >= INCREASED_GLP_REWARDS_TIMESTAMP ? 0.7 : 0.5
-        cumulativeFeesPerGlp += dailyFees / glpSupply * GLP_REWARDS_SHARE
+        const collectedFeesPerGlp = dailyFees / glpSupply * GLP_REWARDS_SHARE
+        cumulativeFeesPerGlp += collectedFeesPerGlp
+
+        cumulativeEsgmxRewardsPerGlp += glpPrice * 0.8 / 365
       }
 
       let glpPlusFees
       if (glpPrice && glpSupply && cumulativeFeesPerGlp) {
         glpPlusFees = glpPrice + cumulativeFeesPerGlp
+      }
+
+      let glpApr
+      let glpPlusDistributedUsd
+      let glpPlusDistributedEth
+      if (glpItem) {
+        if (glpItem.cumulativeDistributedUsdPerGlp) {
+          glpPlusDistributedUsd = glpPrice + glpItem.cumulativeDistributedUsdPerGlp
+          // glpApr = glpItem.distributedUsdPerGlp / glpPrice * 365 * 100 // incorrect?
+        }
+        if (glpItem.cumulativeDistributedEthPerGlp) {
+          glpPlusDistributedEth = glpPrice + glpItem.cumulativeDistributedEthPerGlp * ethPrice
+        }
       }
 
       ret.push({
@@ -809,8 +879,21 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
         btcPrice,
         ethPrice,
         glpPlusFees,
-        performanceSynthetic: glpPlusFees ? (glpPlusFees / syntheticPrice * 100).toFixed(2) : null,
-        performanceLpEth: glpPlusFees ? (glpPlusFees / lpEthPrice * 100).toFixed(2) : null
+        glpPlusDistributedUsd,
+        glpPlusDistributedEth,
+        performanceLpEth: (glpPrice / lpEthPrice * 100).toFixed(2),
+        performanceLpEthCollectedFees: (glpPlusFees / lpEthPrice * 100).toFixed(2),
+        performanceLpEthDistributedUsd: (glpPlusDistributedUsd / lpEthPrice * 100).toFixed(2),
+        performanceLpEthDistributedEth: (glpPlusDistributedEth / lpEthPrice * 100).toFixed(2),
+
+        performanceLpBtcCollectedFees: (glpPlusFees / lpBtcPrice * 100).toFixed(2),
+
+        performanceSynthetic: (glpPrice / syntheticPrice * 100).toFixed(2),
+        performanceSyntheticCollectedFees: (glpPlusFees / syntheticPrice * 100).toFixed(2),
+        performanceSyntheticDistributedUsd: (glpPlusDistributedUsd / syntheticPrice * 100).toFixed(2),
+        performanceSyntheticDistributedEth: (glpPlusDistributedEth / syntheticPrice * 100).toFixed(2),
+
+        glpApr
       })
     }
 

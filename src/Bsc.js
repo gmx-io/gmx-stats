@@ -3,7 +3,11 @@ import * as ethers from 'ethers'
 import * as strftime from 'strftime'
 
 import { urlWithParams, tsToIso } from './helpers'
-import { useRequest, useGambitPoolStats } from './dataProvider'
+import {
+  useRequest,
+  useGambitPoolStats,
+  useGambitVolumeData
+} from './dataProvider'
 
 import {
   LineChart,
@@ -151,7 +155,6 @@ function Bsc() {
     })
   }, [swapSourcesData, displayPercentage])
 
-  // const [poolStatsData, poolStatsLoading] = useRequest(urlWithParams('/api/poolStats2', params), [])
   const [poolStatsData, poolStatsLoading] = useGambitPoolStats({ from: fromTs, to: toTs, groupPeriod: period })
   const poolAmountsChartData = useMemo(() => {
     if (!poolStatsData) {
@@ -206,50 +209,28 @@ function Bsc() {
     })
   }, [poolStatsData])
 
-  const [volumeData, volumeLoading] = useRequest(urlWithParams('/api/volume', params), [])
-  const volumeChartData = useMemo(() => {
-    return volumeData.map(item => {
-      if (!item.metrics) {
-        return {
-          timestamp: item.timestamp
-        }
-      }
+  // const [volumeData, volumeLoading] = useRequest(urlWithParams('/api/volume', params), [])
+  const [volumeChartData, volumeLoading] = useGambitVolumeData(params)
+  // const volumeChartData = useMemo(() => {
+  //   return volumeData.map(item => {
+  //     if (!item.metrics) {
+  //       return {
+  //         timestamp: item.timestamp
+  //       }
+  //     }
 
-      const allValue = Object.values(item.metrics).reduce((sum, value) => sum + value, 0)
-      const metrics = Object.entries(item.metrics).reduce((memo, [key, value]) => {
-        memo[key] = displayPercentage ? value / allValue * 100 : value
-        return memo
-      }, {})
-      return {
-        ...metrics,
-        all: displayPercentage ? 100 : allValue,
-        timestamp: item.timestamp
-      }
-    })
-  }, [volumeData, displayPercentage])
-  const volumeStats = useMemo(() => {
-    if (!volumeData || volumeData.length === 0) {
-      return
-    }
-    const getAll = el => Object.values(el.metrics || {}).reduce((sum, value) => sum + value, 0)
-    return {
-      today: getAll(volumeData[volumeData.length - 1]),
-      last7days: volumeData.slice(-7).reduce((memo, el) => {
-        return memo + getAll(el)
-      }, 0)
-    }
-  }, [volumeData])
-
-  const [volumeByHourData, volumeByHourLoading] = useRequest(urlWithParams('/api/volumeByHour', params), [])
-  const volumeByHourChartData = useMemo(() => {
-    const getAll = el => Object.values(el.metrics || {}).reduce((sum, value) => sum + value, 0)
-    return volumeByHourData.map(item => {
-      return {
-        hour: item.hour,
-        value: getAll(item)
-      }
-    })
-  }, [volumeByHourData])
+  //     const allValue = Object.values(item.metrics).reduce((sum, value) => sum + value, 0)
+  //     const metrics = Object.entries(item.metrics).reduce((memo, [key, value]) => {
+  //       memo[key] = displayPercentage ? value / allValue * 100 : value
+  //       return memo
+  //     }, {})
+  //     return {
+  //       ...metrics,
+  //       all: displayPercentage ? 100 : allValue,
+  //       timestamp: item.timestamp
+  //     }
+  //   })
+  // }, [volumeData, displayPercentage])
 
   const yaxisFormatter = useCallback((value, ...args) => {
     if (displayPercentage) {
@@ -321,20 +302,10 @@ function Bsc() {
           <button onClick={evt => setDatetimeRange(86400 * 7)}>7 days</button>
           <button onClick={evt => setDatetimeRange(86400)}>24 hours</button>
         </p>
-        <p>
-          <input id="displayPercentageCheckbox" type="checkbox" checked={displayPercentage} onChange={evt => setDisplayPercentage(evt.target.checked)} />
-          <label htmlFor="displayPercentageCheckbox">Show relative shares</label>
-        </p>
       </div>
       <div className="chart-grid">
         <div className="chart-cell">
           <h3>Volume</h3>
-          {volumeStats &&
-            <p className="stats">
-              Today: <b>{numberFmt.format(volumeStats.today)}</b><br />
-              Last 7 days: <b>{numberFmt.format(volumeStats.last7days)}</b>
-            </p>
-          }
           { volumeLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <BarChart syncId="syncId" data={volumeChartData}>
@@ -493,21 +464,6 @@ function Bsc() {
           <div className="chart-description">
             <p>Includes users routed through other protocols (like 1inch)</p>
           </div>
-        </div>
-
-        <div className="chart-cell">
-          <h3>Volume by hour</h3> 
-          { volumeByHourLoading && <RiLoader5Fill size="3em" className="loader" /> }
-          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <BarChart data={volumeByHourChartData}>
-              <CartesianGrid strokeDasharray="10 10" />
-              <XAxis dataKey="hour" />
-              <YAxis dataKey="value" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
-              <Tooltip />
-              <Legend />
-              <Bar type="monotone" dataKey="value" name="Volume" fill="#eb8334" />
-            </BarChart>
-          </ResponsiveContainer>
         </div>
       </div>
     </div>

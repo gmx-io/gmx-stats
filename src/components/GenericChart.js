@@ -53,7 +53,8 @@ export default function GenericChart(props) {
     items,
     type,
     syncId,
-    children
+    children,
+    rightYaxisDataKey
   } = props
 
   let ChartComponent
@@ -74,7 +75,10 @@ export default function GenericChart(props) {
       fill: item.color || COLORS[i % COLORS.length],
       stroke: item.color || COLORS[i % COLORS.length],
       dot: item.dot || false,
-      key: 'item-' + i
+      key: 'item-' + i,
+      unit: item.unit,
+      strokeWidth: item.strokeWidth,
+      yAxisId: item.yAxisId
     }
     if (item.type === 'Line' || type === 'Line') {
       return <Line {...props} isAnimationActive={false} />
@@ -88,6 +92,11 @@ export default function GenericChart(props) {
         <CartesianGrid strokeDasharray="10 10" key="a" />,
         <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} key="b" />,
         <YAxis domain={yaxisDomain} dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} key="c" />,
+        (
+          rightYaxisDataKey ?
+            <YAxis dataKey={rightYaxisDataKey} tickFormatter={yaxisTickFormatter} orientation="right" yAxisId="right" key="c2" />
+            : null
+        ),
         <Tooltip
           formatter={tooltipFormatter}
           labelFormatter={tooltipLabelFormatter}

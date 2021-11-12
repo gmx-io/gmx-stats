@@ -22,6 +22,8 @@
        url('./fonts/relative/relative-bold-pro.ttf') format('truetype'); /* Safari, Android, iOS */
 }
 body {
+  font-size: 0.9rem;
+  background: #f6f9ff;
   margin: 0;
   padding: 0;
   font-family: RelativeMono, sans-serif;
@@ -29,7 +31,7 @@ body {
 }
 
 .recharts-wrapper {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-family: Monaco, Consolas, monospace;
 }
 
@@ -44,7 +46,7 @@ body {
 .App {
   color: #222;
   line-height: 1.15;
-  padding: 15px 20px;
+  padding: 1rem
 }
 
 h3, h2 {
@@ -54,11 +56,12 @@ h3, h2 {
 h3 {
   margin: 1rem 0;
   font-weight: normal;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+  font-weight: normal
 }
 
 label {
@@ -71,12 +74,11 @@ label + input {
 }
 
 .chart-subtitle, .stats {
-  font-size: 0.9rem;
   margin: 1.5rem 0 1rem;
 }
 
 .chart-description {
-  margin: 1rem 0;
+  margin: 1rem 0 0;
   max-width: 600px;
 }
 
@@ -99,13 +101,52 @@ label + input {
 
 .chart-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem 2rem; 
+  grid-template-columns: repeat(10, 1fr);
+  gap: 1rem;
   margin-top: 1rem;
 }
 
+.chart-grid-subtitle {
+  grid-column-start: 1;
+  grid-column-end: 9;
+  margin-bottom: 0;
+  margin-top: 2rem;
+}
+
+.total-stat-label {
+}
+.total-stat-value {
+  font-size: 1.5rem;
+  margin-top: 0.3rem;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
 .chart-cell {
+  margin: 0;
+  border-radius: 3px;
+  border: 1px solid #eee;
+  background: white;
   position: relative;
+  padding: 1rem;
+  grid-column-start: span 5;
+}
+.chart-cell.stats {
+  grid-column-start: span 2;
+  text-align: center;
+}
+.chart-cell.experiment {
+  border-color: #fbb;
+}
+.chart-cell.experiment:after {
+  color: #f55;
+  top: 1rem;
+  right: 1rem;
+  position: absolute;
+  content: '(experimental)';
+}
+.chart-cell h3 {
+  margin-top: 0;
 }
 
 .form button {
@@ -123,12 +164,14 @@ label + input {
 }
 
 .loader {
-  animation: loader 1s infinite;
+  animation: loader 1.5s infinite;
+  opacity: 0.3;
 }
 .chart-cell .loader {
   position: absolute;
   margin-left: -1.5em;
-  margin-right: -1.5em;
+  margin-top: -1.5em;
+  font-size: 0.7rem;
   top: 50%;
   left: 50%;
   z-index: 2;
@@ -167,13 +210,21 @@ a, a:active, a:visited {
   opacity: 1;
 }
 
-@media all and (max-width: 1200px) {
+@media all and (max-width: 1000px) {
   .chart-grid {
     display: grid;
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chart-cell {
+    grid-column-start: span 2;
+    grid-column-end: auto;
+  }
+  .chart-cell.stats {
+    grid-column-start: span 1;
   }
 }
 
 .content {
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
