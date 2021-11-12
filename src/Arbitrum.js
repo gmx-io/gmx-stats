@@ -374,15 +374,13 @@ function Arbitrum() {
               title="Unique Users"
               data={usersData}
               yaxisDataKey="uniqueSum"
-              rightYaxisDataKey="uniqueCountCumulative"
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
                 { key: 'uniqueSwapCount', name: 'Swaps' },
                 { key: 'uniqueMarginCount', name: 'Margin trading' },
-                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP' },
-                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
+                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP' }
               ]}
               type="Composed"
             />
@@ -394,13 +392,15 @@ function Arbitrum() {
               title="New Users"
               data={usersData?.map(item => ({ ...item, all: item.newCount }))}
               yaxisDataKey="newCount"
+              rightYaxisDataKey="uniqueCountCumulative"
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
                 { key: 'newSwapCount', name: 'Swap' },
                 { key: 'newMarginCount', name: 'Margin trading' },
-                { key: 'newMintBurnCount', name: 'Mint & Burn' }
+                { key: 'newMintBurnCount', name: 'Mint & Burn' },
+                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
               ]}
               type="Composed"
             />
