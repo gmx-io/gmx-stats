@@ -73,15 +73,46 @@ function Arbitrum() {
 
   const [fundingRateData, fundingRateLoading] = useFundingRateData()
   const [volumeData, volumeLoading] = useVolumeDataFromServer({ groupPeriod })
-  const totalVolume = volumeData ? volumeData[volumeData.length - 1].cumulative : null
+  const [totalVolume, totalVolumeDelta] = useMemo(() => {
+    if (!volumeData) {
+      return []
+    }
+    const total = volumeData[volumeData.length - 1]?.cumulative
+    const delta = total - volumeData[volumeData.length - 2]?.cumulative
+    return [total, delta]
+  }, [volumeData])
+
   const [feesData, feesLoading] = useFeesData({ groupPeriod })
-  const totalFees = feesData ? feesData[feesData.length - 1].cumulative : null
+  const [totalFees, totalFeesDelta] = useMemo(() => {
+    if (!feesData) {
+      return []
+    }
+    const total = feesData[feesData.length - 1]?.cumulative
+    const delta = total - feesData[feesData.length - 2]?.cumulative
+    return [total, delta]
+  }, [feesData])
+
   const [glpData, glpLoading] = useGlpData({ groupPeriod })
-  const totalAum = glpData ? glpData[glpData.length - 1].aum : null
+  const [totalAum, totalAumDelta] = useMemo(() => {
+    if (!glpData) {
+      return []
+    }
+    const total = glpData[glpData.length - 1]?.aum
+    const delta = total - glpData[glpData.length - 2]?.aum
+    return [total, delta]
+  }, [glpData])
+
   const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData({ groupPeriod })
   const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, { groupPeriod })
   const [tradersData, tradersLoading] = useTradersData({ groupPeriod })
-  const openInterest = tradersData?.data ? tradersData.data[tradersData.data.length - 1].openInterest : null
+  const [openInterest, openInterestDelta] = useMemo(() => {
+    if (!tradersData) {
+      return []
+    }
+    const total = tradersData.data[tradersData.data.length - 1]?.openInterest
+    const delta = total - tradersData.data[tradersData.data.length - 2]?.openInterest
+    return [total, delta]
+  }, [tradersData])
   const [swapSources, swapSourcesLoading] = useSwapSources({ groupPeriod })
   const swapSourcesKeys = Object.keys((swapSources || []).reduce((memo, el) => {
     Object.keys(el).forEach(key => {
@@ -92,7 +123,19 @@ function Arbitrum() {
   }, {}))
 
   const [usersData, usersLoading] = useUsersData({ groupPeriod })
-  const totalUsers = 6942 // usersData ? usersData[usersData.length - 1].uniqueCountCumulative : null
+  const [totalUsers, totalUsersDelta] = useMemo(() => {
+    if (!usersData) {
+      return [null, null]
+    }
+    const total = usersData[usersData.length - 1]?.uniqueCountCumulative
+    const prevTotal = usersData[usersData.length - 2]?.uniqueCountCumulative
+    const delta = total && prevTotal ? total - prevTotal : null
+    return [
+      total,
+      delta
+    ]
+
+  }, [usersData])
 
   const [lastSubgraphBlock] = useLastSubgraphBlock()
   const [lastBlock] = useLastBlock()
@@ -118,31 +161,48 @@ function Arbitrum() {
         <div className="chart-cell stats">
           {totalVolume ? <>
             <div className="total-stat-label">Total Volume</div>
-            <div className="total-stat-value">{formatNumber(totalVolume, {currency: true})}</div>
+            <div className="total-stat-value">
+              {formatNumber(totalVolume, {currency: true})}
+              <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalVolumeDelta, {currency: true, compact: true})}</span>
+            </div>
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {totalFees ? <>
             <div className="total-stat-label">Total Fees</div>
-            <div className="total-stat-value">{formatNumber(totalFees, {currency: true})}</div>
+            <div className="total-stat-value">
+              {formatNumber(totalFees, {currency: true})}
+              <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalFeesDelta, {currency: true, compact: true})}</span>
+            </div>
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {totalAum ? <>
             <div className="total-stat-label">GLP Pool</div>
-            <div className="total-stat-value">{formatNumber(totalAum, {currency: true})}</div>
+            <div className="total-stat-value">
+              {formatNumber(totalAum, {currency: true})}
+              <span className="total-stat-delta" title="Change since previous day">{totalAumDelta > 0 ? '+' : ''}{formatNumber(totalAumDelta, {currency: true, compact: true})}</span>
+            </div>
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {totalUsers ? <>
             <div className="total-stat-label">Total Users</div>
-            <div className="total-stat-value">{formatNumber(totalUsers)}</div>
+            <div className="total-stat-value">
+              {formatNumber(totalUsers)}
+              <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalUsersDelta)}</span>
+            </div>
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {openInterest ? <>
             <div className="total-stat-label">Open Interest</div>
-            <div className="total-stat-value">{formatNumber(openInterest, {currency: true})}</div>
+            <div className="total-stat-value">
+              {formatNumber(openInterest, {currency: true})}
+              <span className="total-stat-delta" title="Change since previous day">
+                {openInterestDelta > 0 ? '+' : ''}{formatNumber(openInterestDelta, {currency: true, compact: true})}
+              </span>
+            </div>
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell">

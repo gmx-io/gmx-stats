@@ -46,8 +46,12 @@ export function getLogger(ns) {
 
 const logger = getLogger('helpers')
 
-const numberFmt = Intl.NumberFormat('en-US')
-const currencyFmt = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+const numberFmt0 = Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
+const numberFmt1 = Intl.NumberFormat('en-US', { maximumFractionDigits: 1 })
+const numberFmt2 = Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
+const currencyFmt0 = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+const currencyFmt1 = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 1 })
+const currencyFmt2 = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
 
 export function fillPeriods(arr, { period, from, to, interpolate = true, extrapolate = false }) {
   let i = 0
@@ -99,15 +103,37 @@ export function fillPeriods(arr, { period, from, to, interpolate = true, extrapo
   return ret
 }
 
+function _getNumberFmt(value) {
+  const absValue = Math.abs(value)
+  if (absValue < 10) {
+    return numberFmt2
+  } else if (absValue < 1000) {
+    return numberFmt1
+  } else {
+    return numberFmt0
+  }
+}
+
+function _getCurrencyFmt(value) {
+  const absValue = Math.abs(value)
+  if (absValue < 10) {
+    return currencyFmt2
+  } else if (absValue < 1000) {
+    return currencyFmt1
+  } else {
+    return currencyFmt0
+  }
+}
+
 export const formatNumber = (value, opts = {}) => {
   const currency = !!opts.currency
   const compact = !!opts.compact
 
   if (currency && !compact) {
-    return currencyFmt.format(value)
+    return _getCurrencyFmt(value).format(value)
   }
 
-  const display = compact ? compactNumber(value) : numberFmt.format(value)
+  const display = compact ? compactNumber(value) : _getNumberFmt(value).format(value)
   if (currency) {
     return `$${display}`
   }

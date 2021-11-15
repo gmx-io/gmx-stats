@@ -139,7 +139,7 @@ export function useGambitVolumeData({ from, to }) {
   const [graphData, loading, error] = useGraph(`{
     volumeStats(
       first: 1000,
-      where: { id_gte: ${from}, id_lte: ${to}, period: daily }
+      where: { id_gt: ${from}, id_lte: ${to}, period: daily }
       orderBy: id
       orderDirection: desc
     ) {
@@ -281,12 +281,31 @@ export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       shortOpenInterest
     }
   }`)
+  const [feesData] = useFeesData({ groupPeriod })
+  const marginFeesByTs = useMemo(() => {
+    if (!feesData) {
+      return {}
+    }
+
+    let feesCumulative = 0
+    return feesData.reduce((memo, { timestamp, margin: fees}) => {
+      feesCumulative += fees
+      memo[timestamp] = {
+        fees,
+        feesCumulative
+      }
+      return memo
+    }, {})
+  }, [feesData])
 
   let ret = null
   const data = closedPositionsData ? sortBy(closedPositionsData.tradingStats, i => i.timestamp).map(dataItem => {
     const longOpenInterest = dataItem.longOpenInterest / 1e30
     const shortOpenInterest = dataItem.shortOpenInterest / 1e30
     const openInterest = longOpenInterest + shortOpenInterest
+
+    const fees = (marginFeesByTs[dataItem.timestamp]?.fees || 0)
+    const feesCumulative = (marginFeesByTs[dataItem.timestamp]?.feesCumulative || 0)
 
     const profit = dataItem.profit / 1e30
     const loss = dataItem.loss / 1e30
@@ -499,7 +518,7 @@ export function useUsersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       return memo
     }, {})
     const oldCount = item.uniqueCount - newCountData.newCount
-    const oldPercent = (oldCount / item.uniqueCount * 100).toFixed(2)
+    const oldPercent = (oldCount / item.uniqueCount * 100).toFixed(1)
     return {
       all: item.uniqueCount,
       uniqueSum: item.uniqueSwapCount + item.uniqueMarginCount + item.uniqueMintBurnCount + 100,
@@ -881,17 +900,17 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
         glpPlusFees,
         glpPlusDistributedUsd,
         glpPlusDistributedEth,
-        performanceLpEth: (glpPrice / lpEthPrice * 100).toFixed(2),
-        performanceLpEthCollectedFees: (glpPlusFees / lpEthPrice * 100).toFixed(2),
-        performanceLpEthDistributedUsd: (glpPlusDistributedUsd / lpEthPrice * 100).toFixed(2),
-        performanceLpEthDistributedEth: (glpPlusDistributedEth / lpEthPrice * 100).toFixed(2),
+        performanceLpEth: (glpPrice / lpEthPrice * 100).toFixed(1),
+        performanceLpEthCollectedFees: (glpPlusFees / lpEthPrice * 100).toFixed(1),
+        performanceLpEthDistributedUsd: (glpPlusDistributedUsd / lpEthPrice * 100).toFixed(1),
+        performanceLpEthDistributedEth: (glpPlusDistributedEth / lpEthPrice * 100).toFixed(1),
 
-        performanceLpBtcCollectedFees: (glpPlusFees / lpBtcPrice * 100).toFixed(2),
+        performanceLpBtcCollectedFees: (glpPlusFees / lpBtcPrice * 100).toFixed(1),
 
-        performanceSynthetic: (glpPrice / syntheticPrice * 100).toFixed(2),
-        performanceSyntheticCollectedFees: (glpPlusFees / syntheticPrice * 100).toFixed(2),
-        performanceSyntheticDistributedUsd: (glpPlusDistributedUsd / syntheticPrice * 100).toFixed(2),
-        performanceSyntheticDistributedEth: (glpPlusDistributedEth / syntheticPrice * 100).toFixed(2),
+        performanceSynthetic: (glpPrice / syntheticPrice * 100).toFixed(1),
+        performanceSyntheticCollectedFees: (glpPlusFees / syntheticPrice * 100).toFixed(1),
+        performanceSyntheticDistributedUsd: (glpPlusDistributedUsd / syntheticPrice * 100).toFixed(1),
+        performanceSyntheticDistributedEth: (glpPlusDistributedEth / syntheticPrice * 100).toFixed(1),
 
         glpApr
       })

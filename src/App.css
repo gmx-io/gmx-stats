@@ -44,7 +44,7 @@ body {
 }
 
 .App {
-  color: #222;
+  color: #000;
   line-height: 1.15;
   padding: 1rem
 }
@@ -100,6 +100,7 @@ label + input {
 }
 
 .chart-grid {
+  color: #222;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   gap: 1rem;
@@ -121,17 +122,24 @@ label + input {
   overflow: hidden;
   white-space: pre-wrap;
 }
+.total-stat-delta {
+  color: #999;
+  font-size: 0.7em;
+  display: block;
+  margin-left: 0.2rem;
+}
 
 .chart-cell {
   margin: 0;
   border-radius: 3px;
-  border: 1px solid #eee;
+  border: 1px solid #e6e6f7;
   background: white;
   position: relative;
   padding: 1rem;
   grid-column-start: span 5;
 }
 .chart-cell.stats {
+  min-height: 60px;
   grid-column-start: span 2;
   text-align: center;
 }
