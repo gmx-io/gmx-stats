@@ -348,6 +348,7 @@ function Arbitrum() {
             </ResponsiveContainer>
             <div className="chart-description">
               <p>Considers settled (closed) positions</p>
+              <p>Fees are not factored into PnL</p>
             </div>
           </ChartWrapper>
         </div>
@@ -373,6 +374,7 @@ function Arbitrum() {
             </ResponsiveContainer>
             <div className="chart-description">
               <p>Considers settled (closed) positions</p>
+              <p>Fees are not factored into PnL</p>
             </div>
           </ChartWrapper>
         </div>

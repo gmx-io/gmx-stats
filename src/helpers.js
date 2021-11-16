@@ -46,12 +46,12 @@ export function getLogger(ns) {
 
 const logger = getLogger('helpers')
 
-const numberFmt0 = Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
-const numberFmt1 = Intl.NumberFormat('en-US', { maximumFractionDigits: 1 })
-const numberFmt2 = Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
-const currencyFmt0 = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
-const currencyFmt1 = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 1 })
-const currencyFmt2 = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
+const numberFmt0 = Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+const numberFmt1 = Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 1 })
+const numberFmt2 = Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+const currencyFmt0 = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
+const currencyFmt1 = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 1 })
+const currencyFmt2 = Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 })
 
 export function fillPeriods(arr, { period, from, to, interpolate = true, extrapolate = false }) {
   let i = 0

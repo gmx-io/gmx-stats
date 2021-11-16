@@ -654,17 +654,15 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.no
 
     let chartData = sortBy(feesData.feeStats, 'id').map(item => {
       const ret = { timestamp: item.id };
-      let all = 0;
 
       PROPS.forEach(prop => {
         if (item[prop]) {
           ret[prop] = item[prop] / 1e30
-          all += item[prop] / 1e30
         }
       })
 
       ret.liquidation = item.marginAndLiquidation / 1e30 - item.margin / 1e30
-      ret.all = all
+      ret.all = PROPS.reduce((memo, prop) => memo + ret[prop], 0)
       return ret
     })
 
