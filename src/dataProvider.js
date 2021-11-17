@@ -846,9 +846,11 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
     let cumulativeEsgmxRewardsPerGlp = 0
     let lastGlpPrice = 0
 
+    let prevEthPrice = 3400
     for (let i = 0; i < btcPrices.length; i++) {
       const btcPrice = btcPrices[i].value
-      const ethPrice = ethPrices[i]?.value ?? 3400
+      const ethPrice = ethPrices[i]?.value || prevEthPrice
+      prevEthPrice = ethPrice
 
       const timestampGroup = parseInt(btcPrices[i].timestamp / 86400) * 86400
       const glpItem = glpDataById[timestampGroup]
