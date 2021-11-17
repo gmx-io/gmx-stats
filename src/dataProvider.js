@@ -180,7 +180,7 @@ export function useGambitVolumeData({ from, to }) {
 
 export function useGambitPoolStats({ from, to, groupPeriod }) {
   const [data, loading, error] = useGraph(`{
-    hourlyPoolStats (
+    poolStats (
       first: 1000,
       where: { id_gte: ${from}, id_lte: ${to} }
       orderBy: id
@@ -188,12 +188,12 @@ export function useGambitPoolStats({ from, to, groupPeriod }) {
     ) {
       id,
       usdgSupply,
-      BTC,
-      ETH,
-      BNB,
-      USDC,
-      USDT,
-      BUSD
+      BTC_usd,
+      ETH_usd,
+      BNB_usd,
+      USDC_usd,
+      USDT_usd,
+      BUSD_usd
     }
   }`, { subgraph: 'gkrasulya/gambit' })
 
@@ -201,11 +201,11 @@ export function useGambitPoolStats({ from, to, groupPeriod }) {
     if (!data) {
        return null
     } 
-    let ret = data.hourlyPoolStats.map(item => {
+    let ret = data.poolStats.map(item => {
       return Object.entries(item).reduce((memo, [key, value]) => {
         if (key === 'id') memo.timestamp = value
         else if (key === 'usdgSupply') memo.usdgSupply = value / 1e18
-        else memo[key] = value / 1e30
+        else memo[key.substr(0, key.length - 4)] = value / 1e30
         return memo
       }, {})
     })
