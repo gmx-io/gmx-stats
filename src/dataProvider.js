@@ -11,6 +11,7 @@ const formatUnits = ethers.utils.formatUnits
 const provider = new ethers.providers.JsonRpcProvider('https://arb1.arbitrum.io/rpc');
 
 const DEFAULT_GROUP_PERIOD = 86400
+const FIRST_DATE_TS = parseInt(+(new Date(2021, 7, 31)) / 1000)
 
 function fillNa(arr, keys) {
   const prevValues = {}
@@ -77,7 +78,7 @@ export function useRequest(url, defaultValue, fetcher = defaultFetcher) {
   return [data, loading, error]
 }
 
-export function useCoingeckoPrices(symbol) {
+export function useCoingeckoPrices(symbol, { from = FIRST_DATE_TS } = {}) {
   const _symbol = {
     BTC: 'bitcoin',
     ETH: 'ethereum',
@@ -86,15 +87,18 @@ export function useCoingeckoPrices(symbol) {
   }[symbol]
 
   const now = Date.now() / 1000
-  const fromTs = +new Date(2021, 8, 1) / 1000
-  const days = Math.floor(now / 86400) - Math.floor(fromTs / 86400)
+  const days = Math.floor(now / 86400) - Math.floor(from / 86400) - 1
 
   const url = `https://api.coingecko.com/api/v3/coins/${_symbol}/market_chart?vs_currency=usd&days=${days}&interval=daily`
 
-  let [data, loading, error] = useRequest(url)
+  const [res, loading, error] = useRequest(url)
 
-  if (data && data.prices.length > 1) {
-    data = data.prices.map(item => {
+  const data = useMemo(() => {
+    if (!res || res.length === 0) {
+      return null
+    }
+
+    const ret = res.prices.map(item => {
       // -1 is for shifting to previous day
       // because CG uses first price of the day, but for GLP we store last price of the day
       const timestamp = item[0] - 1
@@ -104,7 +108,9 @@ export function useCoingeckoPrices(symbol) {
         value: item[1]
       }
     })
-  }
+    console.log(symbol, ret.map(item => ({price: item.value, date: new Date(item.timestamp * 1000)})))
+    return ret
+  }, [res])
 
   return [data, loading, error]
 }
@@ -486,13 +492,13 @@ export function useVolumeDataFromServer() {
   return [ret, loading]
 }
 
-export function useUsersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+export function useUsersData({ from = FIRST_DATE_TS } = {}) {
   const query = `{
     userStats(
       first: 1000
       orderBy: timestamp
       orderDirection: desc
-      where: { period: "daily" }
+      where: { period: "daily", timestamp_gte: ${from} }
     ) {
       uniqueCount
       uniqueSwapCount
@@ -533,13 +539,13 @@ export function useUsersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   return [data, loading, error]
 }
 
-export function useFundingRateData() {
+export function useFundingRateData({ from = FIRST_DATE_TS } = {}) {
   const query = `{
     fundingRates(
       first: 1000,
       orderBy: timestamp,
       orderDirection: desc,
-      where: { period: "daily" }
+      where: { period: "daily", id_gte: ${from} }
     ) {
       id,
       token,
@@ -581,14 +587,14 @@ export function useFundingRateData() {
 const MOVING_AVERAGE_DAYS = 7
 const MOVING_AVERAGE_PERIOD = 86400 * MOVING_AVERAGE_DAYS
 
-export function useVolumeData() {
+export function useVolumeData({ from = FIRST_DATE_TS } = {}) {
 	const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const query = `{
     volumeStats(
       first: 1000,
       orderBy: id,
       orderDirection: desc
-      where: {period: daily}
+      where: {period: daily, id_gte: ${from}}
     ) {
       id
       ${PROPS.join('\n')}
@@ -634,10 +640,15 @@ export function useVolumeData() {
   return [data, loading, error]
 }
 
-export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.now() / 1000 - 86400 * 90 } = {}) {
+export function useFeesData({ from = FIRST_DATE_TS } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const feesQuery = `{
-    feeStats(first: 1000, orderBy: id, orderDirection: desc, where: { period: daily }) {
+    feeStats(
+      first: 1000
+      orderBy: id
+      orderDirection: desc
+      where: { period: daily, id_gte: ${from} }
+    ) {
       id
       margin
       marginAndLiquidation
@@ -670,7 +681,7 @@ export function useFeesData({ groupPeriod = DEFAULT_GROUP_PERIOD, from = Date.no
     let cumulative = 0
     const cumulativeByTs = {}
     return chain(chartData)
-      .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
+      .groupBy(item => item.timestamp)
       .map((values, timestamp) => {
         const all = sumBy(values, 'all')
         cumulative += all
@@ -740,13 +751,13 @@ export function useAumPerformanceData({ groupPeriod }) {
   return [data, feesLoading || glpLoading || volumeLoading]
 }
 
-export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+export function useGlpData({ from = FIRST_DATE_TS } = {}) {
   const query = `{
     glpStats(
       first: 1000
       orderBy: id
       orderDirection: desc
-      where: {period: daily}
+      where: {period: daily, id_gte: ${FIRST_DATE_TS}}
     ) {
       id
       aumInUsdg
@@ -781,7 +792,7 @@ export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       cumulativeDistributedEthPerGlp += distributedEthPerGlp
 
       const glpPrice = aum / glpSupply
-      const timestamp = Math.floor(item.id / groupPeriod) * groupPeriod
+      const timestamp = parseInt(item.id)
 
       const newItem = {
         timestamp,
@@ -817,9 +828,9 @@ export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   return [glpChartData, loading, error]
 }
 
-export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
-  const [btcPrices] = useCoingeckoPrices('BTC')
-  const [ethPrices] = useCoingeckoPrices('ETH')
+export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS } = {}) {
+  const [btcPrices] = useCoingeckoPrices('BTC', { from })
+  const [ethPrices] = useCoingeckoPrices('ETH', { from })
 
   const glpPerformanceChartData = useMemo(() => {
     if (!btcPrices || !ethPrices || !glpData || !feesData) {
@@ -880,7 +891,7 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
         cumulativeEsgmxRewardsPerGlp += glpPrice * 0.8 / 365
       }
 
-      let glpPlusFees
+      let glpPlusFees = glpPrice
       if (glpPrice && glpSupply && cumulativeFeesPerGlp) {
         glpPlusFees = glpPrice + cumulativeFeesPerGlp
       }
