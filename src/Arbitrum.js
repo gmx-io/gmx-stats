@@ -104,6 +104,7 @@ function Arbitrum() {
 
   const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData({ groupPeriod })
   const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, { groupPeriod })
+
   const [tradersData, tradersLoading] = useTradersData({ groupPeriod })
   const [openInterest, openInterestDelta] = useMemo(() => {
     if (!tradersData) {

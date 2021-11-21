@@ -97,7 +97,8 @@ export function useCoingeckoPrices(symbol) {
     data = data.prices.map(item => {
       // -1 is for shifting to previous day
       // because CG uses first price of the day, but for GLP we store last price of the day
-      const groupTs = parseInt((item[0] - 1) / 1000 / 86400) * 86400
+      const timestamp = item[0] - 1
+      const groupTs = parseInt(timestamp / 1000 / 86400) * 86400
       return {
         timestamp: groupTs,
         value: item[1]
@@ -112,7 +113,7 @@ function getImpermanentLoss(change) {
   return 2 * Math.sqrt(change) / (1 + change) - 1
 } 
 
-export function useGraph(querySource, { subgraph = 'gmx-io/gmx-stats', subgraphUrl = null } = {}) {
+export function useGraph(querySource, { subgraph = 'gkrasulya/gmx', subgraphUrl = null } = {}) {
   const query = gql(querySource)
 
   if (!subgraphUrl) {
@@ -714,11 +715,19 @@ export function useAumPerformanceData({ groupPeriod }) {
     const ret = feesData.map((feeItem, i) => {
       const glpItem = glpData[i]
       const volumeItem = volumeData[i]
+      let apr = (feeItem?.all && glpItem?.aum) ? feeItem.all /  glpItem.aum * 100 * 365 * dailyCoef : null
+      if (apr > 10000) {
+        apr = null
+      }
+      let usage = (volumeItem?.all && glpItem?.aum) ? volumeItem.all / glpItem.aum * 100 * dailyCoef : null
+      if (usage > 10000) {
+        usage = null
+      }
 
       return {
         timestamp: feeItem.timestamp,
-        apr: (feeItem && glpItem) ? feeItem.all /  glpItem.aum * 100 * 365 * dailyCoef : null,
-        usage: (volumeItem && glpItem) ? volumeItem.all / glpItem.aum * 100 * dailyCoef : null
+        apr,
+        usage
       }
     })
     const averageApr = ret.reduce((memo, item) => item.apr + memo, 0) / ret.length
@@ -764,11 +773,11 @@ export function useGlpData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
       const glpSupply = Number(item.glpSupply) / 1e18
 
       const distributedUsd = Number(item.distributedUsd) / 1e30
-      const distributedUsdPerGlp = distributedUsd / glpSupply
+      const distributedUsdPerGlp = (distributedUsd / glpSupply) || 0
       cumulativeDistributedUsdPerGlp += distributedUsdPerGlp
 
       const distributedEth = Number(item.distributedEth) / 1e18
-      const distributedEthPerGlp = distributedEth / glpSupply
+      const distributedEthPerGlp = (distributedEth / glpSupply) || 0
       cumulativeDistributedEthPerGlp += distributedEthPerGlp
 
       const glpPrice = aum / glpSupply
@@ -900,6 +909,7 @@ export function useGlpPerformanceData(glpData, feesData, { groupPeriod = DEFAULT
         glpPlusFees,
         glpPlusDistributedUsd,
         glpPlusDistributedEth,
+
         performanceLpEth: (glpPrice / lpEthPrice * 100).toFixed(1),
         performanceLpEthCollectedFees: (glpPlusFees / lpEthPrice * 100).toFixed(1),
         performanceLpEthDistributedUsd: (glpPlusDistributedUsd / lpEthPrice * 100).toFixed(1),
