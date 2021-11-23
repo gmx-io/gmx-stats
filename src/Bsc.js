@@ -197,27 +197,18 @@ function Bsc() {
   }, [poolStatsData])
 
   // const [volumeData, volumeLoading] = useRequest(urlWithParams('/api/volume', params), [])
-  const [volumeChartData, volumeLoading] = useGambitVolumeData(params)
-  // const volumeChartData = useMemo(() => {
-  //   return volumeData.map(item => {
-  //     if (!item.metrics) {
-  //       return {
-  //         timestamp: item.timestamp
-  //       }
-  //     }
-
-  //     const allValue = Object.values(item.metrics).reduce((sum, value) => sum + value, 0)
-  //     const metrics = Object.entries(item.metrics).reduce((memo, [key, value]) => {
-  //       memo[key] = displayPercentage ? value / allValue * 100 : value
-  //       return memo
-  //     }, {})
-  //     return {
-  //       ...metrics,
-  //       all: displayPercentage ? 100 : allValue,
-  //       timestamp: item.timestamp
-  //     }
-  //   })
-  // }, [volumeData, displayPercentage])
+  const [volumeData, volumeLoading] = useGambitVolumeData(params)
+  const volumeStats = useMemo(() => {
+    if (!volumeData || volumeData.length === 0) {
+      return
+    }
+    return {
+      lastItem: volumeData[volumeData.length - 1].all,
+      allItems: volumeData.reduce((memo, el) => {
+        return memo + el.all
+      }, 0)
+    }
+  }, [volumeData])
 
   const yaxisFormatter = useCallback((value, ...args) => {
     if (displayPercentage) {
@@ -292,9 +283,15 @@ function Bsc() {
       <div className="chart-grid">
         <div className="chart-cell">
           <h3>Volume</h3>
+          {volumeStats &&
+            <p className="stats">
+              Last record: <b>{numberFmt.format(volumeStats.lastItem)}</b><br />
+              Selected period: <b>{numberFmt.format(volumeStats.allItems)}</b>
+            </p>
+          }
           { volumeLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <BarChart syncId="syncId" data={volumeChartData}>
+            <BarChart syncId="syncId" data={volumeData}>
               <CartesianGrid strokeDasharray="10 10" />
               <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
               <YAxis dataKey="all" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
@@ -324,7 +321,7 @@ function Bsc() {
           <h3>Collected Fees</h3>
           {feesStats &&
             <p className="stats">
-              Last: <b>{numberFmt.format(feesStats.lastItem)}</b><br />
+              Last record: <b>{numberFmt.format(feesStats.lastItem)}</b><br />
               Selected period: <b>{numberFmt.format(feesStats.allItems)}</b>
             </p>
           }
