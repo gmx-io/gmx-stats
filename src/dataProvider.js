@@ -108,7 +108,6 @@ export function useCoingeckoPrices(symbol, { from = FIRST_DATE_TS } = {}) {
         value: item[1]
       }
     })
-    console.log(symbol, ret.map(item => ({price: item.value, date: new Date(item.timestamp * 1000)})))
     return ret
   }, [res])
 
@@ -146,7 +145,7 @@ export function useGambitVolumeData({ from, to }) {
   const [graphData, loading, error] = useGraph(`{
     volumeStats(
       first: 1000,
-      where: { id_gt: ${from}, id_lte: ${to}, period: daily }
+      where: { id_gte: ${from}, id_lte: ${to}, period: daily }
       orderBy: id
       orderDirection: desc
     ) {
@@ -158,7 +157,7 @@ export function useGambitVolumeData({ from, to }) {
       burn
     }
   }`, {
-    subgraph: 'gkrasulya/gambit'
+    subgraph: 'gmx-io/gmx-bsc-stats'
   })
 
   let data
@@ -170,6 +169,53 @@ export function useGambitVolumeData({ from, to }) {
       mint = mint / 1e30
       burn = burn / 1e30
       const all = margin + swap + liquidation + mint + burn
+      return {
+        timestamp: id,
+        all,
+        margin,
+        swap,
+        liquidation,
+        mint,
+        burn
+      }
+    })
+  }
+
+  return [data, loading]
+}
+
+export function useGambitFeesData({ from, to }) {
+  const [graphData, loading, error] = useGraph(`{
+    feeStats(
+      first: 1000,
+      where: { id_gte: ${from}, id_lte: ${to}, period: daily }
+      orderBy: id
+      orderDirection: desc
+    ) {
+      id
+      margin
+      swap
+      mint
+      burn
+      marginCumulative
+      swapCumulative
+      liquidationCumulative
+      mintCumulative
+      burnCumulative
+    }
+  }`, {
+    subgraph: 'gmx-io/gmx-bsc-stats'
+  })
+
+  let data
+  if (graphData) {
+    data = sortBy(graphData.feeStats, item => item.id).map(({ id, margin, swap, mint, burn }) => {
+      margin = margin / 1e30
+      swap = swap / 1e30
+      const liquidation = 0
+      mint = mint / 1e30
+      burn = burn / 1e30
+      const all = margin + swap + mint + burn
       return {
         timestamp: id,
         all,
@@ -271,13 +317,13 @@ export function useLastSubgraphBlock() {
   return [block, loading, error]
 }
 
-export function useTradersData({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+export function useTradersData({ from = FIRST_DATE_TS, groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const [closedPositionsData, loading, error] = useGraph(`{
     tradingStats(
       first: 1000
       orderBy: "timestamp"
       orderDirection: desc
-      where: {period: "daily"}
+      where: {period: "daily", timestamp_gte: ${from}}
     ) {
       timestamp
       profit
@@ -423,7 +469,7 @@ export function useSwapSources({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   return [data, loading, error]
 }
 
-export function useVolumeDataFromServer() {
+export function useVolumeDataFromServer({ from = FIRST_DATE_TS } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const [data, loading] = useRequest('https://gmx-server-mainnet.uw.r.appspot.com/daily_volume', null, async url => {
     let after
@@ -431,7 +477,12 @@ export function useVolumeDataFromServer() {
     while (true) {
       const res = await (await fetch(url + (after ? `?after=${after}` : ''))).json()
       if (res.length === 0) return ret
-      ret.push(...res)
+      for (const item of res) {
+        if (item.data.timestamp < from) {
+          return ret
+        }
+        ret.push(item)
+      }
       after = res[res.length - 1].id
     }
   })

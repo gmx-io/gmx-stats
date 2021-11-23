@@ -2,11 +2,12 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
 import * as strftime from 'strftime'
 
-import { urlWithParams, tsToIso } from './helpers'
+import { urlWithParams, tsToIsoDate } from './helpers'
 import {
   useRequest,
   useGambitPoolStats,
-  useGambitVolumeData
+  useGambitVolumeData,
+  useGambitFeesData
 } from './dataProvider'
 
 import {
@@ -73,11 +74,11 @@ const tooltipFormatter = (value, name, item) => {
 }
 
 function Bsc() {
-  const [from, setFrom] = useState(tsToIso(Date.now() - 86400000 * 30))
+  const [from, setFrom] = useState(tsToIsoDate(Date.now() - 86400000 * 30))
   const [to, setTo] = useState()
 
-  const setDatetimeRange = useCallback(range => {
-    setFrom(new Date(Date.now() - range * 1000).toISOString().slice(0, -5))    
+  const setDateRange = useCallback(range => {
+    setFrom(new Date(Date.now() - range * 1000).toISOString().slice(0, 10))
     setTo(undefined)
   }, [setFrom, setTo])
 
@@ -108,30 +109,16 @@ function Bsc() {
     })
   }, [usersData, displayPercentage])
 
-  const [feesData, feesLoading] = useRequest(urlWithParams('/api/fees', params), [])
-  const feesChartData = useMemo(() => {
-    return feesData.map(item => {
-      item.metrics = item.metrics || {}
-      const allValue = Object.values(item.metrics).reduce((memo, el) => memo + el, 0)
-      return {
-        ...Object.entries(item.metrics).reduce((memo, [key, value]) => {
-          memo[key] = displayPercentage ? value / allValue * 100 : value
-          return memo
-        }, {}),
-        all: displayPercentage ? 100 : allValue,
-        date: new Date(item.timestamp * 1000)
-      }
-    })
-  }, [feesData, displayPercentage])
+  // const [feesData, feesLoading] = useRequest(urlWithParams('/api/fees', params), [])
+  const [feesData, feesLoading] = useGambitFeesData(params)
   const feesStats = useMemo(() => {
     if (!feesData || feesData.length === 0) {
       return
     }
-    const getAll = metrics => Object.values(metrics).reduce((memo, value) => memo + value, 0)
     return {
-      today: getAll(feesData[feesData.length - 1].metrics),
-      last7days: feesData.slice(-7).reduce((memo, el) => {
-        return memo + getAll(el.metrics)
+      lastItem: feesData[feesData.length - 1].all,
+      allItems: feesData.reduce((memo, el) => {
+        return memo + el.all
       }, 0)
     }
   }, [feesData])
@@ -295,12 +282,11 @@ function Bsc() {
       <div className="form">
         <p>
           <label>Period</label>
-          <input type="datetime-local" value={from} onChange={evt => setFrom(evt.target.value)} />
+          <input type="date" value={from} onChange={evt => setFrom(evt.target.value)} />
           &nbsp;—&nbsp;
-          <input type="datetime-local" value={to} onChange={evt => setTo(evt.target.value)} />
-          <button onClick={evt => setDatetimeRange(86400 * 30)}>30 days</button>
-          <button onClick={evt => setDatetimeRange(86400 * 7)}>7 days</button>
-          <button onClick={evt => setDatetimeRange(86400)}>24 hours</button>
+          <input type="date" value={to} onChange={evt => setTo(evt.target.value)} />
+          <button onClick={evt => setDateRange(86400 * 29)}>30 days</button>
+          <button onClick={evt => setDateRange(86400 * 6)}>7 days</button>
         </p>
       </div>
       <div className="chart-grid">
@@ -338,15 +324,15 @@ function Bsc() {
           <h3>Collected Fees</h3>
           {feesStats &&
             <p className="stats">
-              Today: <b>{numberFmt.format(feesStats.today)}</b><br />
-              Last 7 days: <b>{numberFmt.format(feesStats.last7days)}</b>
+              Last: <b>{numberFmt.format(feesStats.lastItem)}</b><br />
+              Selected period: <b>{numberFmt.format(feesStats.allItems)}</b>
             </p>
           }
           { feesLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <BarChart syncId="syncId" data={feesChartData}>
+            <BarChart syncId="syncId" data={feesData}>
               <CartesianGrid strokeDasharray="10 10" />
-              <XAxis dataKey="date" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
+              <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
               <YAxis dataKey="all" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
               <Tooltip
                 formatter={tooltipFormatter}

@@ -232,6 +232,10 @@ export function tsToIso(ts) {
   return new Date(ts - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, -5)
 }
 
+export function tsToIsoDate(ts) {
+  return new Date(ts - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+}
+
 export function urlWithParams(url, params) {
   const paramsStr = Object.entries(params)
     .reduce((memo, [key, value]) => {
