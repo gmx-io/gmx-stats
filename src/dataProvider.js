@@ -471,6 +471,21 @@ export function useSwapSources({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   return [data, loading, error]
 }
 
+export function useTotalVolumeFromServer() {
+  const [data, loading] = useRequest('https://gmx-server-mainnet.uw.r.appspot.com/total_volume')
+
+  return useMemo(() => {
+    if (!data) {
+      return [data, loading]
+    }
+
+    const total = data.reduce((memo, item) => {
+      return memo + parseInt(item.data.volume) / 1e30
+    }, 0)
+    return [total, loading]
+  }, [data, loading])
+}
+
 export function useVolumeDataFromServer({ from = FIRST_DATE_TS } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const [data, loading] = useRequest('https://gmx-server-mainnet.uw.r.appspot.com/daily_volume', null, async url => {

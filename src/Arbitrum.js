@@ -50,6 +50,7 @@ import GenericChart from './components/GenericChart'
 
 import {
   useVolumeData,
+  useTotalVolumeFromServer,
   useVolumeDataFromServer,
   useFeesData,
   useGlpData,
@@ -73,13 +74,12 @@ function Arbitrum() {
 
   const [fundingRateData, fundingRateLoading] = useFundingRateData()
   const [volumeData, volumeLoading] = useVolumeDataFromServer({ groupPeriod })
-  const [totalVolume, totalVolumeDelta] = useMemo(() => {
+  const [totalVolume] = useTotalVolumeFromServer()
+  const totalVolumeDelta = useMemo(() => {
     if (!volumeData) {
-      return []
+      return null
     }
-    const total = volumeData[volumeData.length - 1]?.cumulative
-    const delta = total - volumeData[volumeData.length - 2]?.cumulative
-    return [total, delta]
+    return volumeData[volumeData.length - 1].all
   }, [volumeData])
 
   const [feesData, feesLoading] = useFeesData({ groupPeriod })
@@ -164,7 +164,9 @@ function Arbitrum() {
             <div className="total-stat-label">Total Volume</div>
             <div className="total-stat-value">
               {formatNumber(totalVolume, {currency: true})}
-              <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalVolumeDelta, {currency: true, compact: true})}</span>
+              {totalVolumeDelta &&
+                <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalVolumeDelta, {currency: true, compact: true})}</span>
+              }
             </div>
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
