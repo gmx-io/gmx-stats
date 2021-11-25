@@ -224,6 +224,7 @@ export default function routes(app) {
       return [item.timestamp, Number((item.price / 1e8).toFixed(2))]
     })
     ttlCache.set(cacheKey, prices)
+    res.set('Cache-Control', 'max-age=60')
     res.send(prices) 
   })
 

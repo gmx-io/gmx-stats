@@ -387,7 +387,7 @@ function Arbitrum() {
               yaxisDataKey="ETH"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }]}
+              items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }, { key: 'MIM' }]}
               type="Line"
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
             />

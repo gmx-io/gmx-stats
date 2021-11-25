@@ -35,7 +35,8 @@ const tokenDecimals = {
   "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8": 6, // USDC
   "0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0": 18, // UNI
   "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9": 6, // USDT
-  "0xf97f4df75117a78c1a5a0dbb814af92458539fb4": 18 // LINK
+  "0xf97f4df75117a78c1a5a0dbb814af92458539fb4": 18, // LINK
+  "0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a": 18 // MIM
 }
 
 const tokenSymbols = {
@@ -44,7 +45,8 @@ const tokenSymbols = {
   '0xf97f4df75117a78c1a5a0dbb814af92458539fb4': 'LINK',
   '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0': 'UNI',
   '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8': 'USDC',
-  '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 'USDT'
+  '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 'USDT',
+  '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a': 'MIM'
 }
 
 function getTokenDecimals(token) {
@@ -321,7 +323,7 @@ export function useTradersData({ from = FIRST_DATE_TS, groupPeriod = DEFAULT_GRO
   const [closedPositionsData, loading, error] = useGraph(`{
     tradingStats(
       first: 1000
-      orderBy: "timestamp"
+      orderBy: timestamp
       orderDirection: desc
       where: {period: "daily", timestamp_gte: ${from}}
     ) {
@@ -629,7 +631,7 @@ export function useFundingRateData({ from = FIRST_DATE_TS } = {}) {
       return memo
     }, {})
 
-    return fillNa(sortBy(Object.values(groups), 'timestamp'), ['ETH', 'USDC', 'USDT', 'BTC', 'LINK', 'UNI'])
+    return fillNa(sortBy(Object.values(groups), 'timestamp'), ['ETH', 'USDC', 'USDT', 'BTC', 'LINK', 'UNI', 'MIM'])
   }, [graphData])
 
   return [data, loading, error]
