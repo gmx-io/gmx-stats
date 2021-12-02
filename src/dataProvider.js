@@ -11,6 +11,7 @@ const formatUnits = ethers.utils.formatUnits
 const provider = new ethers.providers.JsonRpcProvider('https://arb1.arbitrum.io/rpc');
 
 const DEFAULT_GROUP_PERIOD = 86400
+const NOW_TS = parseInt(Date.now() / 1000)
 const FIRST_DATE_TS = parseInt(+(new Date(2021, 7, 31)) / 1000)
 
 function fillNa(arr, keys) {
@@ -36,7 +37,8 @@ const tokenDecimals = {
   "0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0": 18, // UNI
   "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9": 6, // USDT
   "0xf97f4df75117a78c1a5a0dbb814af92458539fb4": 18, // LINK
-  "0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a": 18 // MIM
+  "0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a": 18, // MIM
+  "0x17fc002b466eec40dae837fc4be5c67993ddbd6f": 18, // FRAX
 }
 
 const tokenSymbols = {
@@ -46,7 +48,8 @@ const tokenSymbols = {
   '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0': 'UNI',
   '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8': 'USDC',
   '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 'USDT',
-  '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a': 'MIM'
+  '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a': 'MIM',
+  '0x17fc002b466eec40dae837fc4be5c67993ddbd6f': 'FRAX',
 }
 
 function getTokenDecimals(token) {
@@ -132,6 +135,10 @@ export function useGraph(querySource, { subgraph = 'gkrasulya/gmx', subgraphUrl 
   })
   const [data, setData] = useState()
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+  }, [querySource, setLoading])
 
   useEffect(() => {
     client.query({query}).then(res => {
@@ -319,13 +326,13 @@ export function useLastSubgraphBlock() {
   return [block, loading, error]
 }
 
-export function useTradersData({ from = FIRST_DATE_TS, groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const [closedPositionsData, loading, error] = useGraph(`{
     tradingStats(
       first: 1000
       orderBy: timestamp
       orderDirection: desc
-      where: {period: "daily", timestamp_gte: ${from}}
+      where: { period: "daily", timestamp_gte: ${from}, timestamp_lte: ${to} }
     ) {
       timestamp
       profit
@@ -419,14 +426,25 @@ export function useTradersData({ from = FIRST_DATE_TS, groupPeriod = DEFAULT_GRO
   return [ret, loading]
 }
 
-export function useSwapSources({ groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+export function useSwapSources({ from = FIRST_DATE_TS, to = NOW_TS, groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
   const query = `{
-    a: hourlyVolumeBySources(first: 1000 orderBy: timestamp orderDirection: desc) {
+    a: hourlyVolumeBySources(
+      first: 1000
+      orderBy: timestamp
+      orderDirection: desc
+      where: { timestamp_gte: ${from}, timestamp_lte: ${to} }
+    ) {
       timestamp
       source
       swap
     },
-    b: hourlyVolumeBySources(first: 1000 skip: 1000 orderBy: timestamp orderDirection: desc) {
+    b: hourlyVolumeBySources(
+      first: 1000
+      skip: 1000
+      orderBy: timestamp
+      orderDirection: desc
+      where: { timestamp_gte: ${from}, timestamp_lte: ${to} }
+    ) {
       timestamp
       source
       swap
@@ -486,7 +504,7 @@ export function useTotalVolumeFromServer() {
   }, [data, loading])
 }
 
-export function useVolumeDataFromServer({ from = FIRST_DATE_TS } = {}) {
+export function useVolumeDataFromServer({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const [data, loading] = useRequest('https://gmx-server-mainnet.uw.r.appspot.com/daily_volume', null, async url => {
     let after
@@ -510,6 +528,11 @@ export function useVolumeDataFromServer({ from = FIRST_DATE_TS } = {}) {
      } 
 
      const tmp = data.reduce((memo, item) => {
+        const timestamp = item.data.timestamp
+        if (timestamp < from || timestamp > to) {
+          return memo
+        }
+
         let type
         if (item.data.action === 'Swap') {
           type = 'swap'
@@ -523,7 +546,6 @@ export function useVolumeDataFromServer({ from = FIRST_DATE_TS } = {}) {
           type = 'margin'
         }
         const volume = Number(item.data.volume) / 1e30
-        const timestamp = item.data.timestamp
         memo[timestamp] = memo[timestamp] || {}
         memo[timestamp][type] = memo[timestamp][type] || 0
         memo[timestamp][type] += volume
@@ -555,18 +577,18 @@ export function useVolumeDataFromServer({ from = FIRST_DATE_TS } = {}) {
         ...item
       }
     })
-  }, [data])
+  }, [data, from, to])
 
   return [ret, loading]
 }
 
-export function useUsersData({ from = FIRST_DATE_TS } = {}) {
+export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
   const query = `{
     userStats(
       first: 1000
       orderBy: timestamp
       orderDirection: desc
-      where: { period: "daily", timestamp_gte: ${from} }
+      where: { period: "daily", timestamp_gte: ${from}, timestamp_lte: ${to} }
     ) {
       uniqueCount
       uniqueSwapCount
@@ -588,7 +610,9 @@ export function useUsersData({ from = FIRST_DATE_TS } = {}) {
   const prevUniqueCountCumulative = {}
   const data = graphData ? sortBy(graphData.userStats, 'timestamp').map(item => {
     const newCountData = ['', 'Swap', 'Margin', 'MintBurn'].reduce((memo, type) => {
-      memo[`new${type}Count`] = item[`unique${type}CountCumulative`] - (prevUniqueCountCumulative[type] || 0)
+      memo[`new${type}Count`] = prevUniqueCountCumulative[type]
+        ? item[`unique${type}CountCumulative`] - prevUniqueCountCumulative[type]
+        : item[`unique${type}Count`]
       prevUniqueCountCumulative[type] = item[`unique${type}CountCumulative`]
       return memo
     }, {})
@@ -607,13 +631,13 @@ export function useUsersData({ from = FIRST_DATE_TS } = {}) {
   return [data, loading, error]
 }
 
-export function useFundingRateData({ from = FIRST_DATE_TS } = {}) {
+export function useFundingRateData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
   const query = `{
     fundingRates(
       first: 1000,
       orderBy: timestamp,
       orderDirection: desc,
-      where: { period: "daily", id_gte: ${from} }
+      where: { period: "daily", id_gte: ${from}, id_lte: ${to} }
     ) {
       id,
       token,
@@ -639,9 +663,12 @@ export function useFundingRateData({ from = FIRST_DATE_TS } = {}) {
       const group = memo[item.timestamp]
       const timeDelta = parseInt((item.endTimestamp - item.startTimestamp) / 3600) * 3600
 
-      const fundingDelta = item.endFundingRate - item.startFundingRate
-      const divisor = timeDelta / 86400
-      const fundingRate = fundingDelta / divisor / 10000 * 365
+      let fundingRate = 0
+      if (item.endFundingRate && item.startFundingRate) {
+        const fundingDelta = item.endFundingRate - item.startFundingRate
+        const divisor = timeDelta / 86400
+        fundingRate = fundingDelta / divisor / 10000 * 365
+      }
       group[symbol] = fundingRate
       return memo
     }, {})
@@ -655,14 +682,14 @@ export function useFundingRateData({ from = FIRST_DATE_TS } = {}) {
 const MOVING_AVERAGE_DAYS = 7
 const MOVING_AVERAGE_PERIOD = 86400 * MOVING_AVERAGE_DAYS
 
-export function useVolumeData({ from = FIRST_DATE_TS } = {}) {
+export function useVolumeData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
 	const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const query = `{
     volumeStats(
       first: 1000,
       orderBy: id,
       orderDirection: desc
-      where: {period: daily, id_gte: ${from}}
+      where: { period: daily, id_gte: ${from}, id_lte: ${to} }
     ) {
       id
       ${PROPS.join('\n')}
@@ -708,14 +735,14 @@ export function useVolumeData({ from = FIRST_DATE_TS } = {}) {
   return [data, loading, error]
 }
 
-export function useFeesData({ from = FIRST_DATE_TS } = {}) {
+export function useFeesData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const feesQuery = `{
     feeStats(
       first: 1000
       orderBy: id
       orderDirection: desc
-      where: { period: daily, id_gte: ${from} }
+      where: { period: daily, id_gte: ${from}, id_lte: ${to} }
     ) {
       id
       margin
@@ -779,10 +806,10 @@ export function useFeesData({ from = FIRST_DATE_TS } = {}) {
   return [feesChartData, loading, error]
 }
 
-export function useAumPerformanceData({ groupPeriod }) {
-  const [feesData, feesLoading] = useFeesData({ groupPeriod })
-  const [glpData, glpLoading] = useGlpData({ groupPeriod })
-  const [volumeData, volumeLoading] = useVolumeData({ groupPeriod })
+export function useAumPerformanceData({ from = FIRST_DATE_TS, to = NOW_TS, groupPeriod }) {
+  const [feesData, feesLoading] = useFeesData({ from, to, groupPeriod })
+  const [glpData, glpLoading] = useGlpData({ from, to, groupPeriod })
+  const [volumeData, volumeLoading] = useVolumeData({ from, to, groupPeriod })
 
   const dailyCoef = 86400 / groupPeriod
 
@@ -819,13 +846,13 @@ export function useAumPerformanceData({ groupPeriod }) {
   return [data, feesLoading || glpLoading || volumeLoading]
 }
 
-export function useGlpData({ from = FIRST_DATE_TS } = {}) {
+export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
   const query = `{
     glpStats(
       first: 1000
       orderBy: id
       orderDirection: desc
-      where: {period: daily, id_gte: ${FIRST_DATE_TS}}
+      where: {period: daily, id_gte: ${from}, id_lte: ${to}}
     ) {
       id
       aumInUsdg

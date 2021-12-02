@@ -13,6 +13,7 @@ import {
   tooltipFormatterNumber,
   tooltipFormatterPercent,
   formatNumber,
+  tsToIsoDate,
   CHART_HEIGHT,
   YAXIS_WIDTH,
   COLORS,
@@ -67,13 +68,27 @@ import {
 
 const { BigNumber } = ethers
 const { formatUnits} = ethers.utils
+const NOW = Math.floor(Date.now() / 1000)
 
 function Arbitrum() {
   const DEFAULT_GROUP_PERIOD = 86400
   const [groupPeriod, setGroupPeriod] = useState(DEFAULT_GROUP_PERIOD)
 
-  const [fundingRateData, fundingRateLoading] = useFundingRateData()
-  const [volumeData, volumeLoading] = useVolumeDataFromServer({ groupPeriod })
+  const [fromValue, setFromValue] = useState()
+  const [toValue, setToValue] = useState()
+
+  const setDateRange = useCallback(range => {
+    setFromValue(new Date(Date.now() - range * 1000).toISOString().slice(0, 10))
+    setToValue(undefined)
+  }, [setFromValue, setToValue])
+
+  const from = fromValue ? +new Date(fromValue) / 1000 : undefined
+  const to = toValue ? +new Date(toValue) / 1000 : NOW
+
+  const params = { from, to, groupPeriod }
+
+  const [fundingRateData, fundingRateLoading] = useFundingRateData(params)
+  const [volumeData, volumeLoading] = useVolumeDataFromServer(params)
   const [totalVolume] = useTotalVolumeFromServer()
   const totalVolumeDelta = useMemo(() => {
     if (!volumeData) {
@@ -82,7 +97,7 @@ function Arbitrum() {
     return volumeData[volumeData.length - 1].all
   }, [volumeData])
 
-  const [feesData, feesLoading] = useFeesData({ groupPeriod })
+  const [feesData, feesLoading] = useFeesData(params)
   const [totalFees, totalFeesDelta] = useMemo(() => {
     if (!feesData) {
       return []
@@ -92,7 +107,7 @@ function Arbitrum() {
     return [total, delta]
   }, [feesData])
 
-  const [glpData, glpLoading] = useGlpData({ groupPeriod })
+  const [glpData, glpLoading] = useGlpData(params)
   const [totalAum, totalAumDelta] = useMemo(() => {
     if (!glpData) {
       return []
@@ -102,10 +117,10 @@ function Arbitrum() {
     return [total, delta]
   }, [glpData])
 
-  const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData({ groupPeriod })
-  const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, { groupPeriod })
+  const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData(params)
+  const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, params)
 
-  const [tradersData, tradersLoading] = useTradersData()
+  const [tradersData, tradersLoading] = useTradersData(params)
   const [openInterest, openInterestDelta] = useMemo(() => {
     if (!tradersData) {
       return []
@@ -114,7 +129,7 @@ function Arbitrum() {
     const delta = total - tradersData.data[tradersData.data.length - 2]?.openInterest
     return [total, delta]
   }, [tradersData])
-  const [swapSources, swapSourcesLoading] = useSwapSources({ groupPeriod })
+  const [swapSources, swapSourcesLoading] = useSwapSources(params)
   const swapSourcesKeys = Object.keys((swapSources || []).reduce((memo, el) => {
     Object.keys(el).forEach(key => {
       if (key === 'all' || key === 'timestamp') return
@@ -123,7 +138,7 @@ function Arbitrum() {
     return memo
   }, {}))
 
-  const [usersData, usersLoading] = useUsersData({ groupPeriod })
+  const [usersData, usersLoading] = useUsersData(params)
   const [totalUsers, totalUsersDelta] = useMemo(() => {
     if (!usersData) {
       return [null, null]
@@ -148,6 +163,8 @@ function Arbitrum() {
     setIsExperiment(window.localStorage.getItem('experiment'))
   }, [setIsExperiment])
 
+  const showForm = false
+
   return (
     <div className="Home">
       <h1>GMX Analytics / Arbitrum</h1>
@@ -157,6 +174,18 @@ function Arbitrum() {
           Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
           &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
         </p>
+      }
+      {showForm &&
+        <div className="form">
+          <p>
+            <label>Period</label>
+            <input type="date" value={fromValue} onChange={evt => setFromValue(evt.target.value)} />
+            &nbsp;—&nbsp;
+            <input type="date" value={toValue} onChange={evt => setToValue(evt.target.value)} />
+            <button onClick={evt => setDateRange(86400 * 29)}>30 days</button>
+            <button onClick={evt => setDateRange(86400 * 6)}>7 days</button>
+          </p>
+        </div>
       }
       <div className="chart-grid">
         <div className="chart-cell stats">
@@ -389,7 +418,7 @@ function Arbitrum() {
               yaxisDataKey="ETH"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }, { key: 'MIM' }]}
+              items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }, { key: 'MIM' }, { key: 'FRAX' }]}
               type="Line"
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
             />

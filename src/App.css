@@ -157,9 +157,30 @@ label + input {
   margin-top: 0;
 }
 
+.form input[type="date"],
+.form input[type="text"] {
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  appearance: none !important;
+  box-sizing: border-box;
+  padding: 3px;
+}
+
 .form button {
+  border: none;
+  appearance: none !important;
+  color: #000;
+  border: 1px solid #84aefb;
+  box-sizing: border-box;
+  background: #9fc1ff;
   cursor: pointer;
   margin-left: 10px;
+  height: 28px;
+  border-radius: 3px;
+  padding: 3px 7px;
+}
+.form button:hover {
+  opacity: 0.9;
 }
 
 @keyframes loader {
