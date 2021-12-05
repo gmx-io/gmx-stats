@@ -153,6 +153,18 @@ function Arbitrum() {
 
   }, [usersData])
 
+  function getCsv(data) {
+    if (!data || data.length === 0) {
+      return null
+    }
+
+    const header = Object.keys(data[0]).join(',')
+    const rows = data.map(item => {
+      return Object.values(item).join(',')
+    }).join('\n')
+    return header + '\n' + rows
+  }
+
   const [lastSubgraphBlock] = useLastSubgraphBlock()
   const [lastBlock] = useLastBlock()
 
@@ -262,7 +274,7 @@ function Arbitrum() {
           />
         </div>
         <div className="chart-cell">
-          <ChartWrapper title="AUM & Glp Supply" loading={glpLoading}>
+          <ChartWrapper title="AUM & Glp Supply" loading={glpLoading} data={glpData} csvFields={[{key: 'aum'}, {key: 'glpSupply'}]}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
               <LineChart data={glpData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
@@ -281,7 +293,12 @@ function Arbitrum() {
           </ChartWrapper>
         </div>
         <div className="chart-cell">
-          <ChartWrapper title="Glp Price Comparison" loading={glpLoading}>
+          <ChartWrapper
+            title="Glp Price Comparison"
+            loading={glpLoading}
+            data={glpPerformanceData}
+            csvFields={[{key: 'syntheticPrice'}, {key: 'glpPrice'}, {key: 'glpPlusFees'}, {key: 'lpBtcPrice'}, {key: 'lpEthPrice'}]}
+          >
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
@@ -358,7 +375,12 @@ function Arbitrum() {
           </ChartWrapper>
         </div>}
         <div className="chart-cell">
-          <ChartWrapper title="Traders Net PnL" loading={tradersLoading}>
+          <ChartWrapper
+            title="Traders Net PnL"
+            loading={tradersLoading}
+            data={tradersData?.data}
+            csvFields={[{key: 'pnl', name: 'Net PnL'}, {key: 'pnlCumulative', name: 'Cumulative PnL'}]}
+          >
             <ResponsiveContainer width="100%" syncId="tradersId" height={CHART_HEIGHT}>
               <ComposedChart data={tradersData?.data}>
                 <CartesianGrid strokeDasharray="10 10" />
@@ -385,7 +407,12 @@ function Arbitrum() {
           </ChartWrapper>
         </div>
         <div className="chart-cell">
-          <ChartWrapper title="Traders Profit vs. Loss" loading={tradersLoading}>
+          <ChartWrapper
+            title="Traders Profit vs. Loss"
+            loading={tradersLoading}
+            data={tradersData?.data}
+            csvFields={[{key: 'profit'}, {key: 'loss'}, {key: 'profitCumulative'}, {key: 'lossCumulative'}]}
+          >
             <ResponsiveContainer width="100%" syncId="tradersId" height={CHART_HEIGHT}>
               <ComposedChart data={tradersData?.data} barGap={0}>
                 <CartesianGrid strokeDasharray="10 10" />

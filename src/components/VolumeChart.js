@@ -28,7 +28,16 @@ export default function VolumeChart(props) {
     tooltipLabelFormatter
   } = props
 
-  return <ChartWrapper title="Volume" loading={loading}>
+  const csvFields = [
+    {key: 'swap', name: 'Swap'},
+    {key: 'margin', name: 'Margin trading'},
+    {key: 'mint', name: 'Mint GLP'},
+    {key: 'burn', name: 'Burn GLP'},
+    {key: 'liquidation', name: 'Liquidation'},
+    {key: 'cumulative', name: 'Cumulative'}
+  ]
+
+  return <ChartWrapper title="Volume" loading={loading} csvFields={csvFields} data={data}>
     <ResponsiveContainer width="100%" height={chartHeight}>
       <ComposedChart data={data} syncId="syncA">
         <CartesianGrid strokeDasharray="10 10" />

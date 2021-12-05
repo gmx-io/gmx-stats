@@ -157,6 +157,19 @@ label + input {
   margin-top: 0;
 }
 
+.chart-cell .csv-link {
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-left: 0.3rem;
+  opacity: 0;
+}
+.chart-cell:hover .csv-link {
+  opacity: 0.5;
+}
+.chart-cell .csv-link:hover {
+  opacity: 1;
+}
+
 .form input[type="date"],
 .form input[type="text"] {
   border: 1px solid #aaa;

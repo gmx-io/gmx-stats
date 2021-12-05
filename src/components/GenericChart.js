@@ -86,7 +86,9 @@ export default function GenericChart(props) {
     return <Bar {...props} isAnimationActive={false} />
   })
 
-  return <ChartWrapper title={title} loading={loading}>
+  const csvFields = items.map(item => ({ key: item.key, name: item.name }))
+
+  return <ChartWrapper title={title} loading={loading} data={data} csvFields={csvFields}>
     <ResponsiveContainer width="100%" height={height}>
       {React.createElement(ChartComponent, { data, syncId }, [
         <CartesianGrid strokeDasharray="10 10" key="a" />,
