@@ -39,6 +39,7 @@ const tokenDecimals = {
   "0xf97f4df75117a78c1a5a0dbb814af92458539fb4": 18, // LINK
   "0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a": 18, // MIM
   "0x17fc002b466eec40dae837fc4be5c67993ddbd6f": 18, // FRAX
+  "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1": 18, // DAI
 }
 
 const tokenSymbols = {
@@ -50,6 +51,7 @@ const tokenSymbols = {
   '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 'USDT',
   '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a': 'MIM',
   '0x17fc002b466eec40dae837fc4be5c67993ddbd6f': 'FRAX',
+  '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': 'DAI',
 }
 
 function getTokenDecimals(token) {
