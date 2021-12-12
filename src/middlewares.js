@@ -4,9 +4,9 @@ const logger = getLogger('app')
 function _logRequest(req, res) {
   const time = (Date.now() - req.start)
   const method = res.statusCode < 400 ? 'info' : 'warn'
-  logger[method]('request %s %s query: %j handled statusCode: %s in time: %sms',
+  logger[method]('request %s %s handled statusCode: %s in time: %sms',
     req.method,
-    req.path,
+    req.originalUrl,
     req.query,
     res.statusCode,
     time
