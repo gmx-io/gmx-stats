@@ -1,8 +1,6 @@
 import express from 'express';
 
-import jobs from './jobs'
 import routes from './routes'
-import { db } from './db'
 
 const app = express();
 
@@ -16,6 +14,5 @@ app.get('/ping', (req, res) => {
 });
 
 routes(app)
-jobs({ db })
 
 export default app;
