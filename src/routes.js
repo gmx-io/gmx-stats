@@ -168,7 +168,12 @@ export default function routes(app) {
     res.send(prices) 
   })
 
-  app.get('/*', (req, res) => {
+  app.get('/*', (req, res, next) => {
+    if (res.headersSent) {
+      next()
+      return
+    }
+
     const context = {};
     const markup = renderToString(
       <StaticRouter context={context} location={req.url}>
@@ -197,5 +202,7 @@ export default function routes(app) {
         </html>`
       );
     }
+
+    next()
   });
 }
