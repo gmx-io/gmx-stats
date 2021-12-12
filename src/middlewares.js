@@ -7,7 +7,6 @@ function _logRequest(req, res) {
   logger[method]('request %s %s handled statusCode: %s in time: %sms',
     req.method,
     req.originalUrl,
-    req.query,
     res.statusCode,
     time
   )
