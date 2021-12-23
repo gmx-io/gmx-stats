@@ -314,12 +314,16 @@ a, a:active, a:visited {
   color: #16182E;
 }
 
-.App.dark .nav-link.active {
-  color: white;
-}
-
 .App.dark a, .App.dark a:active, .App.dark a:visited {
   color: #FFFFFF;
+}
+
+.App.dark .nav-link {
+  color: #A0A3C4;
+}
+
+.App.dark .nav-link.active {
+  color: white;
 }
 
 .nav-link:hover {
