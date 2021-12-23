@@ -372,6 +372,15 @@ a, a:active, a:visited {
   text-decoration: none;
 }
 
+.recharts-cartesian-axis-tick-value {
+  fill: #A0A3C4;
+  font-size: 0.75rem;
+}
+
+.recharts-cartesian-grid-horizontal line, .recharts-cartesian-grid-vertical line {
+  stroke: #282a3e;
+}
+
 @media all and (max-width: 1000px) {
   .chart-grid {
     display: grid;
