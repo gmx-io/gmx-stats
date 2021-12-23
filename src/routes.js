@@ -13,9 +13,8 @@ import { findNearest, queryProviderLogs, callWithRetry, UsdgSupplyRecord, LogRec
 import * as helpers from './helpers'
 import { TOKENS, TOKENS_BY_ADDRESS, TOKENS_BY_SYMBOL } from './tokens'
 import { tokenSymbols } from './dataProvider'
-import { addresses, BSC, ARBITRUM } from './addresses'
+import { addresses, BSC, ARBITRUM, AVALANCHE } from './addresses'
 import { dbAll } from './db'
-import { contracts } from './contracts'
 
 const assets = require(process.env.RAZZLE_ASSETS_MANIFEST);
 
@@ -38,36 +37,44 @@ const { formatUnits} = ethers.utils
 
 const logger = getLogger('routes')
 
-const graphClient = new ApolloClient({
+const arbitrumGraphClient = new ApolloClient({
   link: new HttpLink({ uri: 'https://api.thegraph.com/subgraphs/name/gmx-io/gmx-stats', fetch }),
   cache: new InMemoryCache()
 })
 
-const cachedPrices = {}
-function putPricesIntoCache(prices) {
+const avalancheGraphClient = new ApolloClient({
+  link: new HttpLink({ uri: 'https://api.thegraph.com/subgraphs/name/gdev8317/gmx-avalanche-staging', fetch }),
+  cache: new InMemoryCache()
+})
+
+const cachedPrices = {
+  [ARBITRUM]: {},
+  [AVALANCHE]: {}
+}
+function putPricesIntoCache(prices, chainId) {
   for (const price of prices) {
     const symbol = tokenSymbols[price.token]
     if (!symbol) {
       continue
     }
-    cachedPrices[symbol] = cachedPrices[symbol] || {}
-    cachedPrices[symbol][price.timestamp] = Number(price.value) / 1e30
+    cachedPrices[chainId][symbol] = cachedPrices[symbol] || {}
+    cachedPrices[chainId][symbol][price.timestamp] = Number(price.value) / 1e30
   }
 }
 
-async function precacheOldPrices() {
-  logger.info('precache old prices into memory...')
+async function precacheOldPrices(chainId) {
+  logger.info('precache old prices into memory for %s...', chainId)
 
   let oldestTimestamp
   let i = 0
   while (i < 100) {
     try {
-      const prices = await loadPrices({ before: oldestTimestamp })
+      const prices = await loadPrices({ before: oldestTimestamp, chainId })
       if (prices.length === 0) {
         break
       }
 
-      putPricesIntoCache(prices)
+      putPricesIntoCache(prices, chainId)
       oldestTimestamp = prices[prices.length - 1].timestamp
     } catch (ex) {
       logger.warn('Old prices load failed')
@@ -76,16 +83,17 @@ async function precacheOldPrices() {
     i++
   }
 }
-precacheOldPrices()
+precacheOldPrices(ARBITRUM)
+precacheOldPrices(AVALANCHE)
 
 let newestTimestamp = parseInt(Date.now() / 1000)
-async function precacheNewPrices() {
+async function precacheNewPrices(chainId) {
   logger.info('precache new prices into memory...')
 
   try {
-    const prices = await loadPrices({ after: newestTimestamp })
+    const prices = await loadPrices({ after: newestTimestamp, chainId })
     if (prices.length > 0) {
-      putPricesIntoCache(prices)
+      putPricesIntoCache(prices, chainId)
       newestTimestamp = prices[0].timestamp
     }
   } catch (ex) {
@@ -95,7 +103,8 @@ async function precacheNewPrices() {
 
   setTimeout(precacheNewPrices, 1000 * 60)
 }
-precacheNewPrices()
+precacheNewPrices(ARBITRUM)
+precacheNewPrices(AVALANCHE)
 
 async function loadPrices({ before, after } = {}) {
   logger.info('loadPrices before: %s, after: %s', before, after)
@@ -145,8 +154,8 @@ export default function routes(app) {
       res.status(400)
       return
     }
-    const preferableChainId = Number(req.query.preferableChainId || BSC)
-    const validSources = new Set([BSC, ARBITRUM])
+    const preferableChainId = Number(req.query.preferableChainId || ARBITRUM)
+    const validSources = new Set([BSC, ARBITRUM, AVALANCHE])
     if (!validSources.has(preferableChainId)) {
       res.send(`Invalid preferableChainId ${preferableChainId}`)
       res.status(400)
