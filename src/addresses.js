@@ -15,6 +15,17 @@ export const addresses = {
     },
 
     [ARBITRUM]: {
-        GMX: '0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a'
+        GMX: '0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a',
+        BTC: '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f',
+        ETH: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
+        LINK: '0xf97f4df75117a78c1a5a0dbb814af92458539fb4',
+        UNI: '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0'
+    },
+
+    [AVALANCHE]: {
+        GMX: '0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a',
+        AVAX: '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
+        ETH: '0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab',
+        BTC: '0x50b7545627a5162f82a992c33b87adc75187b218'
     }
 }

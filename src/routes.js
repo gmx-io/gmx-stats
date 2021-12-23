@@ -53,32 +53,42 @@ const cachedPrices = {
 }
 function putPricesIntoCache(prices, chainId) {
   for (const price of prices) {
-    const symbol = tokenSymbols[price.token]
-    if (!symbol) {
-      continue
-    }
-    cachedPrices[chainId][symbol] = cachedPrices[symbol] || {}
-    cachedPrices[chainId][symbol][price.timestamp] = Number(price.value) / 1e30
+    cachedPrices[chainId][price.token] = cachedPrices[chainId][price.token] || {}
+    cachedPrices[chainId][price.token][price.timestamp] = Number(price.value) / 1e8
   }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms)
+  })
 }
 
 async function precacheOldPrices(chainId) {
   logger.info('precache old prices into memory for %s...', chainId)
 
-  let oldestTimestamp
+  let oldestTimestamp = parseInt(Date.now() / 1000)
   let i = 0
+  let failCount = 0
   while (i < 100) {
     try {
       const prices = await loadPrices({ before: oldestTimestamp, chainId })
       if (prices.length === 0) {
+        logger.info('All old prices loaded for chain: %s', chainId)
         break
       }
 
       putPricesIntoCache(prices, chainId)
-      oldestTimestamp = prices[prices.length - 1].timestamp
+      oldestTimestamp = prices[prices.length - 1].timestamp - 1
     } catch (ex) {
+      failCount++
       logger.warn('Old prices load failed')
-      console.error(ex)
+      logger.error(ex)
+      if (failCount > 10) {
+        logger.warn('too many load failures. stop')
+        break
+      }
+      await sleep(500)
     }
     i++
   }
@@ -94,11 +104,11 @@ async function precacheNewPrices(chainId) {
     const prices = await loadPrices({ after: newestTimestamp, chainId })
     if (prices.length > 0) {
       putPricesIntoCache(prices, chainId)
-      newestTimestamp = prices[0].timestamp
+      newestTimestamp = prices[0].timestamp + 1
     }
   } catch (ex) {
     logger.warn('New prices load failed')
-    console.error(ex)
+    logger.error(ex)
   }
 
   setTimeout(precacheNewPrices, 1000 * 60)
@@ -106,30 +116,33 @@ async function precacheNewPrices(chainId) {
 precacheNewPrices(ARBITRUM)
 precacheNewPrices(AVALANCHE)
 
-async function loadPrices({ before, after } = {}) {
-  logger.info('loadPrices before: %s, after: %s', before, after)
+async function loadPrices({ before, after, chainId } = {}) {
+  if (!before) {
+    before = parseInt(Date.now() / 1000) + 86400 * 365
+  }
   if (!after) {
     after = 0
   }
-  if (!before) {
-    before = 1861822800
-  }
+  logger.info('loadPrices chainId: %s before: %s, after: %s',
+    chainId,
+    new Date(before * 1000),
+    new Date(after * 1000)
+  )
   const query = gql(`{
-    fastPrices(
+    prices: chainlinkPrices(
       first: 1000
       orderBy: timestamp
       orderDirection: desc
       where: {
         timestamp_lte: ${before}
+        timestamp_gte: ${after}
       }
-    ) {
-      value
-      timestamp
-      token
-    }
+    ) { value, timestamp, token }
   }`)
-  const res = await graphClient.query({query})
-  return res.data.fastPrices
+
+  const graphClient = chainId === AVALANCHE ? avalancheGraphClient : arbitrumGraphClient;
+  const { data } = await graphClient.query({query})
+  return data.prices
 }
 
 export default function routes(app) {
@@ -147,7 +160,7 @@ export default function routes(app) {
     let to = Number(req.query.to) || Math.round(Date.now() / 1000)
     to = Math.ceil(to / 300) * 300
 
-    const validSymbols = new Set(['BTC', 'ETH', 'BNB', 'UNI', 'LINK'])
+    const validSymbols = new Set(['BTC', 'ETH', 'BNB', 'UNI', 'LINK', 'AVAX'])
     const { symbol } = req.params
     if (!validSymbols.has(symbol)) {
       res.send(`Invalid symbol ${symbol}`)
@@ -155,19 +168,20 @@ export default function routes(app) {
       return
     }
     const preferableChainId = Number(req.query.preferableChainId || ARBITRUM)
-    const validSources = new Set([BSC, ARBITRUM, AVALANCHE])
+    const validSources = new Set([ARBITRUM, AVALANCHE])
     if (!validSources.has(preferableChainId)) {
       res.send(`Invalid preferableChainId ${preferableChainId}`)
       res.status(400)
       return
     }
 
-    if (!cachedPrices[symbol]) {
+    const tokenAddress = addresses[preferableChainId][symbol]
+    if (!cachedPrices[preferableChainId][tokenAddress]) {
       res.send([])
       return
     }
 
-    const prices = Object.entries(cachedPrices[symbol]).map(([timestamp, price]) => {
+    const prices = Object.entries(cachedPrices[preferableChainId][tokenAddress]).map(([timestamp, price]) => {
       return [Number(timestamp), price]
     }).filter(([timestamp, price]) => {
       return timestamp >= from && timestamp <= to
