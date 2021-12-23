@@ -53,8 +53,9 @@ const cachedPrices = {
 }
 function putPricesIntoCache(prices, chainId) {
   for (const price of prices) {
-    cachedPrices[chainId][price.token] = cachedPrices[chainId][price.token] || {}
-    cachedPrices[chainId][price.token][price.timestamp] = Number(price.value) / 1e8
+    const token = price.token.toLowerCase()
+    cachedPrices[chainId][token] = cachedPrices[chainId][token] || {}
+    cachedPrices[chainId][token][price.timestamp] = Number(price.value) / 1e8
   }
 }
 
@@ -175,8 +176,8 @@ export default function routes(app) {
       return
     }
 
-    const tokenAddress = addresses[preferableChainId][symbol]
-    if (!cachedPrices[preferableChainId][tokenAddress]) {
+    const tokenAddress = addresses[preferableChainId][symbol]?.toLowerCase()
+    if (!tokenAddress || !cachedPrices[preferableChainId][tokenAddress]) {
       res.send([])
       return
     }
