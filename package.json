@@ -8,12 +8,14 @@
     "build-upload": "PORT=8080 razzle build && tar -zcvf build.tar.gz build && scp build.tar.gz do2:~/www/gmx-stats",
     "test": "razzle test --env=jsdom",
     "start": "PORT=3113 razzle start",
+    "start-win": "set PORT=3113&razzle start",
     "start:prod": "pm2 start -i 4 build/server.js"
   },
   "dependencies": {
     "@apollo/client": "^3.4.10",
     "axios": "^0.21.1",
     "chalk": "^4.1.1",
+    "classnames": "^2.3.1",
     "console-log-level": "^1.4.1",
     "cors": "^2.8.5",
     "cross-fetch": "^3.1.4",

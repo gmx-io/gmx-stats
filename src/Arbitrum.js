@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
 import moment from 'moment'
 import { RiLoader5Fill } from 'react-icons/ri'
+import cx from "classnames";
 
 import {
   yaxisFormatterNumber,
@@ -179,9 +180,9 @@ function Arbitrum() {
 
   return (
     <div className="Home">
-      <h1>GMX Analytics / Arbitrum</h1>
+      <h1 className="page-title">GMX Analytics / Arbitrum</h1>
       {lastSubgraphBlock && lastBlock &&
-        <p className={isObsolete ? 'warning' : ''} style={{ marginTop: '-1rem' }}>
+        <p className={cx('page-description', (isObsolete ? 'warning' : ''))} style={{ marginTop: '-1rem' }}>
           {isObsolete && "Data is obsolete. "}
           Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
           &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>

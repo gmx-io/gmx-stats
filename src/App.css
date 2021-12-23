@@ -2,12 +2,12 @@
   font-family: 'RelativeMono';
   font-style: normal;
   font-weight: 400;
-  src: url('./fonts/relative/relative-faux-book-pro.eot'); /* IE9 Compat Modes */
+  src: url('./fonts/relative/relative-book-pro.eot'); /* IE9 Compat Modes */
   src: local(''),
-       url('./fonts/relative/relative-faux-book-pro.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('./fonts/relative/relative-faux-book-pro.woff2') format('woff2'), /* Super Modern Browsers */
-       url('./fonts/relative/relative-faux-book-pro.woff') format('woff'), /* Modern Browsers */
-       url('./fonts/relative/relative-faux-book-pro.ttf') format('truetype'); /* Safari, Android, iOS */
+       url('./fonts/relative/relative-book-pro.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('./fonts/relative/relative-book-pro.woff2') format('woff2'), /* Super Modern Browsers */
+       url('./fonts/relative/relative-book-pro.woff') format('woff'), /* Modern Browsers */
+       url('./fonts/relative/relative-book-pro.ttf') format('truetype'); /* Safari, Android, iOS */
 }
 
 @font-face {
@@ -49,10 +49,22 @@ body {
   padding: 1rem
 }
 
+.App.dark {
+  background: #101124;
+  color: #FFF;
+  line-height: 1.15;
+  padding: 1rem
+}
+
 h3, h2 {
   color: #444;
   margin: 1rem 0 1.5rem;
 }
+
+.App.dark h3, .App.dark h2 {
+  color: white;
+}
+
 h3 {
   margin: 1rem 0;
   font-weight: normal;
@@ -80,6 +92,11 @@ label + input {
 .chart-description {
   margin: 1rem 0 0;
   max-width: 600px;
+  color: #A0A3C4;
+}
+
+.App.dark .chart-description {
+  color: #A0A3C4;
 }
 
 .chart-description p:first-child {
@@ -129,20 +146,32 @@ label + input {
   margin-left: 0.2rem;
 }
 
+.App.dark .chart-cell {
+  background: #16182E;
+  border: none;
+  color: white;
+}
+
+.App.dark .chart-cell.stats {
+  border: 1px solid #FFFFFF14;
+}
+
 .chart-cell {
   margin: 0;
-  border-radius: 3px;
+  border-radius: 4px;
   border: 1px solid #e6e6f7;
   background: white;
   position: relative;
   padding: 1rem;
   grid-column-start: span 5;
 }
+
 .chart-cell.stats {
   min-height: 60px;
   grid-column-start: span 2;
   text-align: center;
 }
+
 .chart-cell.experiment {
   border-color: #fbb;
 }
@@ -153,15 +182,21 @@ label + input {
   position: absolute;
   content: '(experimental)';
 }
+
 .chart-cell h3 {
   margin-top: 0;
+  letter-spacing: 0px;
+  font-size: 1.125rem;
+  line-height: 1.4375rem;
 }
 
 .chart-cell .csv-link {
   cursor: pointer;
   font-size: 0.9rem;
   margin-left: 0.3rem;
-  opacity: 0;
+  opacity: 1;
+  display: inline-flex;
+  vertical-align: middle;
 }
 .chart-cell:hover .csv-link {
   opacity: 0.5;
@@ -220,7 +255,7 @@ label + input {
 }
 
 a, a:active, a:visited {
-  color: #444;
+  color: #16182E;
 }
 
 .warning, .warning a {
@@ -230,26 +265,102 @@ a, a:active, a:visited {
 .nav {
   display: flex;
   justify-content: space-between;
-  font-size: 16px;
+  align-items: center;
+  margin: -1rem -1rem 0;
+  height: 55px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  border-bottom: 1px solid #A0A3C4;
+  background-color: white;
+}
+
+.App.dark .nav {
+  background: #101124;
+  border-bottom: 1px solid #FFFFFF29;
 }
 
 .nav-logo {
-  width: 24px;
+  width: 87px;
   vertical-align: middle;
   margin: -3px 0.5rem 0 0;
 }
 
+.nav-logo img {
+  width: 87px;
+}
+
 .nav-link {
-  color: #000;
-  opacity: 0.8;
+  letter-spacing: 0.47px;
+  color: #A0A3C4;
   text-decoration: none;
   padding: 0.5rem 1rem;
   display: inline-block;
   vertical-align: middle;
+  font-size: 0.875rem;
+  line-height: 1rem;
+  letter-spacing: 0.47px;
+}
+
+.nav-link.active {
+  color: #16182E;
+}
+
+.App.dark .nav-link.active {
+  color: white;
+}
+
+.App.dark a, .App.dark a:active, .App.dark a:visited {
+  color: #FFFFFF;
 }
 
 .nav-link:hover {
   opacity: 1;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.nav-right .nav-link {
+  color: #A8AAC9;
+}
+
+.modeselect {
+  width: 30px;
+  height: 26px;
+  background: #16182E 0% 0% no-repeat padding-box;
+  border: 1px solid #FFFFFF0F;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.App.dark .modeselect {
+  background: #FFFFFF 0% 0% no-repeat padding-box;
+}
+
+.modeselect svg {
+  fill: #A0A3C4;
+}
+
+.App.dark .modeselect svg {
+  fill: #16182E;
+}
+
+.page-title {
+  font-size: 1.8125rem;
+  line-height: 2.3125rem;
+}
+
+.page-description {
+  color: #A0A3C4;
+}
+
+.page-description a {
+  text-decoration: none;
 }
 
 @media all and (max-width: 1000px) {
