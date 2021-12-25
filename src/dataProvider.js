@@ -877,8 +877,15 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
     return sortBy(data.glpStats, item => item.id).filter(item => item.id % 86400 === 0).reduce((memo, item) => {
       const last = memo[memo.length - 1]
 
-      const aum = Number(item.aumInUsdg) / 1e18
-      const glpSupply = Number(item.glpSupply) / 1e18
+      let aum = Number(item.aumInUsdg) / 1e18
+      let glpSupply = Number(item.glpSupply) / 1e18
+
+      if (!glpSupply) {
+        glpSupply = prevGlpSupply
+      }
+      if (!aum) {
+        aum = prevAum
+      }
 
       const distributedUsd = Number(item.distributedUsd) / 1e30
       const distributedUsdPerGlp = (distributedUsd / glpSupply) || 0
