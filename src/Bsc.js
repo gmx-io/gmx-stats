@@ -94,21 +94,6 @@ function Bsc() {
   const [displayPercentage, setDisplayPercentage] = useState(false)
   const dynamicUnit = displayPercentage ? '%' : ''
 
-  const [usersData, usersLoading] = useRequest(urlWithParams('/api/users', params), [])
-  const usersChartData = useMemo(() => {
-    return usersData.map(item => {
-      const allValue = (item.margin || 0) + (item.swap || 0)
-      const margin = displayPercentage ? (item.margin || 0) / allValue * 100 : item.margin
-      const swap = displayPercentage ? (item.swap || 0) / allValue * 100 : item.swap
-      return {
-        margin,
-        swap,
-        all: displayPercentage ? 100 : allValue,
-        date: new Date(item.timestamp * 1000)
-      }
-    })
-  }, [usersData, displayPercentage])
-
   // const [feesData, feesLoading] = useRequest(urlWithParams('/api/fees', params), [])
   const [feesData, feesLoading] = useGambitFeesData(params)
   const feesStats = useMemo(() => {
@@ -123,24 +108,6 @@ function Bsc() {
     }
   }, [feesData])
 
-  const [swapSourcesData, swapSourcesLoading] = useRequest(urlWithParams('/api/swapSources', params), [])
-  const swapSourcesChartData = useMemo(() => {
-    return swapSourcesData.map(item => {
-      item.metrics = item.metrics || {}
-      const allValue = Object.values(item.metrics).reduce((memo, value) => memo + value, 0)
-
-      const metrics = Object.entries(item.metrics).reduce((memo, [key, value]) => {
-        memo[key] = displayPercentage ? value / allValue * 100 : value
-        return memo
-      }, {})
-
-      return {
-        ...metrics,
-        all: displayPercentage ? 100 : allValue,
-        date: new Date(item.timestamp * 1000)
-      }
-    })
-  }, [swapSourcesData, displayPercentage])
 
   const [poolStatsData, poolStatsLoading] = useGambitPoolStats({ from: fromTs, to: toTs, groupPeriod: period })
   const poolAmountsChartData = useMemo(() => {
@@ -373,36 +340,6 @@ function Bsc() {
         </div>
 
         <div className="chart-cell">
-          <h3>Swap Sources</h3>
-          { swapSourcesLoading && <RiLoader5Fill size="3em" className="loader" /> }
-          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <BarChart syncId="syncId" data={swapSourcesChartData}>
-              <CartesianGrid strokeDasharray="10 10" />
-              <XAxis dataKey="date" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-              <YAxis dataKey="all" unit={dynamicUnit} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
-              <Tooltip
-                formatter={tooltipFormatter}
-                labelFormatter={tooltipLabelFormatter}
-                contentStyle={{ textAlign: 'left' }}
-              />
-              <Legend />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="1inch" stackId="a" name="1inch" fill="#ee64b8" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="dodoex" stackId="a" name="Dodoex" fill="#c90000" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="warden" stackId="a" name="WardenSwap" fill="#eb8334" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="metamask" stackId="a" name="MetaMask" fill="#ab6100" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="gmx" stackId="a" name="GMX" fill="#8884ff" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="other" stackId="a" name="Other" fill="#22c761" />
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="chart-description">
-            <ul>
-              <li>Includes Swaps, USDG Mint and Burn.</li>
-              <li>Source is identified by transaction recipient. E.g. if a swap transaction was sent to MetaMask Router and was routed MetaMask -> 1inch -> GMX than the swap source would be "MetaMask", not "1inch"</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="chart-cell">
           <h3>USDG</h3>
           { poolStatsLoading && <RiLoader5Fill size="3em" className="loader" /> }
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
@@ -425,28 +362,6 @@ function Bsc() {
               <Line type="monotone" dot={false} dataKey="price" yAxisId="right" name="Price" stroke="#ee64b8" strokeWidth={2} />
             </ComposedChart>
           </ResponsiveContainer>
-        </div>
-
-        <div className="chart-cell">
-          <h3>Unique users</h3> 
-          { usersLoading && <RiLoader5Fill size="3em" className="loader" /> }
-          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <BarChart syncId="syncId" data={usersChartData}>
-              <CartesianGrid strokeDasharray="10 10" />
-              <XAxis dataKey="date" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-              <YAxis dataKey="all" unit={displayPercentage ? '%' : ''} width={YAXIS_WIDTH} />
-              <Tooltip
-                labelFormatter={tooltipLabelFormatterUnits}
-                formatter={value => displayPercentage ? value.toFixed(2) : value}
-              />
-              <Legend />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#eb8334" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swaps, Mint & Burn USDG" fill="#3483eb" />
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="chart-description">
-            <p>Includes users routed through other protocols (like 1inch)</p>
-          </div>
         </div>
       </div>
     </div>

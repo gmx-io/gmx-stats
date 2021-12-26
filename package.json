@@ -3,9 +3,9 @@
   "version": "4.0.5",
   "license": "MIT",
   "scripts": {
-    "build:prod": "PORT=8080 razzle build",
-    "build:dev": "PORT=3113 razzle build",
-    "build-upload": "PORT=8080 razzle build && tar -zcvf build.tar.gz build && scp build.tar.gz do2:~/www/gmx-stats",
+    "build:prod": "PORT=8080 razzle build --noninteractive",
+    "build:dev": "PORT=3113 razzle build --noninteractive",
+    "build-upload": "PORT=8080 razzle build --noninteractive && tar -zcvf build.tar.gz build && scp build.tar.gz do2:~/www/gmx-stats",
     "test": "razzle test --env=jsdom",
     "start": "PORT=3113 razzle start",
     "start:prod": "pm2 start -i 4 build/server.js"

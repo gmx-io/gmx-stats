@@ -1,5 +1,6 @@
 export const BSC = 56
 export const ARBITRUM = 42161
+export const AVALANCHE = 43114
 
 export const addresses = {
     [BSC]: {
@@ -10,19 +11,21 @@ export const addresses = {
         WardenSwapRouter: "0x7A1Decf6c24232060F4D76A33a317157549C2093",
         OneInchRouter: "0x11111112542D85B3EF69AE05771c2dCCff4fAa26",
         DodoexRouter: "0x8F8Dd7DB1bDA5eD3da8C9daf3bfa471c12d58486",
-        MetamaskRouter: "0x1a1ec25DC08e98e5E93F1104B5e5cdD298707d31",
-        ChainlinkBtcFeed: '0x264990fbd0A4796A3E3d8E37C4d5F87a3aCa5Ebf',
-        ChainlinkEthFeed: '0x9ef1B8c0E4F7dc8bF5719Ea496883DC6401d5b2e',
-        ChainlinkBnbFeed: '0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE',
-        ChainlinkLinkFeed: '0xca236e327f629f9fc2c30a4e95775ebf0b89fac8',
-        ChainlinkUniFeed: '0xb57f259e7c24e56a1da00f66b55a5640d9f9e7e4'
+        MetamaskRouter: "0x1a1ec25DC08e98e5E93F1104B5e5cdD298707d31"
     },
 
     [ARBITRUM]: {
-        ChainlinkBtcFeed: '0x6ce185860a4963106506C203335A2910413708e9',
-        ChainlinkEthFeed: '0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612',
-        ChainlinkLinkFeed: '0x86e53cf1b870786351da77a57575e79cb55812cb',
-        ChainlinkUniFeed: '0x9c917083fdb403ab5adbec26ee294f6ecada2720',
-        GMX: '0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a'
+        GMX: '0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a',
+        BTC: '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f',
+        ETH: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
+        LINK: '0xf97f4df75117a78c1a5a0dbb814af92458539fb4',
+        UNI: '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0'
+    },
+
+    [AVALANCHE]: {
+        GMX: '0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a',
+        AVAX: '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
+        ETH: '0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab',
+        BTC: '0x50b7545627a5162f82a992c33b87adc75187b218'
     }
 }

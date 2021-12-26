@@ -38,7 +38,7 @@ export function getLogger(ns) {
   return Logger({
     level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
     prefix: level => {
-      const prefix = `${new Date().toISOString()} [${ns}] ${level.toUpperCase()}`
+      const prefix = `[${ns}] ${level.toUpperCase()}`
       return (chalk[levelColor[level]] || chalk.white)(prefix)
     }
   })
