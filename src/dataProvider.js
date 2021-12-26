@@ -877,15 +877,8 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
     return sortBy(data.glpStats, item => item.id).filter(item => item.id % 86400 === 0).reduce((memo, item) => {
       const last = memo[memo.length - 1]
 
-      let aum = Number(item.aumInUsdg) / 1e18
-      let glpSupply = Number(item.glpSupply) / 1e18
-
-      if (!glpSupply) {
-        glpSupply = prevGlpSupply
-      }
-      if (!aum) {
-        aum = prevAum
-      }
+      const aum = Number(item.aumInUsdg) / 1e18
+      const glpSupply = Number(item.glpSupply) / 1e18
 
       const distributedUsd = Number(item.distributedUsd) / 1e30
       const distributedUsdPerGlp = (distributedUsd / glpSupply) || 0
@@ -917,7 +910,13 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
 
       return memo
     }, []).map(item => {
-      const { glpSupply, aum } = item
+      let { glpSupply, aum } = item
+      if (!glpSupply) {
+        glpSupply = prevGlpSupply
+      }
+      if (!aum) {
+        aum = prevAum
+      }
       item.glpSupplyChange = prevGlpSupply ? (glpSupply - prevGlpSupply) / prevGlpSupply * 100 : 0
       if (item.glpSupplyChange > 1000) item.glpSupplyChange = 0
       item.aumChange = prevAum ? (aum - prevAum) / prevAum * 100 : 0
