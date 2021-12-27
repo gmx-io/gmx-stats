@@ -910,7 +910,13 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
 
       return memo
     }, []).map(item => {
-      const { glpSupply, aum } = item
+      let { glpSupply, aum } = item
+      if (!glpSupply) {
+        glpSupply = prevGlpSupply
+      }
+      if (!aum) {
+        aum = prevAum
+      }
       item.glpSupplyChange = prevGlpSupply ? (glpSupply - prevGlpSupply) / prevGlpSupply * 100 : 0
       if (item.glpSupplyChange > 1000) item.glpSupplyChange = 0
       item.aumChange = prevAum ? (aum - prevAum) / prevAum * 100 : 0
