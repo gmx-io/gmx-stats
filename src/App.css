@@ -377,11 +377,15 @@ a, a:active, a:visited {
 }
 
 .recharts-cartesian-axis-tick-value {
+  font-size: 0.75rem;
+}
+
+.App.dark .recharts-cartesian-axis-tick-value {
   fill: #A0A3C4;
   font-size: 0.75rem;
 }
 
-.recharts-cartesian-grid-horizontal line, .recharts-cartesian-grid-vertical line {
+.App.dark .recharts-cartesian-grid-horizontal line, .App.dark .recharts-cartesian-grid-vertical line {
   stroke: #282a3e;
 }
 
