@@ -30,7 +30,7 @@ function fillNa(arr, keys) {
   return arr
 }
 
-const tokenDecimals = {
+export const tokenDecimals = {
   "0x82af49447d8a07e3bd95bd0d56f35241523fbab1": 18, // WETH
   "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f": 8, // BTC
   "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8": 6, // USDC
@@ -42,7 +42,7 @@ const tokenDecimals = {
   "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1": 18, // DAI
 }
 
-const tokenSymbols = {
+export const tokenSymbols = {
   '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f': 'BTC',
   '0x82af49447d8a07e3bd95bd0d56f35241523fbab1': 'ETH',
   '0xf97f4df75117a78c1a5a0dbb814af92458539fb4': 'LINK',
@@ -125,7 +125,7 @@ function getImpermanentLoss(change) {
   return 2 * Math.sqrt(change) / (1 + change) - 1
 } 
 
-export function useGraph(querySource, { subgraph = 'gkrasulya/gmx', subgraphUrl = null } = {}) {
+export function useGraph(querySource, { subgraph = 'gmx-io/gmx-stats', subgraphUrl = null } = {}) {
   const query = gql(querySource)
 
   if (!subgraphUrl) {
