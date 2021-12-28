@@ -92,7 +92,7 @@ label + input {
 .chart-description {
   margin: 1rem 0 0;
   max-width: 600px;
-  color: #A0A3C4;
+  /* color: #A0A3C4; */
 }
 
 .App.dark .chart-description {
@@ -132,7 +132,7 @@ label + input {
 }
 
 .total-stat-label {
-  color: #A0A3C4;
+  /* color: #A0A3C4; */
 }
 
 .total-stat-value {
@@ -301,6 +301,7 @@ a, a:active, a:visited {
 .nav-link {
   letter-spacing: 0.47px;
   color: #A0A3C4;
+  /* color: #000; */
   text-decoration: none;
   padding: 0.5rem 1rem;
   display: inline-block;
@@ -326,8 +327,12 @@ a, a:active, a:visited {
   color: white;
 }
 
+.App.dark .nav-link:hover {
+  color: white;
+}
+
 .nav-link:hover {
-  opacity: 1;
+  color: #16182E;
 }
 
 .nav-right {
@@ -336,7 +341,7 @@ a, a:active, a:visited {
 }
 
 .nav-right .nav-link {
-  color: #A8AAC9;
+  /* color: #A8AAC9; */
 }
 
 .modeselect {
@@ -369,11 +374,11 @@ a, a:active, a:visited {
 }
 
 .page-description {
-  color: #A0A3C4;
+  /* color: #A0A3C4; */
 }
 
 .page-description a {
-  text-decoration: none;
+  /* text-decoration: none; */
 }
 
 .recharts-cartesian-axis-tick-value {
