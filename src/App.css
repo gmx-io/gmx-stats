@@ -263,9 +263,6 @@ label + input {
   z-index: 2;
 }
 
-a, a:active, a:visited {
-  color: #16182E;
-}
 
 .warning, .warning a {
   color: #e46b00;
@@ -298,6 +295,10 @@ a, a:active, a:visited {
   width: 87px;
 }
 
+a, a:active, a:visited {
+  color: #16182E;
+}
+
 .nav-link {
   letter-spacing: 0.47px;
   color: #A0A3C4;
@@ -311,6 +312,10 @@ a, a:active, a:visited {
   letter-spacing: 0.47px;
 }
 
+.nav-link:active, .nav-link:visited {
+  color: #A0A3C4;
+}
+
 .nav-link.active {
   color: #16182E;
 }
@@ -320,6 +325,10 @@ a, a:active, a:visited {
 }
 
 .App.dark .nav-link {
+  color: #A0A3C4;
+}
+
+.App.dark .nav-link:active, .App.dark .nav-link:visited {
   color: #A0A3C4;
 }
 
@@ -392,6 +401,27 @@ a, a:active, a:visited {
 
 .App.dark .recharts-cartesian-grid-horizontal line, .App.dark .recharts-cartesian-grid-vertical line {
   stroke: #282a3e;
+}
+
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  padding: 5px 12px!important;
+}
+
+.recharts-tooltip-wrapper ul.recharts-tooltip-item-list li {
+  padding: 0px!important;
+  font-size: 12px!important;
+  line-height: 15px!important;
+}
+
+.recharts-tooltip-wrapper ul.recharts-tooltip-item-list li + li {
+  margin-top: 1px!important;
+}
+
+.App.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: #353651!important;
+  box-shadow: 0px 3px 6px #0000005C;
+  border: 1px solid #484B6E!important;
+  border-radius: 4px;
 }
 
 @media all and (max-width: 1000px) {
