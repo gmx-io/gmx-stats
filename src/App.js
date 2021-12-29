@@ -2,8 +2,8 @@ import React from 'react';
 import { Route, Switch, Link } from 'react-router-dom';
 import Bsc from './Bsc';
 import Arbitrum from './Arbitrum';
+import Avalanche from './Avalanche';
 import Trading from './Trading';
-import BscOrders from './BscOrders';
 import './App.css';
 
 const App = () => (
@@ -25,8 +25,8 @@ const App = () => (
       <div className="content">
         <Route exact path="/" component={Arbitrum} />
         <Route exact path="/bsc" component={Bsc} />
+        <Route exact path="/avalanche" component={Avalanche} />
         <Route exact path="/trading" component={Trading} />
-        <Route exact path="/bsc-orders" component={BscOrders} />
       </div>
     </div>
   </Switch>
