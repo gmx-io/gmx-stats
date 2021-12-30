@@ -395,10 +395,10 @@ function Arbitrum() {
                 <Legend />
                 <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="Net PnL">
                   {(tradersData?.data || []).map((item, i) => {
-                    return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#22c761' : '#f93333'} />
+                    return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#C9DB74' : '#ED645A'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke="#8884ff" dataKey="pnlCumulative" name="Cumulative PnL" />
+                <Line type="monotone" strokeWidth={2} stroke="#5D69B1" dataKey="pnlCumulative" name="Cumulative PnL" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -428,8 +428,8 @@ function Arbitrum() {
                 <Legend />
                 <Area  yAxisId="right" type="monotone" stroke={0} fill="#88eba1" dataKey="profitCumulative" name="Cumulative Profit" />
                 <Area  yAxisId="right" type="monotone" stroke={0} fill="#f98888" dataKey="lossCumulative" name="Cumulative Loss" />
-                <Bar type="monotone" fill="#22c761" dot={false} dataKey="profit" name="Profit" />
-                <Bar type="monotone" fill="#f93333" dot={false} dataKey="loss" name="Loss" />
+                <Bar type="monotone" fill="#C9DB74" dot={false} dataKey="profit" name="Profit" />
+                <Bar type="monotone" fill="#ED645A" dot={false} dataKey="loss" name="Loss" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -449,6 +449,7 @@ function Arbitrum() {
               items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }, { key: 'MIM' }, { key: 'FRAX' }, { key: 'DAI' }]}
               type="Line"
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
+              isCoinChart={true}
             />
         </div>
         <div className="chart-cell">

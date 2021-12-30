@@ -30,7 +30,8 @@ import {
   tooltipFormatterPercent,
   CHART_HEIGHT,
   YAXIS_WIDTH,
-  COLORS
+  COLORS,
+  COINCOLORS
 } from '../helpers'
 
 import ChartWrapper from './ChartWrapper'
@@ -54,7 +55,8 @@ export default function GenericChart(props) {
     type,
     syncId,
     children,
-    rightYaxisDataKey
+    rightYaxisDataKey,
+    isCoinChart
   } = props
 
   let ChartComponent
@@ -72,8 +74,8 @@ export default function GenericChart(props) {
       dataKey: item.key,
       stackId: "a",
       name: item.name || item.key,
-      fill: item.color || COLORS[i % COLORS.length],
-      stroke: item.color || COLORS[i % COLORS.length],
+      fill: item.color || (isCoinChart ? COINCOLORS[i % COINCOLORS.length] : COLORS[i % COLORS.length]),
+      stroke: item.color || (isCoinChart ? COINCOLORS[i % COINCOLORS.length] : COLORS[i % COLORS.length]),
       dot: item.dot || false,
       key: 'item-' + i,
       unit: item.unit,

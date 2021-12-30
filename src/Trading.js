@@ -213,7 +213,7 @@ function Trading() {
               <YAxis yAxisId="right" orientation="right" dataKey="poolAmount" />
               <Tooltip />
               <Legend />
-              <Area isAnimationActive={false} strokeWidth={0} yAxisId="right" dataKey="poolAmount" name="Pool" dot={false} fill="#eb8334" />
+              <Area isAnimationActive={false} strokeWidth={0} yAxisId="right" dataKey="poolAmount" name="Pool" dot={false} fill="#627EEA" />
               <Line isAnimationActive={false} yAxisId="left" dataKey="price" name="Chainlink Price" dot={false} stroke="#666" strokeWidth={2} />
             </ComposedChart>
           </ResponsiveContainer>
@@ -262,11 +262,11 @@ function Trading() {
           <YAxis dataKey="all" />
           <Tooltip />
           <Legend />
-          <Area type="monotone" dot={false} dataKey="swap" stackId="a" name="Swap" stroke="#ee64b8" fill="#ee64b8" />
-          <Area type="monotone" dot={false} dataKey="mint" stackId="a" name="Mint USDG" stroke="#22c761" fill="#22c761" />
+          <Area type="monotone" dot={false} dataKey="swap" stackId="a" name="Swap" stroke="#FE88B1" fill="#FE88B1" />
+          <Area type="monotone" dot={false} dataKey="mint" stackId="a" name="Mint USDG" stroke="#C9DB74" fill="#C9DB74" />
           <Area type="monotone" dot={false} dataKey="burn" stackId="a" name="Burn USDG" stroke="#ab6100" fill="#ab6100" />
           <Area type="monotone" dot={false} dataKey="liquidation" stackId="a" name="Liquidation" stroke="#c90000" fill="#c90000" />
-          <Area type="monotone" dot={false} dataKey="margin" stackId="a" name="Margin trading" stroke="#8884ff" fill="#8884ff" />
+          <Area type="monotone" dot={false} dataKey="margin" stackId="a" name="Margin trading" stroke="#5D69B1" fill="#5D69B1" />
           <Line isAnimationActive={false} dot={false} dataKey="all" name="Total" stroke="#000" />
         </ComposedChart>
       </ResponsiveContainer>

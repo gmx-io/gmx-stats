@@ -268,11 +268,11 @@ function Bsc() {
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill="#ee64b8" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill="#22c761" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill="#FE88B1" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill="#C9DB74" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="burn" stackId="a" name="Burn USDG" fill="#ab6100" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="liquidation" stackId="a" name="Liquidation" fill="#c90000" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#8884ff" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#5D69B1" />
 
               <ReferenceLine x={1624406400} strokeWidth={2} stroke="lightblue">
                 <Label value="1.5% threshold" angle={90} position="insideMiddle" />
@@ -304,11 +304,11 @@ function Bsc() {
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill="#ee64b8" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill="#22c761" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill="#FE88B1" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill="#C9DB74" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="burn" stackId="a" name="Burn USDG" fill="#ab6100" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="liquidation" stackId="a" name="Liquidation" fill="#c90000" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#8884ff" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#5D69B1" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -329,12 +329,12 @@ function Bsc() {
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="USDC" stackId="a" name="USDC" fill="#8884ff" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="USDT" stackId="a" name="USDT" fill="#ab6100" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="USDC" stackId="a" name="USDC" fill="#2775CA" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="USDT" stackId="a" name="USDT" fill="#26A17B" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="BUSD" stackId="a" name="BUSD" fill="#c90000" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="BTC" stackId="a" name="BTC" fill="#3483eb" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="ETH" stackId="a" name="ETH" fill="#eb8334" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="BNB" stackId="a" name="BNB" fill="#ee64b8" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="BTC" stackId="a" name="BTC" fill="#FF9800" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="ETH" stackId="a" name="ETH" fill="#627EEA" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="BNB" stackId="a" name="BNB" fill="#FE88B1" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -359,7 +359,7 @@ function Bsc() {
               <ooltip />
               <Legend />
               <Area type="monotone" dataKey="value" name="Supply" stroke="#9984d8" fillOpacity={0.5} fill="#8884d8" strokeWidth={2} />
-              <Line type="monotone" dot={false} dataKey="price" yAxisId="right" name="Price" stroke="#ee64b8" strokeWidth={2} />
+              <Line type="monotone" dot={false} dataKey="price" yAxisId="right" name="Price" stroke="#FE88B1" strokeWidth={2} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

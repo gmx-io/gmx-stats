@@ -11,18 +11,33 @@ const { BigNumber } = ethers
 export const CHART_HEIGHT = 400
 export const YAXIS_WIDTH = 65
 
-export const GREEN = '#22c761'
-export const RED = '#f93333'
+export const GREEN = '#C9DB74'
+export const RED = '#ED645A'
 export const COLORS = [
-  '#ee64b8',
+  '#FE88B1',
   GREEN,
-  '#ff8d00',
-  '#00bfea',
-  '#8884ff',
+  '#F89C74',
+  '#9EB9F3',
+  '#5D69B1',
   '#ab6100',
   '#c90000',
   '#7b7b7b',
   'darkblue',
+  'purple',
+  'darkgreen',
+  RED
+]
+
+export const COINCOLORS = [
+  '#627EEA',
+  '#FF9800',
+  '#FF007A',
+  '#2A5ADA',
+  '#2775CA',
+  '#26A17B',
+  '#9895F3',
+  '#8C8C8C',
+  '#F4B731',
   'purple',
   'darkgreen',
   RED
