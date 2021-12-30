@@ -54,6 +54,8 @@ body {
   background: #101124;
   color: #FFF;
   line-height: 1.15;
+  box-sizing: border-box;
+  min-height: 100vh;
 }
 
 h3, h2 {
