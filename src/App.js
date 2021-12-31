@@ -50,20 +50,8 @@ const App = () => {
           <Route exact path="/bsc-orders" component={BscOrders} />
         </div>
       </div>
-<<<<<<< HEAD
     </Switch>
   )
 };
-=======
-      <div className="content">
-        <Route exact path="/" component={Arbitrum} />
-        <Route exact path="/bsc" component={Bsc} />
-        <Route exact path="/avalanche" component={Avalanche} />
-        <Route exact path="/trading" component={Trading} />
-      </div>
-    </div>
-  </Switch>
-);
->>>>>>> master
 
 export default App;
