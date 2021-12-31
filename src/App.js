@@ -3,8 +3,8 @@ import { Route, Switch, NavLink } from 'react-router-dom';
 import cx from "classnames";
 import Bsc from './Bsc';
 import Arbitrum from './Arbitrum';
+import Avalanche from './Avalanche';
 import Trading from './Trading';
-import BscOrders from './BscOrders';
 import './App.css';
 import darkLogoIcon from './img/logo_GMX_dark.svg';
 import lightLogoIcon from './img/logo_GMX_light.svg';
@@ -50,8 +50,20 @@ const App = () => {
           <Route exact path="/bsc-orders" component={BscOrders} />
         </div>
       </div>
+<<<<<<< HEAD
     </Switch>
   )
 };
+=======
+      <div className="content">
+        <Route exact path="/" component={Arbitrum} />
+        <Route exact path="/bsc" component={Bsc} />
+        <Route exact path="/avalanche" component={Avalanche} />
+        <Route exact path="/trading" component={Trading} />
+      </div>
+    </div>
+  </Switch>
+);
+>>>>>>> master
 
 export default App;

@@ -90,7 +90,8 @@ export function useCoingeckoPrices(symbol, { from = FIRST_DATE_TS } = {}) {
     BTC: 'bitcoin',
     ETH: 'ethereum',
     LINK: 'chainlink',
-    UNI: 'uniswap'
+    UNI: 'uniswap',
+    AVAX: 'avalanche'
   }[symbol]
 
   const now = Date.now() / 1000
@@ -125,12 +126,20 @@ function getImpermanentLoss(change) {
   return 2 * Math.sqrt(change) / (1 + change) - 1
 } 
 
-export function useGraph(querySource, { subgraph = 'gmx-io/gmx-stats', subgraphUrl = null } = {}) {
+function getChainSubgraph(chain) {
+  return chain === "arbitrum" ? "gmx-io/gmx-stats" : "gmx-io/gmx-avalanche-stats"
+}
+
+export function useGraph(querySource, { subgraph = null, subgraphUrl = null, chainName = "arbitrum" } = {}) {
   const query = gql(querySource)
 
   if (!subgraphUrl) {
+    if (!subgraph) {
+      subgraph = getChainSubgraph(chainName)
+    }
     subgraphUrl = `https://api.thegraph.com/subgraphs/name/${subgraph}`;
   }
+
   const client = new ApolloClient({
     link: new HttpLink({ uri: subgraphUrl, fetch }),
     cache: new InMemoryCache()
@@ -506,9 +515,16 @@ export function useTotalVolumeFromServer() {
   }, [data, loading])
 }
 
-export function useVolumeDataFromServer({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
+function getServerHostname(chainName) {
+  if (chainName == "avalanche") {
+    return 'gmx-avax-server.uc.r.appspot.com'
+  }
+  return 'gmx-server-mainnet.uw.r.appspot.com'
+}
+
+export function useVolumeDataFromServer({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
-  const [data, loading] = useRequest('https://gmx-server-mainnet.uw.r.appspot.com/daily_volume', null, async url => {
+  const [data, loading] = useRequest(`https://${getServerHostname(chainName)}/daily_volume`, null, async url => {
     let after
     const ret = []
     while (true) {
@@ -684,8 +700,11 @@ export function useFundingRateData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
 const MOVING_AVERAGE_DAYS = 7
 const MOVING_AVERAGE_PERIOD = 86400 * MOVING_AVERAGE_DAYS
 
-export function useVolumeData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
+export function useVolumeData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
 	const PROPS = 'margin liquidation swap mint burn'.split(' ')
+  if (chainName === "avalanche") {
+    PROPS.push("timestamp")
+  }
   const query = `{
     volumeStats(
       first: 1000,
@@ -737,7 +756,7 @@ export function useVolumeData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
   return [data, loading, error]
 }
 
-export function useFeesData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
+export function useFeesData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
   const feesQuery = `{
     feeStats(
@@ -752,9 +771,12 @@ export function useFeesData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
       swap
       mint
       burn
+      ${chainName === "avalanche" ? "timestamp" : ""}
     }
   }`
-  let [feesData, loading, error] = useGraph(feesQuery)
+  let [feesData, loading, error] = useGraph(feesQuery, {
+    chainName
+  })
 
   const feesChartData = useMemo(() => {
     if (!feesData) {
@@ -762,7 +784,7 @@ export function useFeesData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
     }
 
     let chartData = sortBy(feesData.feeStats, 'id').map(item => {
-      const ret = { timestamp: item.id };
+      const ret = { timestamp: item.timestamp || item.id };
 
       PROPS.forEach(prop => {
         if (item[prop]) {

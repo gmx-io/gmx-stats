@@ -41,7 +41,7 @@ function cb(err, port) {
     console.error(err);
     return;
   }
-  console.log(`> Started https on port ${httpsPort}`);
+  console.log(`> Started https on port ${port}`);
 }
 
 http.createServer(app).listen(port, err => cb(err, port))

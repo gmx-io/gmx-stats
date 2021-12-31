@@ -9,7 +9,7 @@
     "test": "razzle test --env=jsdom",
     "start": "PORT=3113 razzle start",
     "start-win": "set PORT=3113&razzle start",
-    "start:prod": "pm2 start -i 4 build/server.js"
+    "start:prod": "node build/server.js"
   },
   "dependencies": {
     "@apollo/client": "^3.4.10",
