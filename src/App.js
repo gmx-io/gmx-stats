@@ -46,8 +46,8 @@ const App = () => {
         <div className="content">
           <Route exact path="/" component={Arbitrum} />
           <Route exact path="/bsc" component={Bsc} />
+          <Route exact path="/avalanche" component={Avalanche} />
           <Route exact path="/trading" component={Trading} />
-          <Route exact path="/bsc-orders" component={BscOrders} />
         </div>
       </div>
     </Switch>
