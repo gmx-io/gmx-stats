@@ -287,8 +287,8 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke={COLORS[0]} />
-                <Line isAnimationActive={false} type="monotone" strokeWidth={2} dot={false} dataKey="glpSupply" stackId="a" name="Glp Supply" stroke={COLORS[1]} />
+                <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke="#30D5C8" />
+                <Line isAnimationActive={false} type="monotone" strokeWidth={2} dot={false} dataKey="glpSupply" stackId="a" name="Glp Supply" stroke="#2F8AC4" />
               </LineChart>
             </ResponsiveContainer>
           </ChartWrapper>
@@ -426,9 +426,9 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#88eba1" dataKey="profitCumulative" name="Cumulative Profit" />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#f98888" dataKey="lossCumulative" name="Cumulative Loss" />
-                <Bar type="monotone" fill="#C9DB74" dot={false} dataKey="profit" name="Profit" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#26A69A" dataKey="profitCumulative" name="Cumulative Profit" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#ED645A" dataKey="lossCumulative" name="Cumulative Loss" />
+                <Bar type="monotone" fill="#26A69A" dot={false} dataKey="profit" name="Profit" />
                 <Bar type="monotone" fill="#ED645A" dot={false} dataKey="loss" name="Loss" />
               </ComposedChart>
             </ResponsiveContainer>

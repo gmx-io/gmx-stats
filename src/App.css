@@ -319,7 +319,7 @@ a, a:active, a:visited {
 }
 
 .nav-link.active {
-  color: #16182E;
+  color: #444;
 }
 
 .App.dark a, .App.dark a:active, .App.dark a:visited {
@@ -343,7 +343,7 @@ a, a:active, a:visited {
 }
 
 .nav-link:hover {
-  color: #16182E;
+  color: #444;
 }
 
 .nav-right {
