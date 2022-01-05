@@ -331,7 +331,7 @@ function Bsc() {
               <Legend />
               <Bar type="monotone" unit={dynamicUnit} dataKey="USDC" stackId="a" name="USDC" fill="#2775CA" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="USDT" stackId="a" name="USDT" fill="#26A17B" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="BUSD" stackId="a" name="BUSD" fill="#c90000" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="BUSD" stackId="a" name="BUSD" fill="#F0B90B" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="BTC" stackId="a" name="BTC" fill="#FF9800" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="ETH" stackId="a" name="ETH" fill="#627EEA" />
               <Bar type="monotone" unit={dynamicUnit} dataKey="BNB" stackId="a" name="BNB" fill="#FE88B1" />
