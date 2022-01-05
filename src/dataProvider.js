@@ -967,7 +967,7 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
   return [glpChartData, loading, error]
 }
 
-export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS } = {}) {
+export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS, chainName = "arbitrum" } = {}) {
   const [btcPrices] = useCoingeckoPrices('BTC', { from })
   const [ethPrices] = useCoingeckoPrices('ETH', { from })
 

@@ -121,7 +121,7 @@ function Arbitrum() {
   }, [glpData])
 
   // const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData(params)
-  // const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, params)
+  const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, params)
 
   const [tradersData, tradersLoading] = useTradersData(params)
   const [openInterest, openInterestDelta] = useMemo(() => {
@@ -265,6 +265,30 @@ function Arbitrum() {
                 <Legend />
                 <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke={COLORS[0]} />
                 <Line isAnimationActive={false} type="monotone" strokeWidth={2} dot={false} dataKey="glpSupply" stackId="a" name="Glp Supply" stroke={COLORS[1]} />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
+        </div>
+        <div className="chart-cell">
+          <ChartWrapper
+            title="Glp Price"
+            loading={glpLoading}
+            data={glpPerformanceData}
+            csvFields={[{key: 'syntheticPrice'}, {key: 'glpPrice'}, {key: 'glpPlusFees'}, {key: 'lpBtcPrice'}, {key: 'lpEthPrice'}]}
+          >
+            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+              <LineChart data={glpPerformanceData} syncId="syncGlp">
+                <CartesianGrid strokeDasharray="10 10" />
+                <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
+                <YAxis dataKey="glpPrice" domain={[0.4, 1.7]} tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <Tooltip
+                  formatter={tooltipFormatterNumber}
+                  labelFormatter={tooltipLabelFormatter}
+                  contentStyle={{ textAlign: 'left' }}
+                />
+                <Legend />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} strokeWidth={1} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={COLORS[3]} strokeWidth={1} />
               </LineChart>
             </ResponsiveContainer>
           </ChartWrapper>
