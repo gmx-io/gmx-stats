@@ -150,20 +150,7 @@ function Arbitrum() {
       total,
       delta
     ]
-
   }, [usersData])
-
-  function getCsv(data) {
-    if (!data || data.length === 0) {
-      return null
-    }
-
-    const header = Object.keys(data[0]).join(',')
-    const rows = data.map(item => {
-      return Object.values(item).join(',')
-    }).join('\n')
-    return header + '\n' + rows
-  }
 
   const [lastSubgraphBlock] = useLastSubgraphBlock()
   const [lastBlock] = useLastBlock()

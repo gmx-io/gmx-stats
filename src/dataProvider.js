@@ -8,7 +8,12 @@ import { fillPeriods } from './helpers'
 
 const BigNumber = ethers.BigNumber
 const formatUnits = ethers.utils.formatUnits
-const provider = new ethers.providers.JsonRpcProvider('https://arb1.arbitrum.io/rpc');
+const { JsonRpcProvider } = ethers.providers
+
+const providers = {
+  arbitrum: new JsonRpcProvider('https://arb1.arbitrum.io/rpc'),
+  avalanche: new JsonRpcProvider('https://api.avax.network/ext/bc/C/rpc')
+}
 
 const DEFAULT_GROUP_PERIOD = 86400
 const NOW_TS = parseInt(Date.now() / 1000)
@@ -146,6 +151,7 @@ export function useGraph(querySource, { subgraph = null, subgraphUrl = null, cha
   })
   const [data, setData] = useState()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     setLoading(true)
@@ -155,10 +161,14 @@ export function useGraph(querySource, { subgraph = null, subgraphUrl = null, cha
     client.query({query}).then(res => {
       setData(res.data)
       setLoading(false)
+    }).catch(ex => {
+      console.warn('Subgraph request failed error: %s subgraphUrl: %s', ex.message, subgraphUrl)
+      setError(ex)
+      setLoading(false)
     })
-  }, [querySource, setData, setLoading])
+  }, [querySource, setData, setError, setLoading])
 
-  return [data, loading]
+  return [data, loading, error]
 }
 
 export function useGambitVolumeData({ from, to }) {
@@ -300,12 +310,12 @@ export function useGambitPoolStats({ from, to, groupPeriod }) {
   return [ret, loading, error]
 }
 
-export function useLastBlock() {
+export function useLastBlock(chainName = "arbitrum") {
   const [data, setData] = useState()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   useEffect(() => {
-    provider.getBlock()
+    providers[chainName].getBlock()
       .then(setData)
       .catch(setError)
       .finally(() => setLoading(false))
@@ -314,14 +324,14 @@ export function useLastBlock() {
   return [data, loading, error]
 }
 
-export function useLastSubgraphBlock() {
+export function useLastSubgraphBlock(chainName = "arbitrum") {
   const [data, loading, error] = useGraph(`{
     _meta {
       block {
         number
       }
     } 
-  }`)
+  }`, { chainName })
   const [block, setBlock] = useState(null)
 
   useEffect(() => {
@@ -329,7 +339,7 @@ export function useLastSubgraphBlock() {
       return
     } 
 
-    provider.getBlock(data._meta.block.number).then(block => {
+    providers[chainName].getBlock(data._meta.block.number).then(block => {
       setBlock(block)
     })
   }, [data, setBlock])
@@ -337,7 +347,7 @@ export function useLastSubgraphBlock() {
   return [block, loading, error]
 }
 
-export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
+export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
   const [closedPositionsData, loading, error] = useGraph(`{
     tradingStats(
       first: 1000
@@ -353,8 +363,8 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, groupPeriod 
       longOpenInterest
       shortOpenInterest
     }
-  }`)
-  const [feesData] = useFeesData({ groupPeriod })
+  }`, { chainName })
+  const [feesData] = useFeesData({ from, to, chainName })
   const marginFeesByTs = useMemo(() => {
     if (!feesData) {
       return {}
@@ -600,7 +610,7 @@ export function useVolumeDataFromServer({ from = FIRST_DATE_TS, to = NOW_TS, cha
   return [ret, loading]
 }
 
-export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
+export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
   const query = `{
     userStats(
       first: 1000
@@ -623,7 +633,7 @@ export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
       timestamp
     }
   }`
-  const [graphData, loading, error] = useGraph(query)
+  const [graphData, loading, error] = useGraph(query, { chainName })
 
   const prevUniqueCountCumulative = {}
   const data = graphData ? sortBy(graphData.userStats, 'timestamp').map(item => {
@@ -716,7 +726,7 @@ export function useVolumeData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "
       ${PROPS.join('\n')}
     }
   }`
-  const [graphData, loading, error] = useGraph(query)
+  const [graphData, loading, error] = useGraph(query, { chainName })
 
   const data = useMemo(() => {
     if (!graphData) {
@@ -870,7 +880,7 @@ export function useAumPerformanceData({ from = FIRST_DATE_TS, to = NOW_TS, group
   return [data, feesLoading || glpLoading || volumeLoading]
 }
 
-export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
+export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
   const query = `{
     glpStats(
       first: 1000
@@ -885,7 +895,7 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
       distributedEth
     }
   }`
-  let [data, loading, error] = useGraph(query)
+  let [data, loading, error] = useGraph(query, { chainName })
 
   let cumulativeDistributedUsdPerGlp = 0
   let cumulativeDistributedEthPerGlp = 0
