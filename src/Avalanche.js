@@ -163,7 +163,7 @@ function Arbitrum() {
 
   return (
     <div className="Home">
-      <h1>GMX Analytics / Arbitrum</h1>
+      <h1>GMX Analytics / Avalanche</h1>
       {lastSubgraphBlock && lastBlock &&
         <p className={isObsolete ? 'warning' : ''} style={{ marginTop: '-1rem' }}>
           {isObsolete && "Data is obsolete. "}
