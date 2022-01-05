@@ -648,7 +648,7 @@ export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "a
     const oldPercent = (oldCount / item.uniqueCount * 100).toFixed(1)
     return {
       all: item.uniqueCount,
-      uniqueSum: item.uniqueSwapCount + item.uniqueMarginCount + item.uniqueMintBurnCount + 100,
+      uniqueSum: item.uniqueSwapCount + item.uniqueMarginCount + item.uniqueMintBurnCount,
       oldCount,
       oldPercent,
       ...newCountData,
@@ -881,6 +881,7 @@ export function useAumPerformanceData({ from = FIRST_DATE_TS, to = NOW_TS, group
 }
 
 export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
+  const addProps = chainName === "arbitrum" ? [] : ["timestamp"]
   const query = `{
     glpStats(
       first: 1000
@@ -893,6 +894,7 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
       glpSupply
       distributedUsd
       distributedEth
+      ${addProps.join('\n')}
     }
   }`
   let [data, loading, error] = useGraph(query, { chainName })
@@ -903,10 +905,12 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
     if (!data) {
       return null
     }
+
+    const getTimestamp = item => item.timestamp || parseInt(item.id)
     
     let prevGlpSupply
     let prevAum
-    return sortBy(data.glpStats, item => item.id).filter(item => item.id % 86400 === 0).reduce((memo, item) => {
+    return sortBy(data.glpStats, item => item.id).filter(item => getTimestamp(item) % 86400 === 0).reduce((memo, item) => {
       const last = memo[memo.length - 1]
 
       const aum = Number(item.aumInUsdg) / 1e18
