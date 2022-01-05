@@ -426,8 +426,8 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#26A69A" dataKey="profitCumulative" name="Cumulative Profit" />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#ED645A" dataKey="lossCumulative" name="Cumulative Loss" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#26A69A" fillOpacity="0.3" dataKey="profitCumulative" name="Cumulative Profit" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#BF5656" fillOpacity="0.4" dataKey="lossCumulative" name="Cumulative Loss" />
                 <Bar type="monotone" fill="#26A69A" dot={false} dataKey="profit" name="Profit" />
                 <Bar type="monotone" fill="#ED645A" dot={false} dataKey="loss" name="Loss" />
               </ComposedChart>
