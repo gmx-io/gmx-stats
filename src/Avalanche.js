@@ -75,7 +75,7 @@ function dateToValue(date) {
 }
 
 function Arbitrum() {
-  const [fromValue, setFromValue] = useState("2022-01-01")
+  const [fromValue, setFromValue] = useState("2022-01-05")
   const [toValue, setToValue] = useState()
 
   const setDateRange = useCallback(range => {
