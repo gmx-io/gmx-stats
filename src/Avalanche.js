@@ -97,7 +97,7 @@ function Arbitrum() {
     }
     const total = volumeData[volumeData.length - 1]?.cumulative
     const delta = total - volumeData[volumeData.length - 2]?.cumulative
-    return [total, delta]
+    return [total, delta || 0]
   }, [volumeData])
 
   const [feesData, feesLoading] = useFeesData(params)
@@ -107,7 +107,7 @@ function Arbitrum() {
     }
     const total = feesData[feesData.length - 1]?.cumulative
     const delta = total - feesData[feesData.length - 2]?.cumulative
-    return [total, delta]
+    return [total, delta || 0]
   }, [feesData])
 
   const [glpData, glpLoading] = useGlpData(params)
@@ -117,7 +117,7 @@ function Arbitrum() {
     }
     const total = glpData[glpData.length - 1]?.aum
     const delta = total - glpData[glpData.length - 2]?.aum
-    return [total, delta]
+    return [total, delta || 0]
   }, [glpData])
 
   // const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData(params)
@@ -130,7 +130,7 @@ function Arbitrum() {
     }
     const total = tradersData.data[tradersData.data.length - 1]?.openInterest
     const delta = total - tradersData.data[tradersData.data.length - 2]?.openInterest
-    return [total, delta]
+    return [total, delta || 0]
   }, [tradersData])
 
   const [usersData, usersLoading] = useUsersData(params)
@@ -189,7 +189,9 @@ function Arbitrum() {
             <div className="total-stat-label">Total Fees</div>
             <div className="total-stat-value">
               {formatNumber(totalFees, {currency: true})}
-              <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalFeesDelta, {currency: true, compact: true})}</span>
+              {totalFeesDelta &&
+                <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalFeesDelta, {currency: true, compact: true})}</span>
+              }
             </div>
           </> : null}
           {feesLoading && <RiLoader5Fill size="3em" className="loader" />}
@@ -199,7 +201,9 @@ function Arbitrum() {
             <div className="total-stat-label">GLP Pool</div>
             <div className="total-stat-value">
               {formatNumber(totalAum, {currency: true})}
-              <span className="total-stat-delta" title="Change since previous day">{totalAumDelta > 0 ? '+' : ''}{formatNumber(totalAumDelta, {currency: true, compact: true})}</span>
+              {totalFeesDelta &&
+                <span className="total-stat-delta" title="Change since previous day">{totalAumDelta > 0 ? '+' : ''}{formatNumber(totalAumDelta, {currency: true, compact: true})}</span>
+              }
             </div>
           </> : null}
           {glpLoading && <RiLoader5Fill size="3em" className="loader" />}
@@ -209,7 +213,9 @@ function Arbitrum() {
             <div className="total-stat-label">Total Users</div>
             <div className="total-stat-value">
               {formatNumber(totalUsers)}
-              <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalUsersDelta)}</span>
+              {totalVolumeDelta &&
+                <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalUsersDelta)}</span>
+              }
             </div>
           </>}
           {usersLoading && <RiLoader5Fill size="3em" className="loader" />}
@@ -219,9 +225,11 @@ function Arbitrum() {
             <div className="total-stat-label">Open Interest</div>
             <div className="total-stat-value">
               {formatNumber(openInterest, {currency: true})}
-              <span className="total-stat-delta" title="Change since previous day">
-                {openInterestDelta > 0 ? '+' : ''}{formatNumber(openInterestDelta, {currency: true, compact: true})}
-              </span>
+              {openInterestDelta &&
+                <span className="total-stat-delta" title="Change since previous day">
+                  {openInterestDelta > 0 ? '+' : ''}{formatNumber(openInterestDelta, {currency: true, compact: true})}
+                </span>
+              }
             </div>
           </> : null}
           {tradersLoading && <RiLoader5Fill size="3em" className="loader" />}
