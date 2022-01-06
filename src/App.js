@@ -32,7 +32,8 @@ const App = () => {
             <a href="https://gmx.io" target="_blank" className="nav-logo">
               <img width="87" src={ mode == 'dark' ? darkLogoIcon : lightLogoIcon } />
             </a>
-            <NavLink to="/" exact className="nav-link" activeClassName="active">Arbitrum</NavLink> 
+            <NavLink to="/" exact className="nav-link" activeClassName="active">Arbitrum</NavLink>
+            <NavLink to="/avalanche" className="nav-link">Avalanche</NavLink>
             <NavLink to="/bsc" className="nav-link" activeClassName="active">BSC</NavLink> 
           </div>
           <div className="nav-right">
