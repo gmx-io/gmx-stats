@@ -14,8 +14,9 @@ const App = () => (
           <a href="https://gmx.io" target="_blank" className="nav-logo">
             <img width="24" src="/favicon.png" />
           </a>
-          <Link to="/" className="nav-link">ARBITRUM</Link> 
-          <Link to="/bsc" className="nav-link">BSC</Link> 
+          <Link to="/" className="nav-link">ARBITRUM</Link>
+          <Link to="/avalanche" className="nav-link">AVALANCHE</Link>
+          <Link to="/bsc" className="nav-link">BSC</Link>
         </div>
         <div className="nav-right">
           <a href="https://gmx.io" target="_blank" className="nav-link">APP</a> 
