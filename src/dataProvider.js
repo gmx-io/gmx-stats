@@ -712,17 +712,15 @@ const MOVING_AVERAGE_PERIOD = 86400 * MOVING_AVERAGE_DAYS
 
 export function useVolumeData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
 	const PROPS = 'margin liquidation swap mint burn'.split(' ')
-  if (chainName === "avalanche") {
-    PROPS.push("timestamp")
-  }
+  const timestampProp = chainName === "arbitrum" ? "id" : "timestamp"
   const query = `{
     volumeStats(
       first: 1000,
-      orderBy: id,
+      orderBy: ${timestampProp},
       orderDirection: desc
-      where: { period: daily, id_gte: ${from}, id_lte: ${to} }
+      where: { period: daily, ${timestampProp}_gte: ${from}, ${timestampProp}_lte: ${to} }
     ) {
-      id
+      ${timestampProp}
       ${PROPS.join('\n')}
     }
   }`
@@ -733,8 +731,8 @@ export function useVolumeData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "
       return null
     }
 
-    let ret =  sortBy(graphData.volumeStats, 'id').map(item => {
-      const ret = { timestamp: item.id };
+    let ret =  sortBy(graphData.volumeStats, timestampProp).map(item => {
+      const ret = { timestamp: item[timestampProp] };
       let all = 0;
       PROPS.forEach(prop => {
         ret[prop] = item[prop] / 1e30
