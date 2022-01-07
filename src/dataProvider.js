@@ -100,7 +100,7 @@ export function useCoingeckoPrices(symbol, { from = FIRST_DATE_TS } = {}) {
   }[symbol]
 
   const now = Date.now() / 1000
-  const days = Math.floor(now / 86400) - Math.floor(from / 86400) - 1
+  const days = Math.ceil(now / 86400) - Math.ceil(from / 86400) - 1
 
   const url = `https://api.coingecko.com/api/v3/coins/${_symbol}/market_chart?vs_currency=usd&days=${days}&interval=daily`
 
@@ -879,20 +879,19 @@ export function useAumPerformanceData({ from = FIRST_DATE_TS, to = NOW_TS, group
 }
 
 export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
-  const addProps = chainName === "arbitrum" ? [] : ["timestamp"]
+  const timestampProp = chainName === 'arbitrum' ? 'id' : 'timestamp'
   const query = `{
     glpStats(
       first: 1000
-      orderBy: id
+      orderBy: ${timestampProp}
       orderDirection: desc
-      where: {period: daily, id_gte: ${from}, id_lte: ${to}}
+      where: {period: daily, ${timestampProp}_gte: ${from}, ${timestampProp}_lte: ${to}}
     ) {
-      id
+      ${timestampProp}
       aumInUsdg
       glpSupply
       distributedUsd
       distributedEth
-      ${addProps.join('\n')}
     }
   }`
   let [data, loading, error] = useGraph(query, { chainName })
@@ -904,11 +903,11 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
       return null
     }
 
-    const getTimestamp = item => item.timestamp || parseInt(item.id)
+    const getTimestamp = item => item.timestamp || parseInt(item[timestampProp])
     
     let prevGlpSupply
     let prevAum
-    return sortBy(data.glpStats, item => item.id).filter(item => getTimestamp(item) % 86400 === 0).reduce((memo, item) => {
+    return sortBy(data.glpStats, item => item[timestampProp]).filter(item => item[timestampProp] % 86400 === 0).reduce((memo, item) => {
       const last = memo[memo.length - 1]
 
       const aum = Number(item.aumInUsdg) / 1e18
@@ -923,7 +922,7 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
       cumulativeDistributedEthPerGlp += distributedEthPerGlp
 
       const glpPrice = aum / glpSupply
-      const timestamp = parseInt(item.id)
+      const timestamp = parseInt(item[timestampProp])
 
       const newItem = {
         timestamp,
