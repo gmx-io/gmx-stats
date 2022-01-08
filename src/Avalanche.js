@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
 import moment from 'moment'
 import { RiLoader5Fill } from 'react-icons/ri'
+import cx from "classnames";
 
 import {
   yaxisFormatterNumber,
@@ -178,7 +179,7 @@ function Arbitrum() {
             <div className="total-stat-value">
               {formatNumber(totalVolume, {currency: true})}
               {!!totalVolumeDelta &&
-                <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalVolumeDelta, {currency: true, compact: true})}</span>
+                <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalVolumeDelta, {currency: true, compact: true})}</span>
               }
             </div>
           </> : null}
@@ -190,7 +191,7 @@ function Arbitrum() {
             <div className="total-stat-value">
               {formatNumber(totalFees, {currency: true})}
               {!!totalFeesDelta &&
-                <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalFeesDelta, {currency: true, compact: true})}</span>
+                <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalFeesDelta, {currency: true, compact: true})}</span>
               }
             </div>
           </> : null}
@@ -202,7 +203,7 @@ function Arbitrum() {
             <div className="total-stat-value">
               {formatNumber(totalAum, {currency: true})}
               {!!totalFeesDelta &&
-                <span className="total-stat-delta" title="Change since previous day">{totalAumDelta > 0 ? '+' : ''}{formatNumber(totalAumDelta, {currency: true, compact: true})}</span>
+                <span className={cx("total-stat-delta", (totalAumDelta > 0 ? 'plus' : 'minus'))} title="Change since previous day">{totalAumDelta > 0 ? '+' : ''}{formatNumber(totalAumDelta, {currency: true, compact: true})}</span>
               }
             </div>
           </> : null}
@@ -214,7 +215,7 @@ function Arbitrum() {
             <div className="total-stat-value">
               {formatNumber(totalUsers)}
               {!!totalUsersDelta &&
-                <span className="total-stat-delta" title="Change since previous day">+{formatNumber(totalUsersDelta)}</span>
+                <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalUsersDelta)}</span>
               }
             </div>
           </>}
@@ -226,7 +227,7 @@ function Arbitrum() {
             <div className="total-stat-value">
               {formatNumber(openInterest, {currency: true})}
               {!!openInterestDelta &&
-                <span className="total-stat-delta" title="Change since previous day">
+                <span className={cx("total-stat-delta", (openInterestDelta > 0 ? 'plus' : 'minus'))} title="Change since previous day">
                   {openInterestDelta > 0 ? '+' : ''}{formatNumber(openInterestDelta, {currency: true, compact: true})}
                 </span>
               }

@@ -380,12 +380,12 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="Net PnL">
+                <Bar type="monotone" fill="#FFB449" dot={false} dataKey="pnl" name="Net PnL">
                   {(tradersData?.data || []).map((item, i) => {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#26A69A' : '#ED645A'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke="#5D69B1" dataKey="pnlCumulative" name="Cumulative PnL" />
+                <Line type="monotone" strokeWidth={2} stroke="#FDDD5C" dataKey="pnlCumulative" name="Cumulative PnL" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
