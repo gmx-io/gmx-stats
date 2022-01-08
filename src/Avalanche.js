@@ -108,7 +108,7 @@ function Arbitrum() {
     }
     const total = feesData[feesData.length - 1]?.cumulative
     const delta = total - feesData[feesData.length - 2]?.cumulative
-    return [total]
+    return [total, delta]
   }, [feesData])
 
   const [glpData, glpLoading] = useGlpData(params)
@@ -202,7 +202,7 @@ function Arbitrum() {
             <div className="total-stat-label">GLP Pool</div>
             <div className="total-stat-value">
               {formatNumber(totalAum, {currency: true})}
-              {!!totalFeesDelta &&
+              {!!totalAumDelta &&
                 <span className={cx("total-stat-delta", (totalAumDelta > 0 ? 'plus' : 'minus'))} title="Change since previous day">{totalAumDelta > 0 ? '+' : ''}{formatNumber(totalAumDelta, {currency: true, compact: true})}</span>
               }
             </div>
