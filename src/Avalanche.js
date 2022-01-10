@@ -84,6 +84,13 @@ function Arbitrum() {
     setToValue(undefined)
   }, [setFromValue, setToValue])
 
+  const [mode, setMode] = useState(null)
+
+  useEffect(() => {
+    const savedMode = window.localStorage.getItem('mode')
+    setMode(savedMode)
+  }, [])
+
   const from = fromValue ? +new Date(fromValue) / 1000 : undefined
   const to = toValue ? +new Date(toValue) / 1000 : NOW
 
@@ -272,8 +279,8 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke={COLORS[0]} />
-                <Line isAnimationActive={false} type="monotone" strokeWidth={2} dot={false} dataKey="glpSupply" stackId="a" name="Glp Supply" stroke={COLORS[1]} />
+                <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke="#CC61B0" />
+                <Line isAnimationActive={false} type="monotone" strokeWidth={2} dot={false} dataKey="glpSupply" stackId="a" name="Glp Supply" stroke="#2F8AC4" />
               </LineChart>
             </ResponsiveContainer>
           </ChartWrapper>
@@ -296,8 +303,8 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} strokeWidth={1} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={COLORS[3]} strokeWidth={1} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="glpPrice" name="Glp Price" stroke="#22C761" strokeWidth={1} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke="#2BC3EB" strokeWidth={1} />
               </LineChart>
             </ResponsiveContainer>
           </ChartWrapper>
@@ -308,7 +315,7 @@ function Arbitrum() {
               title="Open Interest"
               data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
               yaxisDataKey="openInterest"
-              items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: GREEN }]}
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#F93333" }, { key: 'longOpenInterest', name: 'Long', color: '#22C761' }]}
               type="Bar"
             />
         </div>
@@ -323,9 +330,9 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'uniqueSwapCount', name: 'Swaps' },
-                { key: 'uniqueMarginCount', name: 'Margin trading' },
-                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP' }
+                { key: 'uniqueSwapCount', name: 'Swaps', color: "#EE64B8" },
+                { key: 'uniqueMarginCount', name: 'Margin trading', color: "#8884FF" },
+                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP', color: "#FF8D00" }
               ]}
               type="Composed"
             />
@@ -342,10 +349,10 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'newSwapCount', name: 'Swap' },
-                { key: 'newMarginCount', name: 'Margin trading' },
-                { key: 'newMintBurnCount', name: 'Mint & Burn' },
-                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
+                { key: 'newSwapCount', name: 'Swap', color: "#EE64B8" },
+                { key: 'newMarginCount', name: 'Margin trading', color: "#8884FF" },
+                { key: 'newMintBurnCount', name: 'Mint & Burn', color: "#FF8D00" },
+                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: "#8884FF" }
               ]}
               type="Composed"
             />

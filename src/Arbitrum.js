@@ -77,6 +77,12 @@ function Arbitrum() {
 
   const [fromValue, setFromValue] = useState()
   const [toValue, setToValue] = useState()
+  const [mode, setMode] = useState(null)
+
+  useEffect(() => {
+    const savedMode = window.localStorage.getItem('mode')
+    setMode(savedMode)
+  }, [])
 
   const setDateRange = useCallback(range => {
     setFromValue(new Date(Date.now() - range * 1000).toISOString().slice(0, 10))
@@ -274,7 +280,7 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke="#30D5C8" />
+                <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke="#CC61B0" />
                 <Line isAnimationActive={false} type="monotone" strokeWidth={2} dot={false} dataKey="glpSupply" stackId="a" name="Glp Supply" stroke="#2F8AC4" />
               </LineChart>
             </ResponsiveContainer>
@@ -299,15 +305,15 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpBtcCollectedFees" name="% LP BTC-USDC (w/ fees)" stroke={COLORS[2]} />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEthCollectedFees" name="% LP ETH-USDC (w/ fees)" stroke={COLORS[4]} />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceSyntheticCollectedFees" name="% Index (w/ fees)" stroke={COLORS[0]} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpBtcCollectedFees" name="% LP BTC-USDC (w/ fees)" stroke={"#FF9C42"} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEthCollectedFees" name="% LP ETH-USDC (w/ fees)" stroke={"#9A8EFF"} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceSyntheticCollectedFees" name="% Index (w/ fees)" stroke={"#EF75C0"} />
 
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} strokeWidth={1} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={COLORS[3]} strokeWidth={1} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[4]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={"#FF8D00"} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={"#22C761"} strokeWidth={1} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={"#2BC3EB"} strokeWidth={1} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={"#FF8D00"} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={"#9A8EFF"} />
               </LineChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -380,12 +386,12 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Bar type="monotone" fill="#FFB449" dot={false} dataKey="pnl" name="Net PnL">
+                <Bar type="monotone" fill={ mode == "dark" ? "#FFFFFF" : "#000000"} dot={false} dataKey="pnl" name="Net PnL">
                   {(tradersData?.data || []).map((item, i) => {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#26A69A' : '#ED645A'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke="#FDDD5C" dataKey="pnlCumulative" name="Cumulative PnL" />
+                <Line type="monotone" strokeWidth={2} stroke="#8884FF" dataKey="pnlCumulative" name="Cumulative PnL" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -413,10 +419,10 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#26A69A" fillOpacity="0.3" dataKey="profitCumulative" name="Cumulative Profit" />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#BF5656" fillOpacity="0.4" dataKey="lossCumulative" name="Cumulative Loss" />
-                <Bar type="monotone" fill="#26A69A" dot={false} dataKey="profit" name="Profit" />
-                <Bar type="monotone" fill="#ED645A" dot={false} dataKey="loss" name="Loss" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#ED645A" fillOpacity="0.4" dataKey="profitCumulative" name="Cumulative Profit" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#26A69A" fillOpacity="0.4" dataKey="lossCumulative" name="Cumulative Loss" />
+                <Bar type="monotone" fill="#ED645A" dot={false} dataKey="profit" name="Profit" />
+                <Bar type="monotone" fill="#26A69A" dot={false} dataKey="loss" name="Loss" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -433,7 +439,7 @@ function Arbitrum() {
               yaxisDataKey="ETH"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }, { key: 'MIM' }, { key: 'FRAX' }, { key: 'DAI' }]}
+              items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }, { key: 'MIM' }, { key: 'FRAX', color: mode == "dark" ? "#FFF" : "#000" }, { key: 'DAI' }]}
               type="Line"
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
               isCoinChart={true}
@@ -445,7 +451,7 @@ function Arbitrum() {
               title="Open Interest"
               data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
               yaxisDataKey="openInterest"
-              items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: '#26A69A' }]}
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#F93333" }, { key: 'longOpenInterest', name: 'Long', color: '#22C761' }]}
               type="Bar"
             />
         </div>
@@ -458,7 +464,7 @@ function Arbitrum() {
               yaxisDataKey="apr"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'apr', name: 'APR' }]}
+              items={[{ key: 'apr', name: 'APR', color: "#EE64B8" }]}
               description="Formula = Daily Fees / GLP Pool * 365 days * 100"
               type="Composed"
             />
@@ -472,7 +478,7 @@ function Arbitrum() {
               yaxisDataKey="usage"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'usage', name: 'Daily Usage', color: COLORS[4] }]}
+              items={[{ key: 'usage', name: 'Daily Usage', color: "#8884FF" }]}
               description="Formula = Daily Volume / GLP Pool * 100"
               type="Composed"
             />
@@ -488,9 +494,9 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'uniqueSwapCount', name: 'Swaps' },
-                { key: 'uniqueMarginCount', name: 'Margin trading' },
-                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP' }
+                { key: 'uniqueSwapCount', name: 'Swaps', color: "#EE64B8" },
+                { key: 'uniqueMarginCount', name: 'Margin trading', color: "#8884FF" },
+                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP', color: "#FF8D00" }
               ]}
               type="Composed"
             />
@@ -507,10 +513,10 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'newSwapCount', name: 'Swap' },
-                { key: 'newMarginCount', name: 'Margin trading' },
-                { key: 'newMintBurnCount', name: 'Mint & Burn' },
-                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
+                { key: 'newSwapCount', name: 'Swap', color: "#EE64B8" },
+                { key: 'newMarginCount', name: 'Margin trading', color: "#8884FF" },
+                { key: 'newMintBurnCount', name: 'Mint & Burn', color: "#FF8D00" },
+                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: "#8884FF" }
               ]}
               type="Composed"
             />
@@ -527,8 +533,8 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'newCount', name: 'New' },
-                { key: 'oldCount', name: 'Existing' },
+                { key: 'newCount', name: 'New', color: "#EE64B8" },
+                { key: 'oldCount', name: 'Existing', color: "#8884FF" },
                 { key: 'oldPercent', name: 'Existing %', yAxisId: 'right', type: 'Line', strokeWidth: 2, color: COLORS[4], unit: '%' }
               ]}
               type="Composed"
@@ -544,7 +550,7 @@ function Arbitrum() {
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
-              items={[{ key: 'actionSwapCount', name: 'Swaps' }, { key: 'actionMarginCount', name: 'Margin trading' }, { key: 'actionMintBurnCount', name: 'Mint & Burn GLP' }]}
+              items={[{ key: 'actionSwapCount', name: 'Swaps', color: "#EE64B8" }, { key: 'actionMarginCount', name: 'Margin trading', color: "#8884FF" }, { key: 'actionMintBurnCount', name: 'Mint & Burn GLP', color: "#FF8D00" }]}
               type="Composed"
             />
         </div>
