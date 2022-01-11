@@ -398,7 +398,7 @@ function Arbitrum() {
               yaxisDataKey="ETH"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'WETH.e', color: "#627EEA" }, { key: 'WBTC.e', color: "#FF9800" }, { key: 'AVAX' }, { key: 'MIM', color: "#9895F3" }, { key: 'USDC', color: "#2775CA" }, { key: 'USDC.e', color: "#2775CA" }]}
+              items={[{ key: 'WETH.e', color: "#627EEA" }, { key: 'WBTC.e', color: "#FF9800" }, { key: 'AVAX', color: "#e84142" }, { key: 'MIM', color: "#9895F3" }, { key: 'USDC', color: "#2775CA" }, { key: 'USDC.e', color: "#2775CA" }]}
               type="Line"
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
             />
