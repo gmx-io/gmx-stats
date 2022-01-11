@@ -14,12 +14,12 @@ export const YAXIS_WIDTH = 65
 export const GREEN = '#92E0C8'
 export const RED = '#ED645A'
 export const COLORS = [
-  '#FE88B1',
-  '#92E0C8',
-  '#F89C74',
-  '#00BFEA',
-  '#949FE1',
-  '#CC61B0',
+  '#F85D46',
+  '#8F8F8F',
+  '#D35DB6',
+  '#5A6DA7',
+  '#F4B806',
+  '#50BCA2',
   '#c90000',
   '#7b7b7b',
   'darkblue',
