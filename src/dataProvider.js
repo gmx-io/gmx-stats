@@ -48,6 +48,7 @@ export const tokenDecimals = {
 }
 
 export const tokenSymbols = {
+  // Arbitrum
   '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f': 'BTC',
   '0x82af49447d8a07e3bd95bd0d56f35241523fbab1': 'ETH',
   '0xf97f4df75117a78c1a5a0dbb814af92458539fb4': 'LINK',
@@ -57,6 +58,14 @@ export const tokenSymbols = {
   '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a': 'MIM',
   '0x17fc002b466eec40dae837fc4be5c67993ddbd6f': 'FRAX',
   '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': 'DAI',
+
+  // Avalanche
+  '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7': 'AVAX',
+  '0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab': 'WETH.e',
+  '0x50b7545627a5162f82a992c33b87adc75187b218': 'WBTC.e',
+  '0x130966628846bfd36ff31a822705796e8cb8c18d': 'MIM',
+  '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664': 'USDC.e',
+  '0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e': 'USDC'
 }
 
 function getTokenDecimals(token) {
@@ -64,9 +73,16 @@ function getTokenDecimals(token) {
 }
 
 const knownSwapSources = {
-  '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX',
-  '0x3b6067d4caa8a14c63fdbe6318f27a0bbc9f9237': 'Dodo',
-  '0x11111112542d85b3ef69ae05771c2dccff4faa26': '1inch'
+  arbitrum: {
+    '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX',
+    '0x09f77e8a13de9a35a7231028187e9fd5db8a2acb': 'GMX',
+    '0x3b6067d4caa8a14c63fdbe6318f27a0bbc9f9237': 'Dodo',
+    '0x11111112542d85b3ef69ae05771c2dccff4faa26': '1inch'
+  },
+  avalanche: {
+    '0x4296e307f108b2f583ff2f7b7270ee7831574ae5': 'GMX',
+    '0x5f719c2f1095f7b9fc68a68e35b51194f4b6abe8': 'GMX'
+  }
 }
 
 const defaultFetcher = url => fetch(url).then(res => res.json())
@@ -91,12 +107,13 @@ export function useRequest(url, defaultValue, fetcher = defaultFetcher) {
 }
 
 export function useCoingeckoPrices(symbol, { from = FIRST_DATE_TS } = {}) {
+  // token ids https://api.coingecko.com/api/v3/coins
   const _symbol = {
     BTC: 'bitcoin',
     ETH: 'ethereum',
     LINK: 'chainlink',
     UNI: 'uniswap',
-    AVAX: 'avalanche'
+    AVAX: 'avalanche-2'
   }[symbol]
 
   const now = Date.now() / 1000
@@ -131,8 +148,8 @@ function getImpermanentLoss(change) {
   return 2 * Math.sqrt(change) / (1 + change) - 1
 } 
 
-function getChainSubgraph(chain) {
-  return chain === "arbitrum" ? "gmx-io/gmx-stats" : "gmx-io/gmx-avalanche-stats"
+function getChainSubgraph(chainName) {
+  return chainName === "arbitrum" ? "gmx-io/gmx-stats" : "gmx-io/gmx-avalanche-stats"
 }
 
 export function useGraph(querySource, { subgraph = null, subgraphUrl = null, chainName = "arbitrum" } = {}) {
@@ -447,21 +464,11 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
   return [ret, loading]
 }
 
-export function useSwapSources({ from = FIRST_DATE_TS, to = NOW_TS, groupPeriod = DEFAULT_GROUP_PERIOD } = {}) {
-  const query = `{
-    a: hourlyVolumeBySources(
+function getSwapSourcesFragment(skip = 0, from, to) {
+  return `
+    hourlyVolumeBySources(
       first: 1000
-      orderBy: timestamp
-      orderDirection: desc
-      where: { timestamp_gte: ${from}, timestamp_lte: ${to} }
-    ) {
-      timestamp
-      source
-      swap
-    },
-    b: hourlyVolumeBySources(
-      first: 1000
-      skip: 1000
+      skip: ${skip}
       orderBy: timestamp
       orderDirection: desc
       where: { timestamp_gte: ${from}, timestamp_lte: ${to} }
@@ -470,8 +477,17 @@ export function useSwapSources({ from = FIRST_DATE_TS, to = NOW_TS, groupPeriod 
       source
       swap
     }
+  `
+}
+export function useSwapSources({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
+  const query = `{
+    a: ${getSwapSourcesFragment(0, from, to)}
+    b: ${getSwapSourcesFragment(1000, from, to)}
+    c: ${getSwapSourcesFragment(2000, from, to)}
+    d: ${getSwapSourcesFragment(3000, from, to)}
+    e: ${getSwapSourcesFragment(4000, from, to)}
   }`
-  const [graphData, loading, error] = useGraph(query)
+  const [graphData, loading, error] = useGraph(query, { chainName })
 
   let total = 0
   let data = useMemo(() => {
@@ -479,14 +495,15 @@ export function useSwapSources({ from = FIRST_DATE_TS, to = NOW_TS, groupPeriod 
       return null
     }
 
-    let ret = chain([...graphData.a, ...graphData.b])
-      .groupBy(item => parseInt(item.timestamp / groupPeriod) * groupPeriod)
+    const {a, b, c, d, e} = graphData
+    let ret = chain([...a, ...b, ...c, ...d, ...e])
+      .groupBy(item => parseInt(item.timestamp / 86400) * 86400)
       .map((values, timestamp) => {
         let all = 0
         const retItem = {
           timestamp: Number(timestamp),
           ...values.reduce((memo, item) => {
-            const source = knownSwapSources[item.source] || item.source
+            const source = knownSwapSources[chainName][item.source] || item.source
             if (item.swap != 0) {
               const volume = item.swap / 1e30
               memo[source] = memo[source] || 0
@@ -659,7 +676,7 @@ export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "a
   return [data, loading, error]
 }
 
-export function useFundingRateData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
+export function useFundingRateData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
   const query = `{
     fundingRates(
       first: 1000,
@@ -676,7 +693,8 @@ export function useFundingRateData({ from = FIRST_DATE_TS, to = NOW_TS } = {}) {
       endTimestamp
     }
   }`
-  const [graphData, loading, error] = useGraph(query)
+  const [graphData, loading, error] = useGraph(query, { chainName })
+
 
   const data = useMemo(() => {
     if (!graphData) {
@@ -967,6 +985,7 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
 export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS, chainName = "arbitrum" } = {}) {
   const [btcPrices] = useCoingeckoPrices('BTC', { from })
   const [ethPrices] = useCoingeckoPrices('ETH', { from })
+  const [avaxPrices] = useCoingeckoPrices('AVAX', { from })
 
   const glpPerformanceChartData = useMemo(() => {
     if (!btcPrices || !ethPrices || !glpData || !feesData) {
@@ -990,12 +1009,14 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
 
     const btcFirstPrice = btcPrices[0].value
     const ethFirstPrice = ethPrices[0].value
+    const avaxFirstPrice = avaxPrices[0].value
 
     const indexBtcCount = GLP_START_PRICE * BTC_WEIGHT / btcFirstPrice
     const indexEthCount = GLP_START_PRICE * ETH_WEIGHT / ethFirstPrice
 
     const lpBtcCount = GLP_START_PRICE * 0.5 / btcFirstPrice
     const lpEthCount = GLP_START_PRICE * 0.5 / ethFirstPrice
+    const lpAvaxCount = GLP_START_PRICE * 0.5 / avaxFirstPrice
 
     const ret = []
     let cumulativeFeesPerGlp = 0
@@ -1003,9 +1024,12 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
     let lastGlpPrice = 0
 
     let prevEthPrice = 3400
+    let prevAvaxPrice = 1000
     for (let i = 0; i < btcPrices.length; i++) {
       const btcPrice = btcPrices[i].value
       const ethPrice = ethPrices[i]?.value || prevEthPrice
+      const avaxPrice = avaxPrices[i]?.value || prevAvaxPrice
+      prevAvaxPrice = avaxPrice
       prevEthPrice = ethPrice
 
       const timestampGroup = parseInt(btcPrices[i].timestamp / 86400) * 86400
@@ -1017,6 +1041,7 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
       const syntheticPrice = indexBtcCount * btcPrice + indexEthCount * ethPrice + GLP_START_PRICE * STABLE_WEIGHT
       const lpBtcPrice = (lpBtcCount * btcPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(btcPrice / btcFirstPrice))
       const lpEthPrice = (lpEthCount * ethPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(ethPrice / ethFirstPrice))
+      const lpAvaxPrice = (lpAvaxCount * avaxPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(avaxPrice / avaxFirstPrice))
 
       if (dailyFees && glpSupply) {
         const INCREASED_GLP_REWARDS_TIMESTAMP = 1635714000
@@ -1050,6 +1075,7 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
         syntheticPrice,
         lpBtcPrice,
         lpEthPrice,
+        lpAvaxPrice,
         glpPrice,
         btcPrice,
         ethPrice,

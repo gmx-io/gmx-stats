@@ -309,10 +309,10 @@ function Arbitrum() {
                 <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEthCollectedFees" name="% LP ETH-USDC (w/ fees)" stroke={"#9A8EFF"} />
                 <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceSyntheticCollectedFees" name="% Index (w/ fees)" stroke={"#EF75C0"} />
 
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={"#FF8D00"} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
                 <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={"#22C761"} strokeWidth={1} />
                 <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={"#2BC3EB"} strokeWidth={1} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={"#FF8D00"} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
                 <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={"#9A8EFF"} />
               </LineChart>
             </ResponsiveContainer>
@@ -391,7 +391,7 @@ function Arbitrum() {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#26A69A' : '#ED645A'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke="#8884FF" dataKey="pnlCumulative" name="Cumulative PnL" />
+                <Line type="monotone" strokeWidth={2} stroke={COLORS[4]} dataKey="pnlCumulative" name="Cumulative PnL" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -451,7 +451,7 @@ function Arbitrum() {
               title="Open Interest"
               data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
               yaxisDataKey="openInterest"
-              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#F93333" }, { key: 'longOpenInterest', name: 'Long', color: '#22C761' }]}
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#ED645A" }, { key: 'longOpenInterest', name: 'Long', color: '#26A69A' }]}
               type="Bar"
             />
         </div>
@@ -464,7 +464,7 @@ function Arbitrum() {
               yaxisDataKey="apr"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'apr', name: 'APR', color: "#EE64B8" }]}
+              items={[{ key: 'apr', name: 'APR', color: COLORS[0] }]}
               description="Formula = Daily Fees / GLP Pool * 365 days * 100"
               type="Composed"
             />
@@ -478,7 +478,7 @@ function Arbitrum() {
               yaxisDataKey="usage"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'usage', name: 'Daily Usage', color: "#8884FF" }]}
+              items={[{ key: 'usage', name: 'Daily Usage', color: COLORS[4] }]}
               description="Formula = Daily Volume / GLP Pool * 100"
               type="Composed"
             />
@@ -494,9 +494,9 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'uniqueSwapCount', name: 'Swaps', color: "#EE64B8" },
-                { key: 'uniqueMarginCount', name: 'Margin trading', color: "#8884FF" },
-                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP', color: "#FF8D00" }
+                { key: 'uniqueSwapCount', name: 'Swaps', color: COLORS[0] },
+                { key: 'uniqueMarginCount', name: 'Margin trading', color: COLORS[4] },
+                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP', color: COLORS[2] }
               ]}
               type="Composed"
             />
@@ -513,10 +513,10 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'newSwapCount', name: 'Swap', color: "#EE64B8" },
-                { key: 'newMarginCount', name: 'Margin trading', color: "#8884FF" },
-                { key: 'newMintBurnCount', name: 'Mint & Burn', color: "#FF8D00" },
-                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: "#8884FF" }
+                { key: 'newSwapCount', name: 'Swap', color: COLORS[0] },
+                { key: 'newMarginCount', name: 'Margin trading', color: COLORS[4] },
+                { key: 'newMintBurnCount', name: 'Mint & Burn', color: COLORS[2] },
+                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
               ]}
               type="Composed"
             />
@@ -533,8 +533,8 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'newCount', name: 'New', color: "#EE64B8" },
-                { key: 'oldCount', name: 'Existing', color: "#8884FF" },
+                { key: 'newCount', name: 'New', color: COLORS[0] },
+                { key: 'oldCount', name: 'Existing', color: COLORS[4] },
                 { key: 'oldPercent', name: 'Existing %', yAxisId: 'right', type: 'Line', strokeWidth: 2, color: COLORS[4], unit: '%' }
               ]}
               type="Composed"
@@ -550,7 +550,7 @@ function Arbitrum() {
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
-              items={[{ key: 'actionSwapCount', name: 'Swaps', color: "#EE64B8" }, { key: 'actionMarginCount', name: 'Margin trading', color: "#8884FF" }, { key: 'actionMintBurnCount', name: 'Mint & Burn GLP', color: "#FF8D00" }]}
+              items={[{ key: 'actionSwapCount', name: 'Swaps', color: COLORS[0] }, { key: 'actionMarginCount', name: 'Margin trading', color: COLORS[4] }, { key: 'actionMintBurnCount', name: 'Mint & Burn GLP', color: COLORS[2] }]}
               type="Composed"
             />
         </div>
