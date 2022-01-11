@@ -280,8 +280,8 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke="#CC61B0" />
-                <Line isAnimationActive={false} type="monotone" strokeWidth={2} dot={false} dataKey="glpSupply" stackId="a" name="Glp Supply" stroke="#2F8AC4" />
+                <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke={COLORS[2]} />
+                <Line isAnimationActive={false} type="monotone" strokeWidth={2} dot={false} dataKey="glpSupply" stackId="a" name="Glp Supply" stroke="#6C7DB3" />
               </LineChart>
             </ResponsiveContainer>
           </ChartWrapper>
@@ -305,15 +305,15 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpBtcCollectedFees" name="% LP BTC-USDC (w/ fees)" stroke={COLORS[2]} />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEthCollectedFees" name="% LP ETH-USDC (w/ fees)" stroke={COLORS[4]} />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceSyntheticCollectedFees" name="% Index (w/ fees)" stroke={COLORS[0]} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpBtcCollectedFees" name="% LP BTC-USDC (w/ fees)" stroke={"#FFD27D"} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEthCollectedFees" name="% LP ETH-USDC (w/ fees)" stroke={"#A6C4EA"} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceSyntheticCollectedFees" name="% Index (w/ fees)" stroke={"#B1638B"} />
 
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
-                <Line isAnimationActive={false} type="monotone" yAxisId="right" unit="$" strokeWidth={1} dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} strokeWidth={1} />
-                <Line isAnimationActive={false} type="monotone" yAxisId="right" unit="$" strokeWidth={1} dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={COLORS[3]} strokeWidth={1} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[4]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={"#D291B1"} />
+                <Line isAnimationActive={false} type="monotone" yAxisId="right" unit="$" strokeWidth={1} dot={false} dataKey="glpPrice" name="Glp Price" stroke={"#1B65A6"} strokeWidth={1} />
+                <Line isAnimationActive={false} type="monotone" yAxisId="right" unit="$" strokeWidth={1} dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={"#50ABBF"} strokeWidth={1} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={"#FFD27D"} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={"#A6C4EA"} />
                 <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpAvaxPrice" name="LP AVAX-USDC" stroke={COLORS[5]} />
               </LineChart>
             </ResponsiveContainer>
@@ -347,10 +347,10 @@ function Arbitrum() {
                 <Legend />
                 <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="Net PnL">
                   {(tradersData?.data || []).map((item, i) => {
-                    return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#26A69A' : '#ED645A'} />
+                    return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#6BB2AA' : '#FC93A4'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke={COLORS[4]} dataKey="pnlCumulative" name="Cumulative PnL" />
+                <Line type="monotone" strokeWidth={2} stroke={"#739DE7"} dataKey="pnlCumulative" name="Cumulative PnL" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -378,10 +378,10 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#26A69A" fillOpacity="0.4" dataKey="profitCumulative" name="Cumulative Profit" />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#ED645A" fillOpacity="0.4" dataKey="lossCumulative" name="Cumulative Loss" />
-                <Bar type="monotone" fill="#26A69A" dot={false} dataKey="profit" name="Profit" />
-                <Bar type="monotone" fill="#ED645A" dot={false} dataKey="loss" name="Loss" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#FC93A4" fillOpacity="0.4" dataKey="profitCumulative" name="Cumulative Profit" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#6BB2AA" fillOpacity="0.4" dataKey="lossCumulative" name="Cumulative Loss" />
+                <Bar type="monotone" fill="#FC93A4" dot={false} dataKey="profit" name="Profit" />
+                <Bar type="monotone" fill="#6BB2AA" dot={false} dataKey="loss" name="Loss" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -409,7 +409,7 @@ function Arbitrum() {
               title="Open Interest"
               data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
               yaxisDataKey="openInterest"
-              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#ED645A" }, { key: 'longOpenInterest', name: 'Long', color: '#26A69A' }]}
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#FF8C8C" }, { key: 'longOpenInterest', name: 'Long', color: '#7CB090' }]}
               type="Bar"
             />
         </div>
@@ -426,7 +426,7 @@ function Arbitrum() {
               items={[
                 { key: 'uniqueSwapCount', name: 'Swaps', color: COLORS[0] },
                 { key: 'uniqueMarginCount', name: 'Margin trading', color: COLORS[4] },
-                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP', color: COLORS[2] }
+                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP', color: "#FF8D00" }
               ]}
               type="Composed"
             />
@@ -445,8 +445,8 @@ function Arbitrum() {
               items={[
                 { key: 'newSwapCount', name: 'Swap', color: COLORS[0] },
                 { key: 'newMarginCount', name: 'Margin trading', color: COLORS[4] },
-                { key: 'newMintBurnCount', name: 'Mint & Burn', color: COLORS[2] },
-                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
+                { key: 'newMintBurnCount', name: 'Mint & Burn', color: "#FF8D00" },
+                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: "#CCCCCC" }
               ]}
               type="Composed"
             />

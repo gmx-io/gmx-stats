@@ -14,12 +14,12 @@ export const YAXIS_WIDTH = 65
 export const GREEN = '#92E0C8'
 export const RED = '#ED645A'
 export const COLORS = [
-  '#FE88B1',
-  '#92E0C8',
-  '#F89C74',
-  '#00BFEA',
-  '#949FE1',
-  '#CC61B0',
+  '#1B4E6B',
+  '#5B63A2',
+  '#C067A7',
+  '#ED707B',
+  '#F2AA32',
+  '#016FFF',
   '#c90000',
   '#7b7b7b',
   'darkblue',
@@ -37,7 +37,7 @@ export const COINCOLORS = [
   '#26A17B',
   '#9895F3',
   '#8C8C8C',
-  '#F4B731',
+  '#F0B90B',
   'purple',
   'darkgreen',
   RED

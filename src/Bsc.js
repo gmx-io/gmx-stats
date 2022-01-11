@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
 import * as strftime from 'strftime'
 
-import { urlWithParams, tsToIsoDate } from './helpers'
+import { urlWithParams, tsToIsoDate, COLORS } from './helpers'
 import {
   useRequest,
   useGambitPoolStats,
@@ -271,11 +271,11 @@ function Bsc() {
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill="#FE88B1" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill="#92E0C8" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="burn" stackId="a" name="Burn USDG" fill="#F89C74" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="liquidation" stackId="a" name="Liquidation" fill="#00BFEA" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#949FE1" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill={COLORS[0]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill={COLORS[1]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="burn" stackId="a" name="Burn USDG" fill={COLORS[2]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="liquidation" stackId="a" name="Liquidation" fill={COLORS[3]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill={COLORS[4]} />
 
               <ReferenceLine x={1624406400} strokeWidth={2} stroke="lightblue">
                 <Label value="1.5% threshold" angle={90} position="insideMiddle" />
@@ -307,11 +307,11 @@ function Bsc() {
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill="#FE88B1" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill="#92E0C8" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="burn" stackId="a" name="Burn USDG" fill="#F89C74" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="liquidation" stackId="a" name="Liquidation" fill="#00BFEA" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill="#949FE1" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="swap" stackId="a" name="Swap" fill={COLORS[0]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="mint" stackId="a" name="Mint USDG" fill={COLORS[1]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="burn" stackId="a" name="Burn USDG" fill={COLORS[2]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="liquidation" stackId="a" name="Liquidation" fill={COLORS[3]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="margin" stackId="a" name="Margin trading" fill={COLORS[4]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -361,8 +361,8 @@ function Bsc() {
               />
               <ooltip />
               <Legend />
-              <Area type="monotone" dataKey="value" name="Supply" stroke="#9984d8" fillOpacity={0.5} fill="#8884d8" strokeWidth={2} />
-              <Line type="monotone" dot={false} dataKey="price" yAxisId="right" name="Price" stroke="#FE88B1" strokeWidth={2} />
+              <Area type="monotone" dataKey="value" name="Supply" stroke="#9984d8" fillOpacity={0.5} fill="#6C7DB3" strokeWidth={2} />
+              <Line type="monotone" dot={false} dataKey="price" yAxisId="right" name="Price" stroke="#1B65A6" strokeWidth={2} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
