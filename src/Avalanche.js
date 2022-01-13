@@ -347,7 +347,7 @@ function Arbitrum() {
                 <Legend />
                 <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="Net PnL">
                   {(tradersData?.data || []).map((item, i) => {
-                    return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#6BB2AA' : '#FC93A4'} />
+                    return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#FC93A4' : '#6BB2AA'} />
                   })}
                 </Bar>
                 <Line type="monotone" strokeWidth={2} stroke={"#739DE7"} dataKey="pnlCumulative" name="Cumulative PnL" />
@@ -378,10 +378,10 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#FC93A4" fillOpacity="0.4" dataKey="profitCumulative" name="Cumulative Profit" />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#6BB2AA" fillOpacity="0.4" dataKey="lossCumulative" name="Cumulative Loss" />
-                <Bar type="monotone" fill="#FC93A4" dot={false} dataKey="profit" name="Profit" />
-                <Bar type="monotone" fill="#6BB2AA" dot={false} dataKey="loss" name="Loss" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#6BB2AA" fillOpacity="0.4" dataKey="profitCumulative" name="Cumulative Profit" />
+                <Area  yAxisId="right" type="monotone" stroke={0} fill="#FC93A4" fillOpacity="0.4" dataKey="lossCumulative" name="Cumulative Loss" />
+                <Bar type="monotone" fill="#6BB2AA" dot={false} dataKey="profit" name="Profit" />
+                <Bar type="monotone" fill="#FC93A4" dot={false} dataKey="loss" name="Loss" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -409,7 +409,7 @@ function Arbitrum() {
               title="Open Interest"
               data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
               yaxisDataKey="openInterest"
-              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#FF8C8C" }, { key: 'longOpenInterest', name: 'Long', color: '#7CB090' }]}
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#7CB090" }, { key: 'longOpenInterest', name: 'Long', color: '#FF8C8C' }]}
               type="Bar"
             />
         </div>
