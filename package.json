@@ -22,6 +22,7 @@
     "ethers": "^5.4.2",
     "express": "^4.17.1",
     "forever": "^4.0.1",
+    "framer-motion": "^4.1",
     "got": "^11.8.2",
     "graphql": "^15.5.3",
     "lodash": "^4.17.21",
