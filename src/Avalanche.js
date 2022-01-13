@@ -347,7 +347,7 @@ function Arbitrum() {
                 <Legend />
                 <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="Net PnL">
                   {(tradersData?.data || []).map((item, i) => {
-                    return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#26A69A' : '#ED645A'} />
+                    return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#ED645A' : '#26A69A'} />
                   })}
                 </Bar>
                 <Line type="monotone" strokeWidth={2} stroke={COLORS[4]} dataKey="pnlCumulative" name="Cumulative PnL" />
@@ -409,7 +409,7 @@ function Arbitrum() {
               title="Open Interest"
               data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
               yaxisDataKey="openInterest"
-              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#ED645A" }, { key: 'longOpenInterest', name: 'Long', color: '#26A69A' }]}
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#26A69A" }, { key: 'longOpenInterest', name: 'Long', color: '#ED645A' }]}
               type="Bar"
             />
         </div>
