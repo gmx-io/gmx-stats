@@ -22,7 +22,7 @@ export const COLORS = [
   '#CC61B0',
   '#c90000',
   '#7b7b7b',
-  'darkblue',
+  '#6464ff',
   'purple',
   'darkgreen',
   RED

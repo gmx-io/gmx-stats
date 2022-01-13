@@ -173,7 +173,7 @@ function Arbitrum() {
 
   return (
     <div className="Home">
-      <h1 className="page-title">GMX Analytics / Arbitrum</h1>
+      <h1 className="page-title">Analytics / Arbitrum</h1>
       {lastSubgraphBlock && lastBlock &&
         <p className={cx('page-description', (isObsolete ? 'warning' : ''))} style={{ marginTop: '-1rem' }}>
           {isObsolete && "Data is obsolete. "}
