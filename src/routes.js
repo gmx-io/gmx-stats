@@ -112,7 +112,7 @@ async function precacheNewPrices(chainId) {
     logger.error(ex)
   }
 
-  setTimeout(precacheNewPrices, 1000 * 60, chainId)
+  setTimeout(precacheNewPrices, 1000 * 60 * 5, chainId)
 }
 precacheNewPrices(ARBITRUM)
 precacheNewPrices(AVALANCHE)
