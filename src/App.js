@@ -55,7 +55,8 @@ const App = () => {
 
   useEffect(() => {
     const savedMode = window.localStorage.getItem('mode');
-    setMode(savedMode);
+    const targetMode = savedMode == 'dark' ? 'dark' : 'light';
+    setMode(targetMode);
   }, [])
 
   const switchMode = () => {
@@ -66,65 +67,67 @@ const App = () => {
 
   return (
     <Switch>
-      <div className={cx("App", mode)}>
-        {isDrawerVisible &&
+      {
+        mode && <div className={cx("App", mode)}>
+          {isDrawerVisible &&
+            <AnimatePresence>
+              {isDrawerVisible &&
+                <motion.div className="App-header-backdrop"
+                  initial="hidden"
+                  animate="visible"
+                  exit="hidden"
+                  variants={fadeVariants}
+                  transition={{ duration: 0.2 }}
+                  onClick={() => setIsDrawerVisible(!isDrawerVisible)}
+                >
+                </motion.div>
+              }
+            </AnimatePresence>
+          }
+          <div className="nav">
+            <div className="nav-left">
+              <div className="App-header-menu-icon-block" onClick={() => setIsDrawerVisible(!isDrawerVisible)}>
+                {!isDrawerVisible && <RiMenuLine className="App-header-menu-icon" />}
+                {isDrawerVisible && <FaTimes className="App-header-menu-icon" />}
+              </div>
+              <a href="https://gmx.io" target="_blank" className="nav-logo">
+                <img width="87" src={mode == 'dark' ? darkLogoIcon : lightLogoIcon} />
+              </a>
+              <NavLink to="/" exact className="nav-link" activeClassName="active">Arbitrum</NavLink>
+              <NavLink to="/avalanche" className="nav-link">Avalanche</NavLink>
+              <NavLink to="/bsc" className="nav-link" activeClassName="active">BSC</NavLink>
+            </div>
+            <div className="nav-right">
+              <a href="https://gmx.io" target="_blank" className="nav-link">APP</a>
+              <a href="https://gmxio.gitbook.io/gmx/" target="_blank" className="nav-link">DOCS</a>
+              <div className='modeselect' onClick={() => switchMode()}>
+                {mode == 'dark' ? <FaSun /> : <FaMoon />}
+              </div>
+            </div>
+          </div>
           <AnimatePresence>
             {isDrawerVisible &&
-              <motion.div className="App-header-backdrop"
+              <motion.div
+                onClick={() => setIsDrawerVisible(false)}
+                className="App-header-links-container App-header-drawer"
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
-                variants={fadeVariants}
+                variants={slideVariants}
                 transition={{ duration: 0.2 }}
-                onClick={() => setIsDrawerVisible(!isDrawerVisible)}
               >
+                <AppHeaderLinks mode={mode} small clickCloseIcon={() => setIsDrawerVisible(false)} />
               </motion.div>
             }
           </AnimatePresence>
-        }
-        <div className="nav">
-          <div className="nav-left">
-            <div className="App-header-menu-icon-block" onClick={() => setIsDrawerVisible(!isDrawerVisible)}>
-              {!isDrawerVisible && <RiMenuLine className="App-header-menu-icon" />}
-              {isDrawerVisible && <FaTimes className="App-header-menu-icon" />}
-            </div>
-            <a href="https://gmx.io" target="_blank" className="nav-logo">
-              <img width="87" src={mode == 'dark' ? darkLogoIcon : lightLogoIcon} />
-            </a>
-            <NavLink to="/" exact className="nav-link" activeClassName="active">Arbitrum</NavLink>
-            <NavLink to="/avalanche" className="nav-link">Avalanche</NavLink>
-            <NavLink to="/bsc" className="nav-link" activeClassName="active">BSC</NavLink>
-          </div>
-          <div className="nav-right">
-            <a href="https://gmx.io" target="_blank" className="nav-link">APP</a>
-            <a href="https://gmxio.gitbook.io/gmx/" target="_blank" className="nav-link">DOCS</a>
-            <div className='modeselect' onClick={() => switchMode()}>
-              {mode == 'dark' ? <FaSun /> : <FaMoon />}
-            </div>
+          <div className="content">
+            <Route exact path="/" component={Arbitrum} />
+            <Route exact path="/bsc" component={Bsc} />
+            <Route exact path="/avalanche" component={Avalanche} />
+            <Route exact path="/trading" component={Trading} />
           </div>
         </div>
-        <AnimatePresence>
-          {isDrawerVisible &&
-            <motion.div
-              onClick={() => setIsDrawerVisible(false)}
-              className="App-header-links-container App-header-drawer"
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              variants={slideVariants}
-              transition={{ duration: 0.2 }}
-            >
-              <AppHeaderLinks mode={mode} small clickCloseIcon={() => setIsDrawerVisible(false)} />
-            </motion.div>
-          }
-        </AnimatePresence>
-        <div className="content">
-          <Route exact path="/" component={Arbitrum} />
-          <Route exact path="/bsc" component={Bsc} />
-          <Route exact path="/avalanche" component={Avalanche} />
-          <Route exact path="/trading" component={Trading} />
-        </div>
-      </div>
+      }
     </Switch>
   )
 };
