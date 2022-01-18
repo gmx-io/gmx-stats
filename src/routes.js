@@ -1,20 +1,13 @@
-import path from 'path';
-
 import { ethers } from 'ethers'
 import React from 'react';
-import Logger from 'console-log-level'
 import { StaticRouter } from 'react-router-dom';
 import { renderToString } from 'react-dom/server';
 import fetch from 'cross-fetch';
 
 import App from './App';
 import { ApolloClient, InMemoryCache, gql, HttpLink } from '@apollo/client'
-import { findNearest, queryProviderLogs, callWithRetry, UsdgSupplyRecord, LogRecord, getLogger, fillPeriods } from './helpers'
-import * as helpers from './helpers'
-import { TOKENS, TOKENS_BY_ADDRESS, TOKENS_BY_SYMBOL } from './tokens'
-import { tokenSymbols } from './dataProvider'
-import { addresses, BSC, ARBITRUM, AVALANCHE } from './addresses'
-import { dbAll } from './db'
+import { getLogger } from './helpers'
+import { addresses, ARBITRUM, AVALANCHE } from './addresses'
 
 const assets = require(process.env.RAZZLE_ASSETS_MANIFEST);
 
@@ -32,7 +25,6 @@ const jsScriptTagsFromAssets = (assets, entrypoint, extra = '') => {
   ).join('') : '' : '';
 };
 
-const { BigNumber } = ethers
 const { formatUnits} = ethers.utils
 
 const logger = getLogger('routes')
@@ -51,11 +43,16 @@ const cachedPrices = {
   [ARBITRUM]: {},
   [AVALANCHE]: {}
 }
-function putPricesIntoCache(prices, chainId) {
+function putPricesIntoCache(prices, chainId, entitiesKey) {
+  if (!prices || !chainId || !entitiesKey) {
+    throw new Error('Invalid arguments')
+  }
+  const delimeter = entitiesKey === "chainlinkPrices" ? 1e8 : 1e30
   for (const price of prices) {
     const token = price.token.toLowerCase()
-    cachedPrices[chainId][token] = cachedPrices[chainId][token] || {}
-    cachedPrices[chainId][token][price.timestamp] = Number(price.value) / 1e8
+    cachedPrices[chainId][entitiesKey] = cachedPrices[chainId][entitiesKey] || {}
+    cachedPrices[chainId][entitiesKey][token] = cachedPrices[chainId][entitiesKey][token] || {}
+    cachedPrices[chainId][entitiesKey][token][price.timestamp] = Number(price.value) / delimeter
   }
 }
 
@@ -65,7 +62,7 @@ function sleep(ms) {
   })
 }
 
-async function precacheOldPrices(chainId) {
+async function precacheOldPrices(chainId, entitiesKey) {
   logger.info('precache old prices into memory for %s...', chainId)
 
   let oldestTimestamp = parseInt(Date.now() / 1000)
@@ -73,13 +70,13 @@ async function precacheOldPrices(chainId) {
   let failCount = 0
   while (i < 100) {
     try {
-      const prices = await loadPrices({ before: oldestTimestamp, chainId })
+      const prices = await loadPrices({ before: oldestTimestamp, chainId, entitiesKey })
       if (prices.length === 0) {
         logger.info('All old prices loaded for chain: %s', chainId)
         break
       }
 
-      putPricesIntoCache(prices, chainId)
+      putPricesIntoCache(prices, chainId, entitiesKey)
       oldestTimestamp = prices[prices.length - 1].timestamp - 1
     } catch (ex) {
       failCount++
@@ -94,17 +91,19 @@ async function precacheOldPrices(chainId) {
     i++
   }
 }
-precacheOldPrices(ARBITRUM)
-precacheOldPrices(AVALANCHE)
+precacheOldPrices(ARBITRUM, "chainlinkPrices")
+precacheOldPrices(ARBITRUM, "fastPrices")
+precacheOldPrices(AVALANCHE, "chainlinkPrices")
+precacheOldPrices(AVALANCHE, "fastPrices")
 
 let newestTimestamp = parseInt(Date.now() / 1000)
-async function precacheNewPrices(chainId) {
+async function precacheNewPrices(chainId, entitiesKey) {
   logger.info('precache new prices into memory...')
 
   try {
-    const prices = await loadPrices({ after: newestTimestamp, chainId })
+    const prices = await loadPrices({ after: newestTimestamp, chainId, entitiesKey })
     if (prices.length > 0) {
-      putPricesIntoCache(prices, chainId)
+      putPricesIntoCache(prices, chainId, entitiesKey)
       newestTimestamp = prices[0].timestamp + 1
     }
   } catch (ex) {
@@ -112,25 +111,34 @@ async function precacheNewPrices(chainId) {
     logger.error(ex)
   }
 
-  setTimeout(precacheNewPrices, 1000 * 60 * 5, chainId)
+  setTimeout(precacheNewPrices, 1000 * 60 * 5, chainId, entitiesKey)
 }
-precacheNewPrices(ARBITRUM)
-precacheNewPrices(AVALANCHE)
+precacheNewPrices(ARBITRUM, "chainlinkPrices")
+precacheNewPrices(ARBITRUM, "fastPrices")
+precacheNewPrices(AVALANCHE, "chainlinkPrices")
+precacheNewPrices(AVALANCHE, "fastPrices")
 
-async function loadPrices({ before, after, chainId } = {}) {
+async function loadPrices({ before, after, chainId, entitiesKey } = {}) {
+  if (!chainId) {
+    throw new Error('loadPrices requires chainId')
+  }
+  if (!entitiesKey) {
+    throw new Error('loadPrices requires entitiesKey')
+  }
   if (!before) {
     before = parseInt(Date.now() / 1000) + 86400 * 365
   }
   if (!after) {
     after = 0
   }
-  logger.info('loadPrices chainId: %s before: %s, after: %s',
+  logger.info('loadPrices %s chainId: %s before: %s, after: %s',
+    entitiesKey,
     chainId,
     new Date(before * 1000),
     new Date(after * 1000)
   )
   const query = gql(`{
-    prices: chainlinkPrices(
+    prices: ${entitiesKey}(
       first: 1000
       orderBy: timestamp
       orderDirection: desc
@@ -146,9 +154,104 @@ async function loadPrices({ before, after, chainId } = {}) {
   return data.prices
 }
 
-export default function routes(app) {
-  const GROUP_PERIOD = 86400
+function filterAndNormalizePrices(obj, from, to) {
+  let firstTimestamp
+  const prices = Object.entries(obj).map(([timestamp, price]) => {
+    if (!firstTimestamp) {
+      firstTimestamp = timestamp
+    }
+    return [Number(timestamp), price]
+  }).filter(([timestamp]) => {
+    return timestamp >= from && timestamp <= to
+  }).sort((a, b) => a.timestamp - b.timestamp)
+  return [prices, firstTimestamp]
+}
 
+function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "fast", symbol) {
+  if (preferableSource !== "chainlink" && preferableSource !== "fast") {
+    const err = new Error(`Invalid preferableSource ${preferableSource}. Valid options are: chainlink, fast`)
+    err.code = 400
+    throw err
+  }
+
+  const validSymbols = new Set(['BTC', 'ETH', 'BNB', 'UNI', 'LINK', 'AVAX'])
+  if (!validSymbols.has(symbol)) {
+    const err = new Error(`Invalid symbol ${symbol}`)
+    err.code = 400
+    throw err
+  }
+  preferableChainId = Number(preferableChainId)
+  const validSources = new Set([ARBITRUM, AVALANCHE])
+  if (!validSources.has(preferableChainId)) {
+    const err = new Error(`Invalid preferableChainId ${preferableChainId}`)
+    err.code = 400
+    throw err
+  }
+
+  const tokenAddress = addresses[preferableChainId][symbol]?.toLowerCase()
+  if (!tokenAddress || !cachedPrices[preferableChainId].chainlinkPrices
+    || !cachedPrices[preferableChainId].chainlinkPrices[tokenAddress]
+  ) {
+    return []
+  }
+
+  const entitiesKey = preferableSource === "chainlink" ? "chainlinkPrices" : "fastPrices"
+
+  const rawPrices = cachedPrices[preferableChainId][entitiesKey][tokenAddress]
+  let [prices, firstTimestamp] = filterAndNormalizePrices(rawPrices, from, to)
+
+  if (preferableSource === "fast" && firstTimestamp > from) {
+    // there is no enough fast price data. upfill it with chainlink prices
+    const [chainlinkPrices] = filterAndNormalizePrices(cachedPrices[preferableChainId].chainlinkPrices[tokenAddress], from, firstTimestamp)
+    prices = [...chainlinkPrices, ...prices]
+  }
+
+  return prices
+}
+
+const periodsMap = {
+  '5m': 60 * 5,
+  '15m': 60 * 15,
+  '1h': 60 * 60,
+  '4h': 60 * 60 * 4,
+  '1d': 60 * 60 * 24,
+  '1w': 60 * 60 * 24 * 7
+}
+
+function getCandles(prices, period) {
+  const periodTime = periodsMap[period]
+
+  if (prices.length < 2) {
+    return []
+  }
+
+  const candles = []
+  const first = prices[0]
+  let prevTsGroup = Math.floor(first[0] / periodTime) * periodTime
+  let prevPrice = first[1]
+  let o = prevPrice
+  let h = prevPrice
+  let l = prevPrice
+  let c = prevPrice
+  for (let i = 1; i < prices.length; i++) {
+    const [ts, price] = prices[i]
+    const tsGroup = Math.floor(ts / periodTime) * periodTime
+    if (prevTsGroup !== tsGroup) {
+      candles.push({ t: prevTsGroup, o, h, l, c })
+      o = c
+      h = Math.max(o, c)
+      l = Math.min(o, c)
+    }
+    c = price
+    h = Math.max(h, price)
+    l = Math.min(l, price)
+    prevTsGroup = tsGroup
+  }
+
+  return candles
+}
+
+export default function routes(app) {
   app.get('/api/gmx-supply', async (req, res) => {
     const apiResponse = await fetch('https://api.gmx.io/gmx_supply')
     const data = (await apiResponse.text()).toString()
@@ -161,35 +264,59 @@ export default function routes(app) {
     let to = Number(req.query.to) || Math.round(Date.now() / 1000)
     to = Math.ceil(to / 300) * 300
 
-    const validSymbols = new Set(['BTC', 'ETH', 'BNB', 'UNI', 'LINK', 'AVAX'])
-    const { symbol } = req.params
-    if (!validSymbols.has(symbol)) {
-      res.send(`Invalid symbol ${symbol}`)
-      res.status(400)
-      return
+    let prices
+    try {
+      prices = getPrices(from, to, req.query.preferableChainId, req.query.entitiesKey, req.params.symbol)
+    } catch (ex) {
+      if (ex.code === 400) {
+        res.send(ex.message)
+        res.status(400)
+        return
+      }
+      throw ex
     }
-    const preferableChainId = Number(req.query.preferableChainId || ARBITRUM)
-    const validSources = new Set([ARBITRUM, AVALANCHE])
-    if (!validSources.has(preferableChainId)) {
-      res.send(`Invalid preferableChainId ${preferableChainId}`)
-      res.status(400)
-      return
-    }
-
-    const tokenAddress = addresses[preferableChainId][symbol]?.toLowerCase()
-    if (!tokenAddress || !cachedPrices[preferableChainId][tokenAddress]) {
-      res.send([])
-      return
-    }
-
-    const prices = Object.entries(cachedPrices[preferableChainId][tokenAddress]).map(([timestamp, price]) => {
-      return [Number(timestamp), price]
-    }).filter(([timestamp, price]) => {
-      return timestamp >= from && timestamp <= to
-    }).sort((a, b) => a.timestamp - b.timestamp)
 
     res.set('Cache-Control', 'max-age=60')
-    res.send(prices) 
+    res.send(prices)
+  })
+
+  app.get('/api/candles/:symbol', async (req, res) => {
+    let from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
+    from = Math.floor(from / 300) * 300
+    let to = Number(req.query.to) || Math.round(Date.now() / 1000)
+    to = Math.ceil(to / 300) * 300
+
+    let prices
+    try {
+      prices = getPrices(from, to, req.query.preferableChainId, req.query.preferableSource, req.params.symbol)
+    } catch (ex) {
+      if (ex.code === 400) {
+        res.send(ex.message)
+        res.status(400)
+        return
+      }
+      throw ex
+    }
+
+    const period = req.query.period?.toLowerCase()
+    if (!period || !periodsMap[period]) {
+      res.send(`Invalid period. Valid periods are ${Object.keys(periodsMap)}`)
+      res.status(400)
+      return
+    }
+
+    const candles = getCandles(prices, period)
+    let updatedAt
+    if (prices.length) {
+      updatedAt = prices[prices.length - 1][0]
+    }
+
+    res.set('Cache-Control', 'max-age=60')
+    res.send({
+      prices: candles,
+      period,
+      updatedAt
+    })
   })
 
   app.get('/*', (req, res, next) => {
