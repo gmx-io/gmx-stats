@@ -56,6 +56,25 @@ function putPricesIntoCache(prices, chainId, entitiesKey) {
   }
 }
 
+class TtlCache {
+  constructor(ttl = 60) {
+    this._cache = {}
+    this._ttl = ttl
+  }
+
+  get(key) {
+    return this._cache[key]
+  }
+
+  set(key, value) {
+    this._cache[key] = value
+    setTimeout(() => {
+      delete this._cache[key]
+    }, this._ttl * 1000)
+  }
+}
+const ttlCache = new TtlCache(60)
+
 function sleep(ms) {
   return new Promise(resolve => {
     setTimeout(resolve, ms)
@@ -168,6 +187,12 @@ function filterAndNormalizePrices(obj, from, to) {
 }
 
 function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "chainlink", symbol) {
+  const cacheKey = `${from}:${to}:${preferableChainId}:${preferableSource}:${symbol}`
+  const fromCache = ttlCache.get(cacheKey)
+  if (fromCache) {
+    return fromCache
+  }
+
   if (preferableSource !== "chainlink" && preferableSource !== "fast") {
     const err = new Error(`Invalid preferableSource ${preferableSource}. Valid options are: chainlink, fast`)
     err.code = 400
@@ -205,6 +230,8 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
     const [chainlinkPrices] = filterAndNormalizePrices(cachedPrices[preferableChainId].chainlinkPrices[tokenAddress], from, firstTimestamp)
     prices = [...chainlinkPrices, ...prices]
   }
+
+  ttlCache.set(cacheKey, prices)
 
   return prices
 }
@@ -251,6 +278,15 @@ function getCandles(prices, period) {
   return candles
 }
 
+function getFromAndTo(req) {
+  let from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
+  from = Math.floor(from / 60) * 60
+  let to = Number(req.query.to) || Math.round(Date.now() / 1000)
+  to = Math.ceil(to / 60) * 60
+
+  return [from, to]
+}
+
 export default function routes(app) {
   app.get('/api/gmx-supply', async (req, res) => {
     const apiResponse = await fetch('https://api.gmx.io/gmx_supply')
@@ -259,10 +295,7 @@ export default function routes(app) {
   })
 
   app.get('/api/chart/:symbol', async (req, res) => {
-    let from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
-    from = Math.floor(from / 300) * 300
-    let to = Number(req.query.to) || Math.round(Date.now() / 1000)
-    to = Math.ceil(to / 300) * 300
+    const [from, to, shouldRedirect] = getFromAndTo(req)
 
     let prices
     try {
@@ -281,10 +314,7 @@ export default function routes(app) {
   })
 
   app.get('/api/candles/:symbol', async (req, res) => {
-    let from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
-    from = Math.floor(from / 300) * 300
-    let to = Number(req.query.to) || Math.round(Date.now() / 1000)
-    to = Math.ceil(to / 300) * 300
+    const [from, to, shouldRedirect] = getFromAndTo(req)
 
     let prices
     try {
