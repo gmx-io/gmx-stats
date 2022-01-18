@@ -167,7 +167,7 @@ function filterAndNormalizePrices(obj, from, to) {
   return [prices, firstTimestamp]
 }
 
-function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "fast", symbol) {
+function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "chainlink", symbol) {
   if (preferableSource !== "chainlink" && preferableSource !== "fast") {
     const err = new Error(`Invalid preferableSource ${preferableSource}. Valid options are: chainlink, fast`)
     err.code = 400
