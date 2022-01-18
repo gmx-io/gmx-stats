@@ -4,6 +4,7 @@ import routes from './routes'
 import { requestLogger } from './middlewares'
 
 const app = express();
+app.set('trust proxy', true)
 
 app
   .disable('x-powered-by')
