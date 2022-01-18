@@ -10,8 +10,7 @@
     "start": "PORT=3113 razzle start",
     "start:prod": "node build/server.js",
     "lint": "eslint $(git ls-files -m | grep -E \".js$\")",
-    "pre-commit": "npm run lint",
-    "postinstall": "echo 'mkdir -p .git/hooks && npm run pre-commit' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit"
+    "pre-commit": "npm run lint"
   },
   "dependencies": {
     "@apollo/client": "^3.4.10",
