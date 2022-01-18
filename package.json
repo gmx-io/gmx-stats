@@ -11,7 +11,7 @@
     "start:prod": "node build/server.js",
     "lint": "eslint $(git ls-files -m | grep -E \".js$\")",
     "pre-commit": "npm run lint",
-    "postinstall": "echo 'npm run pre-commit' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit"
+    "postinstall": "echo 'mkdir -p .git/hooks && npm run pre-commit' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit"
   },
   "dependencies": {
     "@apollo/client": "^3.4.10",
