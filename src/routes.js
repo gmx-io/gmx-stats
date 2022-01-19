@@ -43,17 +43,24 @@ const cachedPrices = {
   [ARBITRUM]: {},
   [AVALANCHE]: {}
 }
+const AVALANCHE_LAUNCH_TS = 1641416400
 function putPricesIntoCache(prices, chainId, entitiesKey) {
   if (!prices || !chainId || !entitiesKey) {
     throw new Error('Invalid arguments')
   }
-  const delimeter = entitiesKey === "chainlinkPrices" ? 1e8 : 1e30
+  const precision = entitiesKey === "chainlinkPrices" ? 1e8 : 1e30
   for (const price of prices) {
     const token = price.token.toLowerCase()
+    const timestamp = price.timestamp
+    if (chainId === AVALANCHE && entitiesKey === "fastPrices" && timestamp < AVALANCHE_LAUNCH_TS) {
+      logger.info("Reject older prices on Avalanche. Price ts: %s launch ts: %s", timestamp, AVALANCHE_LAUNCH_TS)
+      return false
+    }
     cachedPrices[chainId][entitiesKey] = cachedPrices[chainId][entitiesKey] || {}
     cachedPrices[chainId][entitiesKey][token] = cachedPrices[chainId][entitiesKey][token] || {}
-    cachedPrices[chainId][entitiesKey][token][price.timestamp] = Number(price.value) / delimeter
+    cachedPrices[chainId][entitiesKey][token][timestamp] = Number(price.value) / precision
   }
+  return true
 }
 
 class TtlCache {
@@ -91,18 +98,21 @@ async function precacheOldPrices(chainId, entitiesKey) {
     try {
       const prices = await loadPrices({ before: oldestTimestamp, chainId, entitiesKey })
       if (prices.length === 0) {
-        logger.info('All old prices loaded for chain: %s', chainId)
+        logger.info('All old prices loaded for chain: %s %s', chainId, entitiesKey)
         break
       }
 
-      putPricesIntoCache(prices, chainId, entitiesKey)
+      if (!putPricesIntoCache(prices, chainId, entitiesKey)) {
+        logger.info('putPricesIntoCache returned false for chain: %s %s. stop', chainId, entitiesKey)
+        break
+      }
       oldestTimestamp = prices[prices.length - 1].timestamp - 1
     } catch (ex) {
       failCount++
       logger.warn('Old prices load failed')
       logger.error(ex)
       if (failCount > 10) {
-        logger.warn('too many load failures. stop')
+        logger.warn('too many load failures for chainId: %s %s. stop', chainId, entitiesKey)
         break
       }
       await sleep(500)
@@ -299,7 +309,7 @@ export default function routes(app) {
 
     let prices
     try {
-      prices = getPrices(from, to, req.query.preferableChainId, req.query.entitiesKey, req.params.symbol)
+      prices = getPrices(from, to, req.query.preferableChainId, req.query.preferableSource, req.params.symbol)
     } catch (ex) {
       if (ex.code === 400) {
         res.send(ex.message)
