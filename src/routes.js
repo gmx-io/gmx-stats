@@ -107,6 +107,7 @@ async function precacheOldPrices(chainId, entitiesKey) {
         break
       }
       oldestTimestamp = prices[prices.length - 1].timestamp - 1
+      failCount = 0
     } catch (ex) {
       failCount++
       logger.warn('Old prices load failed')
@@ -115,7 +116,7 @@ async function precacheOldPrices(chainId, entitiesKey) {
         logger.warn('too many load failures for chainId: %s %s. stop', chainId, entitiesKey)
         break
       }
-      await sleep(500)
+      await sleep(100)
     }
     i++
   }
