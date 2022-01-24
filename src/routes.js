@@ -91,8 +91,10 @@ function sleep(ms) {
 async function precacheOldPrices(chainId, entitiesKey) {
   logger.info('precache old prices into memory for %s...', chainId)
 
+  const baseRetryTimeout = 10000
   let oldestTimestamp = parseInt(Date.now() / 1000)
   let i = 0
+  let retryTimeout = baseRetryTimeout
   let failCount = 0
   while (i < 100) {
     try {
@@ -108,15 +110,18 @@ async function precacheOldPrices(chainId, entitiesKey) {
       }
       oldestTimestamp = prices[prices.length - 1].timestamp - 1
       failCount = 0
+      retryTimeout = baseRetryTimeout
     } catch (ex) {
       failCount++
       logger.warn('Old prices load failed')
       logger.error(ex)
       if (failCount > 10) {
-        logger.warn('too many load failures for chainId: %s %s. stop', chainId, entitiesKey)
-        break
+        logger.warn('too many load failures for chainId: %s %s. retry in %s seconds',
+          chainId, entitiesKey, retryTimeout / 1000)
+        await sleep(retryTimeout)
+        retryTimeout *= 2
       }
-      await sleep(100)
+      await sleep(500)
     }
     i++
   }
