@@ -131,22 +131,23 @@ precacheOldPrices(ARBITRUM, "fastPrices")
 precacheOldPrices(AVALANCHE, "chainlinkPrices")
 precacheOldPrices(AVALANCHE, "fastPrices")
 
-let newestTimestamp = parseInt(Date.now() / 1000)
+let newestPriceTimestamp = parseInt(Date.now() / 1000)
 async function precacheNewPrices(chainId, entitiesKey) {
-  logger.info('precache new prices into memory...')
+  logger.info('Precache new prices into memory chainId: %s %s...', chainId, entitiesKey)
 
   try {
-    const prices = await loadPrices({ after: newestTimestamp, chainId, entitiesKey })
+    const prices = await loadPrices({ after: newestPriceTimestamp, chainId, entitiesKey })
     if (prices.length > 0) {
+      logger.info('Loaded %s new prices', prices.length)
       putPricesIntoCache(prices, chainId, entitiesKey)
-      newestTimestamp = prices[0].timestamp + 1
+      newestPriceTimestamp = prices[0].timestamp + 1
     }
   } catch (ex) {
-    logger.warn('New prices load failed')
+    logger.warn('New prices load failed chainId: %s %s', chainId, entitiesKey)
     logger.error(ex)
   }
 
-  setTimeout(precacheNewPrices, 1000 * 60 * 5, chainId, entitiesKey)
+  setTimeout(precacheNewPrices, 1000 * 60 * 1, chainId, entitiesKey)
 }
 precacheNewPrices(ARBITRUM, "chainlinkPrices")
 precacheNewPrices(ARBITRUM, "fastPrices")
