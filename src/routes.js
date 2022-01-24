@@ -76,7 +76,9 @@ class TtlCache {
   set(key, value) {
     this._cache[key] = value
     setTimeout(() => {
+      logger.debug('delete key %s', key)
       delete this._cache[key]
+      logger.debug('cache', this._cache)
     }, this._ttl * 1000)
   }
 }
@@ -108,7 +110,7 @@ async function precacheOldPrices(chainId, entitiesKey) {
         logger.info('putPricesIntoCache returned false for chain: %s %s. stop', chainId, entitiesKey)
         break
       }
-      oldestTimestamp = prices[prices.length - 1].timestamp - 1
+      oldestTimestamp = prices[prices.length - 1].timestamp
       failCount = 0
       retryTimeout = baseRetryTimeout
     } catch (ex) {
@@ -131,16 +133,20 @@ precacheOldPrices(ARBITRUM, "fastPrices")
 precacheOldPrices(AVALANCHE, "chainlinkPrices")
 precacheOldPrices(AVALANCHE, "fastPrices")
 
-let newestPriceTimestamp = parseInt(Date.now() / 1000)
+ // on Arbitrum new block can be with timestamps from past...
+let newestPriceTimestamp = parseInt(Date.now() / 1000) - 300
 async function precacheNewPrices(chainId, entitiesKey) {
   logger.info('Precache new prices into memory chainId: %s %s...', chainId, entitiesKey)
 
   try {
     const prices = await loadPrices({ after: newestPriceTimestamp, chainId, entitiesKey })
     if (prices.length > 0) {
-      logger.info('Loaded %s new prices', prices.length)
-      putPricesIntoCache(prices, chainId, entitiesKey)
-      newestPriceTimestamp = prices[0].timestamp + 1
+      logger.info('Loaded %s new prices chainId: %s %s', prices.length, chainId, entitiesKey)
+      if (putPricesIntoCache(prices, chainId, entitiesKey)) {
+        newestPriceTimestamp = prices[0].timestamp
+      } else {
+        logger.warn('Prices were not saved')
+      }
     }
   } catch (ex) {
     logger.warn('New prices load failed chainId: %s %s', chainId, entitiesKey)
@@ -207,6 +213,7 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
   const cacheKey = `${from}:${to}:${preferableChainId}:${preferableSource}:${symbol}`
   const fromCache = ttlCache.get(cacheKey)
   if (fromCache) {
+    logger.debug('from cache')
     return fromCache
   }
 
@@ -240,6 +247,7 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
   const entitiesKey = preferableSource === "chainlink" ? "chainlinkPrices" : "fastPrices"
 
   const rawPrices = cachedPrices[preferableChainId][entitiesKey][tokenAddress]
+  logger.debug('rawPrices', rawPrices)
   let [prices, firstTimestamp] = filterAndNormalizePrices(rawPrices, from, to)
 
   if (preferableSource === "fast" && firstTimestamp > from) {
