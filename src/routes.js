@@ -142,7 +142,12 @@ async function precacheNewPrices(chainId, entitiesKey) {
     const after = newestPriceTimestamp - 60 * 15 // 15 minutes before last update.
     const prices = await loadPrices({ after, chainId, entitiesKey })
     if (prices.length > 0) {
-      logger.info('Loaded %s new prices chainId: %s %s', prices.length, chainId, entitiesKey)
+      logger.info('Loaded %s prices since %s chainId: %s %s',
+        prices.length,
+        new Date(after * 1000).toISOString(),
+        chainId,
+        entitiesKey
+      )
       if (putPricesIntoCache(prices, chainId, entitiesKey)) {
         newestPriceTimestamp = prices[0].timestamp
       } else {
