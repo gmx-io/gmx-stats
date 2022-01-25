@@ -133,13 +133,14 @@ precacheOldPrices(ARBITRUM, "fastPrices")
 precacheOldPrices(AVALANCHE, "chainlinkPrices")
 precacheOldPrices(AVALANCHE, "fastPrices")
 
- // on Arbitrum new block can be with timestamps from past...
-let newestPriceTimestamp = parseInt(Date.now() / 1000) - 300
+ // on Arbitrum new block may have with timestamps from past...
+let newestPriceTimestamp = parseInt(Date.now() / 1000) - 60 * 5
 async function precacheNewPrices(chainId, entitiesKey) {
   logger.info('Precache new prices into memory chainId: %s %s...', chainId, entitiesKey)
 
   try {
-    const prices = await loadPrices({ after: newestPriceTimestamp, chainId, entitiesKey })
+    const after = newestPriceTimestamp - 60 * 15 // 15 minutes before last update.
+    const prices = await loadPrices({ after, chainId, entitiesKey })
     if (prices.length > 0) {
       logger.info('Loaded %s new prices chainId: %s %s', prices.length, chainId, entitiesKey)
       if (putPricesIntoCache(prices, chainId, entitiesKey)) {
