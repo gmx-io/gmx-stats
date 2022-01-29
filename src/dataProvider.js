@@ -990,7 +990,7 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
   const [avaxPrices] = useCoingeckoPrices('AVAX', { from })
 
   const glpPerformanceChartData = useMemo(() => {
-    if (!btcPrices || !ethPrices || !glpData || !feesData) {
+    if (!btcPrices || !ethPrices || !avaxPrices || !glpData || !feesData) {
       return null
     }
 
