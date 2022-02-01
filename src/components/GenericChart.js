@@ -68,14 +68,18 @@ export default function GenericChart(props) {
     ChartComponent = ComposedChart
   }
 
+  // Previous update
+  // fill: item.color || (isCoinChart ? COINCOLORS[i % COINCOLORS.length] : COLORS[i % COLORS.length]),
+  // stroke: item.color || (isCoinChart ? COINCOLORS[i % COINCOLORS.length] : COLORS[i % COLORS.length]),
+
   const htmlItems = (items || []).map((item, i) => {
     const props = {
       type: "monotone",
       dataKey: item.key,
       stackId: "a",
       name: item.name || item.key,
-      fill: item.color || (isCoinChart ? COINCOLORS[i % COINCOLORS.length] : COLORS[i % COLORS.length]),
-      stroke: item.color || (isCoinChart ? COINCOLORS[i % COINCOLORS.length] : COLORS[i % COLORS.length]),
+      fill: item.color || COLORS[i % COLORS.length],
+      stroke: item.color || COLORS[i % COLORS.length],
       dot: item.dot || false,
       key: 'item-' + i,
       unit: item.unit,
