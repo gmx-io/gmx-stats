@@ -32,9 +32,6 @@ function AppHeaderLinks({ mode, small, clickCloseIcon }) {
       <div className="App-header-link-container">
         <NavLink to="/avalanche" className="nav-link">Avalanche</NavLink>
       </div>
-      <div className="App-header-link-container">
-        <NavLink to="/bsc" className="nav-link" activeClassName="active">BSC</NavLink>
-      </div>
     </div>
   )
 }
@@ -95,7 +92,6 @@ const App = () => {
               </a>
               <NavLink to="/" exact className="nav-link" activeClassName="active">Arbitrum</NavLink>
               <NavLink to="/avalanche" className="nav-link">Avalanche</NavLink>
-              <NavLink to="/bsc" className="nav-link" activeClassName="active">BSC</NavLink>
             </div>
             <div className="nav-right">
               <a href="https://gmx.io" target="_blank" className="nav-link">APP</a>
