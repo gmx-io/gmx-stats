@@ -60,6 +60,7 @@ const App = () => {
     const targetMode = mode == 'dark' ? 'light' : 'dark';
     window.localStorage.setItem('mode', targetMode);
     setMode(targetMode)
+    window.location.reload();
   }
 
   return (
