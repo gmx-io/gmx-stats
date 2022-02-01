@@ -152,7 +152,9 @@ label + input {
 .total-stat-delta.plus {
   color: #46E3AE;
 }
-
+.App.light .total-stat-delta.plus {
+  color: rgb(34 199 97);
+}
 .total-stat-delta.minus {
   color: #727171;
 }
