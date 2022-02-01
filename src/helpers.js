@@ -11,15 +11,31 @@ const { BigNumber } = ethers
 export const CHART_HEIGHT = 400
 export const YAXIS_WIDTH = 65
 
-export const GREEN = '#92E0C8'
-export const RED = '#ED645A'
+// export const GREEN = '#92E0C8'
+export const GREEN = '#22c761'
+// export const RED = '#ED645A'
+export const RED = '#f93333'
+// export const COLORS = [
+//   '#FE88B1',
+//   '#92E0C8',
+//   '#F89C74',
+//   '#00BFEA',
+//   '#949FE1',
+//   '#CC61B0',
+//   '#c90000',
+//   '#7b7b7b',
+//   '#6464ff',
+//   'purple',
+//   'darkgreen',
+//   RED
+// ]
 export const COLORS = [
-  '#FE88B1',
-  '#92E0C8',
-  '#F89C74',
-  '#00BFEA',
-  '#949FE1',
-  '#CC61B0',
+  '#ee64b8',
+  GREEN,
+  '#ff8d00',
+  '#00bfea',
+  '#8884ff',
+  '#ab6100',
   '#c90000',
   '#7b7b7b',
   '#6464ff',
@@ -77,7 +93,7 @@ export function fillPeriods(arr, { period, from, to, interpolate = true, extrapo
 
   while (i < arr.length) {
     const item = arr[i]
-    const periodStep = Math.floor(item.timestamp / period) 
+    const periodStep = Math.floor(item.timestamp / period)
 
     if (periodStep - 1 > prevPeriodStep) {
       const diff = periodStep - prevPeriodStep
@@ -262,7 +278,7 @@ export function urlWithParams(url, params) {
 }
 
 export function getProvider(chainId) {
-  let rpc 
+  let rpc
   if (chainId === BSC) {
     rpc = 'https://bsc-dataseed1.defibit.io/'
   } else if (chainId === ARBITRUM) {

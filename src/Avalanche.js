@@ -345,7 +345,7 @@ function Arbitrum() {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Bar type="monotone" fill="#444" dot={false} dataKey="pnl" name="Net PnL">
+                <Bar type="monotone" fill={ mode == "dark" ? "#FFFFFF" : "#000000"} dot={false} dataKey="pnl" name="Net PnL">
                   {(tradersData?.data || []).map((item, i) => {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#f93333' : '#22c761'} />
                   })}
@@ -398,7 +398,7 @@ function Arbitrum() {
               yaxisDataKey="ETH"
               yaxisTickFormatter={yaxisFormatterPercent}
               tooltipFormatter={tooltipFormatterPercent}
-              items={[{ key: 'WETH.e', color: "#627EEA" }, { key: 'WBTC.e', color: "#FF9800" }, { key: 'AVAX', color: "#e84142" }, { key: 'MIM', color: "#9895F3" }, { key: 'USDC', color: "#2775CA" }, { key: 'USDC.e', color: "#2775CA" }]}
+              items={[{ key: 'WETH.e' }, { key: 'WBTC.e' }, { key: 'AVAX' }, { key: 'MIM' }, { key: 'USDC' }, { key: 'USDC.e' }]}
               type="Line"
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
             />
@@ -409,7 +409,7 @@ function Arbitrum() {
               title="Open Interest"
               data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
               yaxisDataKey="openInterest"
-              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#22c761" }, { key: 'longOpenInterest', name: 'Long', color: '#f93333' }]}
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: GREEN }]}
               type="Bar"
             />
         </div>
@@ -424,9 +424,9 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'uniqueSwapCount', name: 'Swaps', color: COLORS[0] },
-                { key: 'uniqueMarginCount', name: 'Margin trading', color: COLORS[4] },
-                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP', color: COLORS[2] }
+                { key: 'uniqueSwapCount', name: 'Swaps'},
+                { key: 'uniqueMarginCount', name: 'Margin trading'},
+                { key: 'uniqueMintBurnCount', name: 'Mint & Burn GLP' }
               ]}
               type="Composed"
             />
@@ -443,9 +443,9 @@ function Arbitrum() {
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'newSwapCount', name: 'Swap', color: COLORS[0] },
-                { key: 'newMarginCount', name: 'Margin trading', color: COLORS[4] },
-                { key: 'newMintBurnCount', name: 'Mint & Burn', color: COLORS[2] },
+                { key: 'newSwapCount', name: 'Swap'},
+                { key: 'newMarginCount', name: 'Margin trading'},
+                { key: 'newMintBurnCount', name: 'Mint & Burn'},
                 { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
               ]}
               type="Composed"
