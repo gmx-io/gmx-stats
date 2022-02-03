@@ -82,7 +82,7 @@ class TtlCache {
     }, this._ttl * 1000)
   }
 }
-const ttlCache = new TtlCache(300)
+const ttlCache = new TtlCache(60)
 
 function sleep(ms) {
   return new Promise(resolve => {
@@ -311,10 +311,11 @@ function getCandles(prices, period) {
 }
 
 function getFromAndTo(req) {
+  const granularity = 300
   let from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
-  from = Math.floor(from / 60) * 60
+  from = Math.floor(from / granularity) * granularity
   let to = Number(req.query.to) || Math.round(Date.now() / 1000)
-  to = Math.ceil(to / 60) * 60
+  to = Math.ceil(to / granularity) * granularity
 
   return [from, to]
 }
