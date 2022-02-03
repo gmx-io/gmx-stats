@@ -82,7 +82,7 @@ class TtlCache {
     }, this._ttl * 1000)
   }
 }
-const ttlCache = new TtlCache(60)
+const ttlCache = new TtlCache(300)
 
 function sleep(ms) {
   return new Promise(resolve => {
@@ -373,7 +373,7 @@ export default function routes(app) {
       updatedAt = prices[prices.length - 1][0]
     }
 
-    res.set('Cache-Control', 'max-age=60')
+    res.set('Cache-Control', 'max-age=300')
     res.send({
       prices: candles,
       period,
