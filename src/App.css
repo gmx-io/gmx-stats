@@ -292,7 +292,8 @@ label + input {
 .nav-logo {
   width: 87px;
   vertical-align: middle;
-  margin: -3px 0.5rem 0 0;
+  margin: 0px 0.5rem 0 0;
+  display: inline-flex;
 }
 
 .nav-logo img {
@@ -311,8 +312,8 @@ a, a:active, a:visited {
   padding: 0.5rem 1rem;
   display: inline-block;
   vertical-align: middle;
-  font-size: 0.875rem;
-  line-height: 1rem;
+  font-size: 1rem;
+  line-height: 1.125rem;
   letter-spacing: 0.47px;
 }
 
