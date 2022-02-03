@@ -193,6 +193,7 @@ async function loadPrices({ before, after, chainId, entitiesKey } = {}) {
       where: {
         timestamp_lte: ${before}
         timestamp_gte: ${after}
+        period: any
       }
     ) { value, timestamp, token }
   }`)
