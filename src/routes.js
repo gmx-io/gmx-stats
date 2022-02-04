@@ -40,27 +40,47 @@ const avalancheGraphClient = new ApolloClient({
 })
 
 const cachedPrices = {
-  [ARBITRUM]: {},
-  [AVALANCHE]: {}
+  sorted: {
+    [ARBITRUM]: {},
+    [AVALANCHE]: {}
+  },
+  byKey: {
+    [ARBITRUM]: {},
+    [AVALANCHE]: {}
+  }
 }
 const AVALANCHE_LAUNCH_TS = 1641416400
 function putPricesIntoCache(prices, chainId, entitiesKey) {
   if (!prices || !chainId || !entitiesKey) {
     throw new Error('Invalid arguments')
   }
+  let ret = true
   const precision = entitiesKey === "chainlinkPrices" ? 1e8 : 1e30
+  const changedTokens = new Set([])
+  const byKeyNs = cachedPrices.byKey
+  byKeyNs[chainId][entitiesKey] = byKeyNs[chainId][entitiesKey] || {}
   for (const price of prices) {
     const token = price.token.toLowerCase()
     const timestamp = price.timestamp
     if (chainId === AVALANCHE && entitiesKey === "fastPrices" && timestamp < AVALANCHE_LAUNCH_TS) {
       logger.info("Reject older prices on Avalanche. Price ts: %s launch ts: %s", timestamp, AVALANCHE_LAUNCH_TS)
-      return false
+      ret = false
+      break
     }
-    cachedPrices[chainId][entitiesKey] = cachedPrices[chainId][entitiesKey] || {}
-    cachedPrices[chainId][entitiesKey][token] = cachedPrices[chainId][entitiesKey][token] || {}
-    cachedPrices[chainId][entitiesKey][token][timestamp] = Number(price.value) / precision
+    byKeyNs[chainId][entitiesKey][token] = byKeyNs[chainId][entitiesKey][token] || {}
+    byKeyNs[chainId][entitiesKey][token][timestamp] = Number(price.value) / precision
+    changedTokens.add(token)
   }
-  return true
+
+  const sortedNs = cachedPrices.sorted
+  sortedNs[chainId][entitiesKey] = sortedNs[chainId][entitiesKey] || {}
+  for (const token of changedTokens) {
+    sortedNs[chainId][entitiesKey][token] = Object.entries(byKeyNs[chainId][entitiesKey][token])
+      .map(([timestamp, price]) => [Number(timestamp), price])
+      .sort((a, b) => a[0] - b[0])
+  }
+
+  return ret
 }
 
 class TtlCache {
@@ -78,7 +98,6 @@ class TtlCache {
     setTimeout(() => {
       logger.debug('delete key %s', key)
       delete this._cache[key]
-      logger.debug('cache', this._cache)
     }, this._ttl * 1000)
   }
 }
@@ -203,26 +222,38 @@ async function loadPrices({ before, after, chainId, entitiesKey } = {}) {
   return data.prices
 }
 
-function filterAndNormalizePrices(obj, from, to) {
-  let firstTimestamp
-  const prices = Object.entries(obj).map(([timestamp, price]) => {
-    if (!firstTimestamp) {
-      firstTimestamp = timestamp
+function getPriceRange(sortedPrices, from, to) {
+  const indexFrom = binSearchPrice(sortedPrices, from)
+  const indexTo = binSearchPrice(sortedPrices, to, false)
+
+  return [
+    sortedPrices.slice(indexFrom, indexTo + indexFrom),
+    sortedPrices[0][0]
+  ]
+}
+
+function binSearchPrice(prices, timestamp, gt = true) {
+  let left = 0
+  let right = prices.length - 1
+  let mid
+  while (left + 1 < right) {
+    mid = Math.floor((left + right) / 2)
+    if (Number(prices[mid][0]) < timestamp) {
+      left = mid
+    } else {
+      right = mid
     }
-    return [Number(timestamp), price]
-  }).filter(([timestamp]) => {
-    return timestamp >= from && timestamp <= to
-  }).sort((a, b) => a.timestamp - b.timestamp)
-  return [prices, firstTimestamp]
+  }
+  return gt ? right : left
 }
 
 function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "chainlink", symbol) {
   const cacheKey = `${from}:${to}:${preferableChainId}:${preferableSource}:${symbol}`
   const fromCache = ttlCache.get(cacheKey)
-  if (fromCache) {
-    logger.debug('from cache')
-    return fromCache
-  }
+  // if (fromCache) {
+  //   logger.debug('from cache')
+  //   return fromCache
+  // }
 
   if (preferableSource !== "chainlink" && preferableSource !== "fast") {
     const err = new Error(`Invalid preferableSource ${preferableSource}. Valid options are: chainlink, fast`)
@@ -245,21 +276,38 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
   }
 
   const tokenAddress = addresses[preferableChainId][symbol]?.toLowerCase()
-  if (!tokenAddress || !cachedPrices[preferableChainId].chainlinkPrices
-    || !cachedPrices[preferableChainId].chainlinkPrices[tokenAddress]
+  if (!tokenAddress || !cachedPrices.byKey[preferableChainId].chainlinkPrices
+    || !cachedPrices.byKey[preferableChainId].chainlinkPrices[tokenAddress]
   ) {
     return []
   }
 
   const entitiesKey = preferableSource === "chainlink" ? "chainlinkPrices" : "fastPrices"
 
-  const rawPrices = cachedPrices[preferableChainId][entitiesKey][tokenAddress]
-  logger.debug('rawPrices', rawPrices)
-  let [prices, firstTimestamp] = filterAndNormalizePrices(rawPrices, from, to)
+  const sortedPrices = (
+    cachedPrices.sorted[preferableChainId]
+    && cachedPrices.sorted[preferableChainId][entitiesKey]
+    && cachedPrices.sorted[preferableChainId][entitiesKey][tokenAddress]
+  ) || []
+
+  let [prices, firstTimestamp] = getPriceRange(sortedPrices, from, to)
+
+  let prevTs = prices[0][0]
+  for (const [ts, price] of prices) {
+    if (prevTs > ts) {
+      console.log('FUCK!')
+    }
+    prevTs = ts
+  }
 
   if (preferableSource === "fast" && firstTimestamp > from) {
     // there is no enough fast price data. upfill it with chainlink prices
-    const [chainlinkPrices] = filterAndNormalizePrices(cachedPrices[preferableChainId].chainlinkPrices[tokenAddress], from, firstTimestamp)
+    const otherSortedPrices = (
+      cachedPrices.sorted[preferableChainId]
+      && cachedPrices.sorted[preferableChainId].chainlinkPrices
+      && cachedPrices.sorted[preferableChainId].chainlinkPrices[tokenAddress]
+    ) || []
+    const [chainlinkPrices] = getPriceRange(otherSortedPrices, from, firstTimestamp)
     prices = [...chainlinkPrices, ...prices]
   }
 
@@ -288,30 +336,37 @@ function getCandles(prices, period) {
   const first = prices[0]
   let prevTsGroup = Math.floor(first[0] / periodTime) * periodTime
   let prevPrice = first[1]
+  let prevTs = first[0]
   let o = prevPrice
   let h = prevPrice
   let l = prevPrice
   let c = prevPrice
   for (let i = 1; i < prices.length; i++) {
     const [ts, price] = prices[i]
-    const tsGroup = Math.floor(ts / periodTime) * periodTime
+    const tsGroup = ts - (ts % periodTime)
+
+    if (prevTs > ts) {
+      throw new Error(`Invalid order prevTs: ${prevTs} (${new Date(prevTs * 1000)}) ts: ${ts} (${new Date(ts * 1000)})`)
+    }
+
     if (prevTsGroup !== tsGroup) {
       candles.push({ t: prevTsGroup, o, h, l, c })
       o = c
-      h = Math.max(o, c)
-      l = Math.min(o, c)
+      h = o > c ? o : c
+      l = o < c ? o : c
     }
     c = price
-    h = Math.max(h, price)
-    l = Math.min(l, price)
+    h = h > price ? h : price
+    l = l < price ? l : price
     prevTsGroup = tsGroup
+    prevTs = ts
   }
 
   return candles
 }
 
 function getFromAndTo(req) {
-  const granularity = 300
+  const granularity = 60
   let from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
   from = Math.floor(from / granularity) * granularity
   let to = Number(req.query.to) || Math.round(Date.now() / 1000)
@@ -374,7 +429,7 @@ export default function routes(app) {
       updatedAt = prices[prices.length - 1][0]
     }
 
-    res.set('Cache-Control', 'max-age=300')
+    res.set('Cache-Control', 'max-age=60')
     res.send({
       prices: candles,
       period,
