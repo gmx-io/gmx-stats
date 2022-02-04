@@ -3,11 +3,14 @@ import React from 'react';
 import { StaticRouter } from 'react-router-dom';
 import { renderToString } from 'react-dom/server';
 import fetch from 'cross-fetch';
+import sizeof from 'object-sizeof'
 
 import App from './App';
 import { ApolloClient, InMemoryCache, gql, HttpLink } from '@apollo/client'
 import { getLogger } from './helpers'
 import { addresses, ARBITRUM, AVALANCHE } from './addresses'
+
+const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
 const assets = require(process.env.RAZZLE_ASSETS_MANIFEST);
 
@@ -29,14 +32,24 @@ const { formatUnits} = ethers.utils
 
 const logger = getLogger('routes')
 
+const apolloOptions = {
+  query: {
+    fetchPolicy: 'no-cache'
+  },
+  watchQuery: {
+    fetchPolicy: 'no-cache'
+  }
+}
 const arbitrumGraphClient = new ApolloClient({
   link: new HttpLink({ uri: 'https://api.thegraph.com/subgraphs/name/gmx-io/gmx-stats', fetch }),
-  cache: new InMemoryCache()
+  cache: new InMemoryCache(),
+  defaultOptions: apolloOptions
 })
 
 const avalancheGraphClient = new ApolloClient({
   link: new HttpLink({ uri: 'https://api.thegraph.com/subgraphs/name/gdev8317/gmx-avalanche-staging', fetch }),
-  cache: new InMemoryCache()
+  cache: new InMemoryCache(),
+  defaultOptions: apolloOptions
 })
 
 const cachedPrices = {
@@ -83,28 +96,62 @@ function putPricesIntoCache(prices, chainId, entitiesKey) {
       .sort((a, b) => a[0] - b[0])
   }
 
+  if (!IS_PRODUCTION) {
+    console.time('sizeof call')
+    const size = sizeof(cachedPrices) / 1024 / 1024
+    console.timeEnd('sizeof call')
+    let pricesCount = 0
+    for (const chainId of Object.keys(cachedPrices.sorted)) {
+      for (const entitiesKey of Object.keys(cachedPrices.sorted[chainId])) {
+        for (const prices of Object.values(cachedPrices.sorted[chainId][entitiesKey])) {
+          pricesCount += prices.length
+        }
+      }
+    }
+    logger.debug('Estimated price cache size: %s MB, prices count: %s', size, pricesCount)
+  }
+
   return ret
 }
 
 class TtlCache {
-  constructor(ttl = 60) {
+  constructor(ttl = 60, maxKeys) {
     this._cache = {}
     this._ttl = ttl
+    this._maxKeys = maxKeys
+    this._logger = getLogger('routes.TtlCache')
   }
 
   get(key) {
+    this._logger.debug('get key %s', key)
     return this._cache[key]
   }
 
   set(key, value) {
     this._cache[key] = value
+
+    const keys = Object.keys(this._cache)
+    if (this._maxKeys && keys.length >= this._maxKeys) {
+      for (let i = 0; i <= keys.length - this._maxKeys; i++) {
+        this._logger.debug('delete key %s (max keys)', key)
+        delete this._cache[keys[i]]
+      }
+    }
+
     setTimeout(() => {
-      logger.debug('delete key %s', key)
+      this._logger.debug('delete key %s (ttl)', key)
       delete this._cache[key]
     }, this._ttl * 1000)
+
+    if (!IS_PRODUCTION) {
+      console.time('sizeof call')
+      const size = sizeof(this._cache) / 1024 / 1024
+      console.timeEnd('sizeof call')
+      this._logger.debug('TtlCache cache size %s MB', size)
+    }
   }
 }
-const ttlCache = new TtlCache(60)
+const ttlCache = new TtlCache(60, 100)
 
 function sleep(ms) {
   return new Promise(resolve => {
@@ -286,6 +333,7 @@ function binSearchPrice(prices, timestamp, gt = true) {
 }
 
 function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "chainlink", symbol) {
+  const start = Date.now()
   const cacheKey = `${from}:${to}:${preferableChainId}:${preferableSource}:${symbol}`
   const fromCache = ttlCache.get(cacheKey)
   if (fromCache) {
@@ -343,6 +391,8 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
   }
 
   ttlCache.set(cacheKey, prices)
+
+  logger.debug('getPrices took %sms cacheKey %s', Date.now() - start, cacheKey)
 
   return prices
 }

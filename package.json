@@ -8,7 +8,7 @@
     "build-upload": "PORT=8080 razzle build --noninteractive && tar -zcvf build.tar.gz build && scp build.tar.gz do2:~/www/gmx-stats",
     "test": "razzle test --env=jsdom",
     "start": "PORT=3113 razzle start",
-    "start:prod": "node build/server.js",
+    "start:prod": "pm2-runtime -i 2 build/server.js",
     "lint": "eslint $(git ls-files -m | grep -E \".js$\")",
     "pre-commit": "npm run lint"
   },
@@ -26,6 +26,7 @@
     "graphql": "^15.5.3",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
+    "object-sizeof": "^1.6.1",
     "pm2": "^5.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
