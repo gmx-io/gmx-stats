@@ -34,9 +34,7 @@
     "react-router-dom": "^5.2.0",
     "recharts": "^2.0.10",
     "sqlite3": "^5.0.2",
-    "strftime": "^0.10.0"
-  },
-  "devDependencies": {
+    "strftime": "^0.10.0",
     "babel-preset-razzle": "4.0.5",
     "eslint": "^8.7.0",
     "eslint-plugin-react": "^7.28.0",
