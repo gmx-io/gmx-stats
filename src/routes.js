@@ -63,7 +63,10 @@ function putPricesIntoCache(prices, chainId, entitiesKey) {
     const token = price.token.toLowerCase()
     const timestamp = price.timestamp
     if (chainId === AVALANCHE && entitiesKey === "fastPrices" && timestamp < AVALANCHE_LAUNCH_TS) {
-      logger.info("Reject older prices on Avalanche. Price ts: %s launch ts: %s", timestamp, AVALANCHE_LAUNCH_TS)
+      logger.info("Reject older prices on Avalanche. Price ts: %s launch ts: %s",
+        toReadable(timestamp),
+        toReadable(AVALANCHE_LAUNCH_TS)
+      )
       ret = false
       break
     }
@@ -129,7 +132,7 @@ async function precacheOldPrices(chainId, entitiesKey) {
         logger.info('putPricesIntoCache returned false for chain: %s %s. stop', chainId, entitiesKey)
         break
       }
-      oldestTimestamp = prices[prices.length - 1].timestamp
+      oldestTimestamp = prices[prices.length - 1].timestamp - 1
       failCount = 0
       retryTimeout = baseRetryTimeout
     } catch (ex) {
@@ -163,7 +166,7 @@ async function precacheNewPrices(chainId, entitiesKey) {
     if (prices.length > 0) {
       logger.info('Loaded %s prices since %s chainId: %s %s',
         prices.length,
-        new Date(after * 1000).toISOString(),
+        toReadable(after),
         chainId,
         entitiesKey
       )
@@ -201,12 +204,14 @@ async function loadPrices({ before, after, chainId, entitiesKey } = {}) {
   logger.info('loadPrices %s chainId: %s before: %s, after: %s',
     entitiesKey,
     chainId,
-    new Date(before * 1000),
-    new Date(after * 1000)
+    toReadable(before),
+    after && toReadable(after)
   )
-  const query = gql(`{
-    prices: ${entitiesKey}(
+
+  const fragment = (skip) => {
+     return `${entitiesKey}(
       first: 1000
+      skip: ${skip}
       orderBy: timestamp
       orderDirection: desc
       where: {
@@ -214,12 +219,44 @@ async function loadPrices({ before, after, chainId, entitiesKey } = {}) {
         timestamp_gte: ${after}
         period: any
       }
-    ) { value, timestamp, token }
-  }`)
+    ) { value, timestamp, token }\n`
+  }
+  const queryString = `{
+    p0: ${fragment(0)}
+    p1: ${fragment(1000)}
+    p2: ${fragment(2000)}
+    p3: ${fragment(3000)}
+    p4: ${fragment(4000)}
+    p5: ${fragment(5000)}
+  }`
+  const query = gql(queryString)
 
   const graphClient = chainId === AVALANCHE ? avalancheGraphClient : arbitrumGraphClient;
   const { data } = await graphClient.query({query})
-  return data.prices
+  const prices = [
+    ...data.p0,
+    ...data.p1,
+    ...data.p2,
+    ...data.p3,
+    ...data.p4,
+    ...data.p5
+  ]
+
+  if (prices.length) {
+    logger.debug('Loaded %s prices (%s – %s) for chain %s %s',
+      prices.length,
+      toReadable(prices[prices.length - 1].timestamp),
+      toReadable(prices[0].timestamp),
+      chainId,
+      entitiesKey,
+    )
+  }
+
+  return prices
+}
+
+function toReadable(ts) {
+  return (new Date(ts * 1000).toISOString()).replace('T', ' ').replace('.000Z', '')
 }
 
 function getPriceRange(sortedPrices, from, to) {
@@ -227,7 +264,7 @@ function getPriceRange(sortedPrices, from, to) {
   const indexTo = binSearchPrice(sortedPrices, to, false)
 
   return [
-    sortedPrices.slice(indexFrom, indexTo + indexFrom),
+    sortedPrices.slice(indexFrom, indexTo),
     sortedPrices[0][0]
   ]
 }
@@ -238,13 +275,14 @@ function binSearchPrice(prices, timestamp, gt = true) {
   let mid
   while (left + 1 < right) {
     mid = Math.floor((left + right) / 2)
-    if (Number(prices[mid][0]) < timestamp) {
+    if (prices[mid][0] < timestamp) {
       left = mid
     } else {
       right = mid
     }
   }
-  return gt ? right : left
+  const ret = gt ? right : left
+  return ret
 }
 
 function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "chainlink", symbol) {
@@ -292,14 +330,6 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
 
   let [prices, firstTimestamp] = getPriceRange(sortedPrices, from, to)
 
-  let prevTs = prices[0][0]
-  for (const [ts, price] of prices) {
-    if (prevTs > ts) {
-      console.log('FUCK!')
-    }
-    prevTs = ts
-  }
-
   if (preferableSource === "fast" && firstTimestamp > from) {
     // there is no enough fast price data. upfill it with chainlink prices
     const otherSortedPrices = (
@@ -308,6 +338,7 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
       && cachedPrices.sorted[preferableChainId].chainlinkPrices[tokenAddress]
     ) || []
     const [chainlinkPrices] = getPriceRange(otherSortedPrices, from, firstTimestamp)
+
     prices = [...chainlinkPrices, ...prices]
   }
 
@@ -346,7 +377,7 @@ function getCandles(prices, period) {
     const tsGroup = ts - (ts % periodTime)
 
     if (prevTs > ts) {
-      throw new Error(`Invalid order prevTs: ${prevTs} (${new Date(prevTs * 1000)}) ts: ${ts} (${new Date(ts * 1000)})`)
+      throw new Error(`Invalid order prevTs: ${prevTs} (${toReadable(prevTs)}) ts: ${ts} (${toReadable(ts)})`)
     }
 
     if (prevTsGroup !== tsGroup) {
