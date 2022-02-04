@@ -3,11 +3,11 @@
   "version": "4.0.5",
   "license": "MIT",
   "scripts": {
-    "build:prod": "PORT=8080 ./node_modules/.bin/razzle build --noninteractive",
-    "build:dev": "PORT=3113 ./node_modules/.bin/razzle build --noninteractive",
-    "build-upload": "PORT=8080 ./node_modules/.bin/razzle build --noninteractive && tar -zcvf build.tar.gz build && scp build.tar.gz do2:~/www/gmx-stats",
-    "test": "./node_modules/.bin/razzle test --env=jsdom",
-    "start": "PORT=3113 ./node_modules/.bin/razzle start",
+    "build:prod": "PORT=8080 razzle build --noninteractive",
+    "build:dev": "PORT=3113 razzle build --noninteractive",
+    "build-upload": "PORT=8080 razzle build --noninteractive && tar -zcvf build.tar.gz build && scp build.tar.gz do2:~/www/gmx-stats",
+    "test": "razzle test --env=jsdom",
+    "start": "PORT=3113 razzle start",
     "start:prod": "node build/server.js",
     "lint": "eslint $(git ls-files -m | grep -E \".js$\")",
     "pre-commit": "npm run lint"
@@ -45,7 +45,7 @@
     "webpack": "^4.44.1",
     "webpack-dev-server": "^3.11.2"
   },
-  "engine": {
+  "engines": {
     "node": "14.x"
   }
 }
