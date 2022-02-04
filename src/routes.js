@@ -250,10 +250,10 @@ function binSearchPrice(prices, timestamp, gt = true) {
 function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "chainlink", symbol) {
   const cacheKey = `${from}:${to}:${preferableChainId}:${preferableSource}:${symbol}`
   const fromCache = ttlCache.get(cacheKey)
-  // if (fromCache) {
-  //   logger.debug('from cache')
-  //   return fromCache
-  // }
+  if (fromCache) {
+    logger.debug('from cache')
+    return fromCache
+  }
 
   if (preferableSource !== "chainlink" && preferableSource !== "fast") {
     const err = new Error(`Invalid preferableSource ${preferableSource}. Valid options are: chainlink, fast`)
