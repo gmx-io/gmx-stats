@@ -307,8 +307,8 @@ function toReadable(ts) {
 }
 
 function getPriceRange(sortedPrices, from, to) {
-  const indexFrom = binSearchPrice(sortedPrices, from)
-  const indexTo = binSearchPrice(sortedPrices, to, false)
+  const indexFrom = binSearchPrice(sortedPrices, from, false)
+  const indexTo = binSearchPrice(sortedPrices, to, true) + 1
 
   return [
     sortedPrices.slice(indexFrom, indexTo),
