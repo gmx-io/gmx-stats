@@ -312,7 +312,7 @@ a, a:active, a:visited {
   padding: 0.5rem 1rem;
   display: inline-block;
   vertical-align: middle;
-  font-size: 1rem;
+  font-size: 15px;
   line-height: 1.125rem;
   letter-spacing: 0.47px;
 }
