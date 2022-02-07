@@ -22,7 +22,7 @@ function AppHeaderLinks({ mode, small, clickCloseIcon }) {
             <FiX className="App-header-menu-icon" />
           </div>
           <NavLink exact activeClassName="active" className="App-header-link-main" to="/">
-            <img src={mode == 'dark' ? darkLogoIcon : lightLogoIcon} alt="GMX Logo" />
+            <img src={darkLogoIcon} alt="GMX Logo" />
           </NavLink>
         </div>
       }

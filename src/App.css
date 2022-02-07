@@ -430,7 +430,7 @@ a, a:active, a:visited {
 }
 
 .App-header-drawer {
-  background: #17182C88 0% 0% no-repeat padding-box;
+  background: #101124 0% 0% no-repeat padding-box;
   box-shadow: 8px 3px 6px #00000029;
   opacity: 1;
   backdrop-filter: blur(27px);
@@ -459,6 +459,17 @@ a, a:active, a:visited {
 .App-header-drawer .App-header-link-container a.active {
   background: #303FD024;
   color: white;
+}
+
+.App-header-drawer .App-header-menu-icon {
+  color: white;
+  margin: unset;
+  font-size: 2rem;
+}
+
+.App-header-drawer .App-header-link-main {
+  display: flex;
+  align-items: center;
 }
 
 .App-header-links-header {
