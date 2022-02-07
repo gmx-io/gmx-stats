@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@apollo/client": "^3.4.10",
-    "axios": "^0.21.1",
     "chalk": "^4.1.1",
     "classnames": "^2.3.1",
     "console-log-level": "^1.4.1",
@@ -29,16 +28,13 @@
     "graphql": "^15.5.3",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
-    "pm2": "^5.1.2",
+    "object-sizeof": "1.6.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-icons": "^4.2.0",
     "react-router-dom": "^5.2.0",
     "recharts": "^2.0.10",
-    "sqlite3": "^5.0.2",
-    "strftime": "^0.10.0"
-  },
-  "devDependencies": {
+    "strftime": "^0.10.0",
     "babel-preset-razzle": "4.0.5",
     "eslint": "^8.7.0",
     "eslint-plugin-react": "^7.28.0",
@@ -48,5 +44,9 @@
     "razzle-dev-utils": "^4.0.5",
     "webpack": "^4.44.1",
     "webpack-dev-server": "^3.11.2"
+  },
+  "engines": {
+    "node": "14.x",
+    "npm": "6.x"
   }
 }
