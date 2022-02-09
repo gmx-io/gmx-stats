@@ -306,9 +306,9 @@ function toReadable(ts) {
   return (new Date(ts * 1000).toISOString()).replace('T', ' ').replace('.000Z', '')
 }
 
-function getPriceRange(sortedPrices, from, to) {
-  const indexFrom = binSearchPrice(sortedPrices, from, false)
-  const indexTo = binSearchPrice(sortedPrices, to, true) + 1
+function getPriceRange(sortedPrices, from, to, inbound = false) {
+  const indexFrom = binSearchPrice(sortedPrices, from, inbound)
+  const indexTo = binSearchPrice(sortedPrices, to, !inbound) + 1
 
   return [
     sortedPrices.slice(indexFrom, indexTo),
@@ -385,7 +385,7 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
       && cachedPrices.sorted[preferableChainId].chainlinkPrices
       && cachedPrices.sorted[preferableChainId].chainlinkPrices[tokenAddress]
     ) || []
-    const [chainlinkPrices] = getPriceRange(otherSortedPrices, from, firstTimestamp)
+    const [chainlinkPrices] = getPriceRange(otherSortedPrices, from, firstTimestamp, true)
 
     prices = [...chainlinkPrices, ...prices]
   }
@@ -427,7 +427,8 @@ function getCandles(prices, period) {
     const tsGroup = ts - (ts % periodTime)
 
     if (prevTs > ts) {
-      throw new Error(`Invalid order prevTs: ${prevTs} (${toReadable(prevTs)}) ts: ${ts} (${toReadable(ts)})`)
+      logger.warn(`Invalid order prevTs: ${prevTs} (${toReadable(prevTs)}) ts: ${ts} (${toReadable(ts)})`)
+      continue
     }
 
     if (prevTsGroup !== tsGroup) {
