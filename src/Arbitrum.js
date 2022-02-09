@@ -175,7 +175,7 @@ function Arbitrum() {
     <div className="Home">
       <h1>Analytics / Arbitrum</h1>
       {lastSubgraphBlock && lastBlock &&
-        <p className={cx('page-description', (isObsolete ? 'warning' : ''))} style={{ marginTop: '-1rem' }}>
+        <p className={cx('page-description', { warning: isObsolete })} style={{ marginTop: '-1rem' }}>
           {isObsolete && "Data is obsolete. "}
           Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
           &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
