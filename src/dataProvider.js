@@ -1009,9 +1009,9 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
     const STABLE_WEIGHT = 1 - BTC_WEIGHT - ETH_WEIGHT
     const GLP_START_PRICE = glpDataById[btcPrices[0].timestamp]?.glpPrice || 1.19
 
-    const btcFirstPrice = btcPrices[0].value
-    const ethFirstPrice = ethPrices[0].value
-    const avaxFirstPrice = avaxPrices[0].value
+    const btcFirstPrice = btcPrices[0]?.value
+    const ethFirstPrice = ethPrices[0]?.value
+    const avaxFirstPrice = avaxPrices[0]?.value
 
     const indexBtcCount = GLP_START_PRICE * BTC_WEIGHT / btcFirstPrice
     const indexEthCount = GLP_START_PRICE * ETH_WEIGHT / ethFirstPrice
