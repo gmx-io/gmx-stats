@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
 import * as strftime from 'strftime'
 
-import { urlWithParams, tsToIsoDate } from './helpers'
+import { urlWithParams, tsToIsoDate, COINCOLORS } from './helpers'
 import {
   useRequest,
   useGambitPoolStats,
@@ -332,12 +332,12 @@ function Bsc() {
                 contentStyle={{ textAlign: 'left' }}
               />
               <Legend />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="USDC" stackId="a" name="USDC" fill="#2775CA" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="USDT" stackId="a" name="USDT" fill="#26A17B" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="BUSD" stackId="a" name="BUSD" fill="#F0B90B" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="BTC" stackId="a" name="BTC" fill="#FF9800" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="ETH" stackId="a" name="ETH" fill="#627EEA" />
-              <Bar type="monotone" unit={dynamicUnit} dataKey="BNB" stackId="a" name="BNB" fill="#FE88B1" />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="USDC" stackId="a" name="USDC" fill={COINCOLORS[4]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="USDT" stackId="a" name="USDT" fill={COINCOLORS[5]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="BUSD" stackId="a" name="BUSD" fill={COINCOLORS[12]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="BTC" stackId="a" name="BTC" fill={COINCOLORS[1]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="ETH" stackId="a" name="ETH" fill={COINCOLORS[0]} />
+              <Bar type="monotone" unit={dynamicUnit} dataKey="BNB" stackId="a" name="BNB" fill={COINCOLORS[13]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

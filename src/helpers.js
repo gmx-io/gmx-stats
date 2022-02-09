@@ -39,7 +39,9 @@ export const COINCOLORS = [
   '#F4B731',
   'purple',
   'darkgreen',
-  RED
+  RED,
+  '#F0B90B',
+  '#FE88B1'
 ]
 
 const levelColor = {
