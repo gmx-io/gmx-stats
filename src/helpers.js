@@ -1,5 +1,4 @@
 import Logger from 'console-log-level'
-import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import strftime from 'strftime'
 import chalk from 'chalk'
@@ -11,24 +10,8 @@ const { BigNumber } = ethers
 export const CHART_HEIGHT = 400
 export const YAXIS_WIDTH = 65
 
-// export const GREEN = '#92E0C8'
 export const GREEN = '#22c761'
-// export const RED = '#ED645A'
 export const RED = '#f93333'
-// export const COLORS = [
-//   '#FE88B1',
-//   '#92E0C8',
-//   '#F89C74',
-//   '#00BFEA',
-//   '#949FE1',
-//   '#CC61B0',
-//   '#c90000',
-//   '#7b7b7b',
-//   '#6464ff',
-//   'purple',
-//   'darkgreen',
-//   RED
-// ]
 export const COLORS = [
   '#ee64b8',
   GREEN,
