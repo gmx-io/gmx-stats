@@ -75,7 +75,7 @@ function dateToValue(date) {
   return date.toISOString().slice(0, 10)
 }
 
-function Arbitrum() {
+function Avalanche(props) {
   const [fromValue, setFromValue] = useState("2022-01-06")
   const [toValue, setToValue] = useState()
 
@@ -84,12 +84,7 @@ function Arbitrum() {
     setToValue(undefined)
   }, [setFromValue, setToValue])
 
-  const [mode, setMode] = useState(null)
-
-  useEffect(() => {
-    const savedMode = window.localStorage.getItem('mode')
-    setMode(savedMode)
-  }, [])
+  const { mode } = props
 
   const from = fromValue ? +new Date(fromValue) / 1000 : undefined
   const to = toValue ? +new Date(toValue) / 1000 : NOW
@@ -464,4 +459,4 @@ function Arbitrum() {
   );
 }
 
-export default Arbitrum;
+export default Avalanche;

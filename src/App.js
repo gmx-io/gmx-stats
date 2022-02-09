@@ -60,7 +60,6 @@ const App = () => {
     const targetMode = mode == 'dark' ? 'light' : 'dark';
     window.localStorage.setItem('mode', targetMode);
     setMode(targetMode)
-    window.location.reload();
   }
 
   return (
@@ -118,9 +117,13 @@ const App = () => {
             }
           </AnimatePresence>
           <div className="content">
-            <Route exact path="/" component={Arbitrum} />
+            <Route exact path="/" render={(props) => (
+              <Arbitrum {...props} mode={mode} />
+            )} />
             <Route exact path="/bsc" component={Bsc} />
-            <Route exact path="/avalanche" component={Avalanche} />
+            <Route exact path="/avalanche" render={(props) => (
+              <Avalanche {...props} mode={mode} />
+            )} />
             <Route exact path="/trading" component={Trading} />
           </div>
         </div>

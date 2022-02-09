@@ -71,18 +71,14 @@ const { BigNumber } = ethers
 const { formatUnits} = ethers.utils
 const NOW = Math.floor(Date.now() / 1000)
 
-function Arbitrum() {
+function Arbitrum(props) {
   const DEFAULT_GROUP_PERIOD = 86400
   const [groupPeriod, setGroupPeriod] = useState(DEFAULT_GROUP_PERIOD)
 
   const [fromValue, setFromValue] = useState()
   const [toValue, setToValue] = useState()
-  const [mode, setMode] = useState(null)
 
-  useEffect(() => {
-    const savedMode = window.localStorage.getItem('mode')
-    setMode(savedMode)
-  }, [])
+  const { mode } = props
 
   const setDateRange = useCallback(range => {
     setFromValue(new Date(Date.now() - range * 1000).toISOString().slice(0, 10))
