@@ -1,4 +1,0 @@
-CREATE TABLE IF NOT EXISTS meta (
-	key CHAR PRIMARY KEY,
-	value CHAR
-);
