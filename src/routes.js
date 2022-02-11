@@ -334,12 +334,6 @@ function binSearchPrice(prices, timestamp, gt = true) {
 
 function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "chainlink", symbol) {
   const start = Date.now()
-  const cacheKey = `${from}:${to}:${preferableChainId}:${preferableSource}:${symbol}`
-  const fromCache = ttlCache.get(cacheKey)
-  if (fromCache) {
-    logger.debug('from cache')
-    return fromCache
-  }
 
   if (preferableSource !== "chainlink" && preferableSource !== "fast") {
     const err = new Error(`Invalid preferableSource ${preferableSource}. Valid options are: chainlink, fast`)
@@ -356,7 +350,7 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
   preferableChainId = Number(preferableChainId)
   const validSources = new Set([ARBITRUM, AVALANCHE])
   if (!validSources.has(preferableChainId)) {
-    const err = new Error(`Invalid preferableChainId ${preferableChainId}`)
+    const err = new Error(`Invalid preferableChainId ${preferableChainId}. Valid options are ${ARBITRUM}, ${AVALANCHE}`)
     err.code = 400
     throw err
   }
@@ -366,6 +360,13 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
     || !cachedPrices.byKey[preferableChainId].chainlinkPrices[tokenAddress]
   ) {
     return []
+  }
+
+  const cacheKey = `${from}:${to}:${preferableChainId}:${preferableSource}:${symbol}`
+  const fromCache = ttlCache.get(cacheKey)
+  if (fromCache) {
+    logger.debug('from cache')
+    return fromCache
   }
 
   const entitiesKey = preferableSource === "chainlink" ? "chainlinkPrices" : "fastPrices"
@@ -448,7 +449,7 @@ function getCandles(prices, period) {
 }
 
 function getFromAndTo(req) {
-  const granularity = 60
+  const granularity = 60 // seconds
   let from = Number(req.query.from) || Math.round(Date.now() / 1000) - 86400 * 90
   from = Math.floor(from / granularity) * granularity
   let to = Number(req.query.to) || Math.round(Date.now() / 1000)
@@ -465,7 +466,7 @@ export default function routes(app) {
   })
 
   app.get('/api/chart/:symbol', async (req, res) => {
-    const [from, to, shouldRedirect] = getFromAndTo(req)
+    const [from, to] = getFromAndTo(req)
 
     let prices
     try {
@@ -484,7 +485,7 @@ export default function routes(app) {
   })
 
   app.get('/api/candles/:symbol', async (req, res) => {
-    const [from, to, shouldRedirect] = getFromAndTo(req)
+    const [from, to] = getFromAndTo(req)
 
     let prices
     try {
@@ -519,6 +520,9 @@ export default function routes(app) {
     })
   })
 
+  const cssAssetsTag = cssLinksFromAssets(assets, 'client')
+  const jsAssetsTag = jsScriptTagsFromAssets(assets, 'client', ' defer crossorigin')
+
   app.get('/*', (req, res, next) => {
     if (res.headersSent) {
       next()
@@ -532,28 +536,23 @@ export default function routes(app) {
       </StaticRouter>
     );
 
-    if (context.url) {
-      res.redirect(context.url);
-    } else {
-      res.status(200).send(
-        `<!doctype html>
-            <html lang="">
-            <head>
-                <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-                <meta charset="utf-8" />
-                <title>GMX analytics</title>
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <link rel="icon" type="image/png" href="/favicon.png" />
-                ${cssLinksFromAssets(assets, 'client')}
-            </head>
-            <body>
-                <div id="root">${markup}</div>
-                ${jsScriptTagsFromAssets(assets, 'client', ' defer crossorigin')}
-            </body>
-        </html>`
-      );
-    }
-
+    res.status(200).send(
+      `<!doctype html>
+          <html lang="">
+          <head>
+              <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+              <meta charset="utf-8" />
+              <title>GMX analytics</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <link rel="icon" type="image/png" href="/favicon.png" />
+              ${cssAssetsTag}
+          </head>
+          <body>
+              <div id="root">${markup}</div>
+              ${jsAssetsTag}
+          </body>
+      </html>`
+    );
     next()
   });
 }
