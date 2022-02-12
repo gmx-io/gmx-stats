@@ -1,7 +1,7 @@
 import express from 'express';
 
 import routes from './routes'
-import { requestLogger } from './middlewares'
+import { requestLogger, csp } from './middlewares'
 
 const app = express();
 app.set('trust proxy', true)
@@ -11,6 +11,7 @@ app
   .use(express.static(process.env.RAZZLE_PUBLIC_DIR))
   .use(require('cors')())
   .use(requestLogger)
+  .use(csp)
 
 app.get('/ping', (req, res, next) => {
   res.send('ok')
