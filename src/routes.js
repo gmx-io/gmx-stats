@@ -197,10 +197,12 @@ async function precacheOldPrices(chainId, entitiesKey) {
     i++
   }
 }
-precacheOldPrices(ARBITRUM, "chainlinkPrices")
-precacheOldPrices(ARBITRUM, "fastPrices")
-precacheOldPrices(AVALANCHE, "chainlinkPrices")
-precacheOldPrices(AVALANCHE, "fastPrices")
+if (!process.env.DISABLE_PRICES) {
+  precacheOldPrices(ARBITRUM, "chainlinkPrices")
+  precacheOldPrices(ARBITRUM, "fastPrices")
+  precacheOldPrices(AVALANCHE, "chainlinkPrices")
+  precacheOldPrices(AVALANCHE, "fastPrices")
+}
 
  // on Arbitrum new block may have with timestamps from past...
 let newestPriceTimestamp = parseInt(Date.now() / 1000) - 60 * 5
@@ -230,10 +232,12 @@ async function precacheNewPrices(chainId, entitiesKey) {
 
   setTimeout(precacheNewPrices, 1000 * 60 * 1, chainId, entitiesKey)
 }
-precacheNewPrices(ARBITRUM, "chainlinkPrices")
-precacheNewPrices(ARBITRUM, "fastPrices")
-precacheNewPrices(AVALANCHE, "chainlinkPrices")
-precacheNewPrices(AVALANCHE, "fastPrices")
+if (!process.env.DISABLE_PRICES) {
+  precacheNewPrices(ARBITRUM, "chainlinkPrices")
+  precacheNewPrices(ARBITRUM, "fastPrices")
+  precacheNewPrices(AVALANCHE, "chainlinkPrices")
+  precacheNewPrices(AVALANCHE, "fastPrices")
+}
 
 async function loadPrices({ before, after, chainId, entitiesKey } = {}) {
   if (!chainId) {
@@ -336,23 +340,17 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
   const start = Date.now()
 
   if (preferableSource !== "chainlink" && preferableSource !== "fast") {
-    const err = new Error(`Invalid preferableSource ${preferableSource}. Valid options are: chainlink, fast`)
-    err.code = 400
-    throw err
+    throw createHttpError(400, `Invalid preferableSource ${preferableSource}. Valid options are: chainlink, fast`)
   }
 
   const validSymbols = new Set(['BTC', 'ETH', 'BNB', 'UNI', 'LINK', 'AVAX'])
   if (!validSymbols.has(symbol)) {
-    const err = new Error(`Invalid symbol ${symbol}`)
-    err.code = 400
-    throw err
+    throw createHttpError(400, `Invalid symbol ${symbol}`)
   }
   preferableChainId = Number(preferableChainId)
   const validSources = new Set([ARBITRUM, AVALANCHE])
   if (!validSources.has(preferableChainId)) {
-    const err = new Error(`Invalid preferableChainId ${preferableChainId}. Valid options are ${ARBITRUM}, ${AVALANCHE}`)
-    err.code = 400
-    throw err
+    throw createHttpError(400, `Invalid preferableChainId ${preferableChainId}. Valid options are ${ARBITRUM}, ${AVALANCHE}`)
   }
 
   const tokenAddress = addresses[preferableChainId][symbol]?.toLowerCase()
@@ -458,51 +456,49 @@ function getFromAndTo(req) {
   return [from, to]
 }
 
+function createHttpError(code, message) {
+  const error = new Error(message)
+  error.code = code
+  return error
+}
+
 export default function routes(app) {
   app.get('/api/gmx-supply', async (req, res) => {
     const apiResponse = await fetch('https://api.gmx.io/gmx_supply')
     const data = (await apiResponse.text()).toString()
+    res.set('Content-Type', 'text/plain')
     res.send(formatUnits(data))
   })
 
-  app.get('/api/chart/:symbol', async (req, res) => {
+  app.get('/api/chart/:symbol', async (req, res, next) => {
     const [from, to] = getFromAndTo(req)
 
     let prices
     try {
       prices = getPrices(from, to, req.query.preferableChainId, req.query.preferableSource, req.params.symbol)
     } catch (ex) {
-      if (ex.code === 400) {
-        res.send(ex.message)
-        res.status(400)
-        return
-      }
-      throw ex
+      next(ex)
+      return
     }
 
     res.set('Cache-Control', 'max-age=60')
     res.send(prices)
   })
 
-  app.get('/api/candles/:symbol', async (req, res) => {
+  app.get('/api/candles/:symbol', async (req, res, next) => {
     const [from, to] = getFromAndTo(req)
 
     let prices
     try {
       prices = getPrices(from, to, req.query.preferableChainId, req.query.preferableSource, req.params.symbol)
     } catch (ex) {
-      if (ex.code === 400) {
-        res.send(ex.message)
-        res.status(400)
-        return
-      }
-      throw ex
+      next(ex)
+      return
     }
 
     const period = req.query.period?.toLowerCase()
     if (!period || !periodsMap[period]) {
-      res.send(`Invalid period. Valid periods are ${Object.keys(periodsMap)}`)
-      res.status(400)
+      next(createHttpError(400, `Invalid period. Valid periods are ${Object.keys(periodsMap)}`))
       return
     }
 
@@ -555,4 +551,10 @@ export default function routes(app) {
     );
     next()
   });
+
+  app.use('/api', function (err, req, res, next) {
+    res.set('Content-Type', 'text/plain')
+    res.status(err.code || 500)
+    res.send(err.message)
+  })
 }
