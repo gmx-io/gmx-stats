@@ -556,6 +556,10 @@ export default function routes(app) {
   app.use('/api', function (err, req, res, next) {
     res.set('Content-Type', 'text/plain')
     res.status(err.code || 500)
-    res.send(err.message)
+    if (err.code === 400) {
+      res.send(err.message)
+    } else {
+      res.end()
+    }
   })
 }
