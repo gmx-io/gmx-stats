@@ -531,6 +531,7 @@ export default function routes(app) {
         <App />
       </StaticRouter>
     );
+    res.set('Content-Type', 'text/html')
 
     res.status(200).send(
       `<!doctype html>
