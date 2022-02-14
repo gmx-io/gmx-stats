@@ -15,6 +15,7 @@ app
   .use((req, res, next) => {
     res.set('X-Content-Type-Options', 'nosniff')
     res.set('X-Frame-Options', 'DENY')
+    res.set('Referrer-Policy', 'same-origin')
     next()
   })
 
