@@ -52,7 +52,7 @@ const App = () => {
 
   useEffect(() => {
     const savedMode = window.localStorage.getItem('mode');
-    const targetMode = savedMode == 'dark' ? 'dark' : 'light';
+    const targetMode = savedMode == 'light' ? 'light' : 'dark';
     document.querySelector('body').style.backgroundColor = targetMode == 'dark' ? '#101124' : '#f6f9ff';
     setMode(targetMode);
   }, [])
