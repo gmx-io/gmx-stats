@@ -515,6 +515,65 @@ a, a:active, a:visited {
   right: 0;
 }
 
+.react-dropdown-select-dropdown {
+  max-height: 430px!important;
+}
+
+.App.dark .react-dropdown-select-dropdown {
+  background-color: #101124!important;
+  border: 1px solid #FFFFFF14!important;
+}
+
+.react-dropdown-select {
+  border: 1px solid #e6e6f7!important;
+}
+
+.App.dark .react-dropdown-select {
+  border: 1px solid #FFFFFF14!important;
+}
+
+.date-range-items {
+  overflow: auto;
+  min-height: 10px;
+  max-height: 200px;
+}
+
+.date-range-item {
+  display: flex;
+  margin: 0.5rem;
+  padding: 0.5rem;
+  align-items: baseline;
+}
+
+.date-range-item__label {
+  color: black;
+}
+
+.date-range-item.selected {
+  background: #EEE!important;
+}
+
+.App.dark .date-range-item__label {
+  color: white;
+}
+
+.App.dark .date-range-item.selected {
+  background-color: white;
+}
+
+.App.dark .date-range-item.selected .date-range-item__label {
+  color: black;
+}
+
+.date-range-custom {
+  color: #000;
+  margin: 0.5rem;
+}
+
+.chart-cell.mobile {
+  display: none;
+}
+
 @media all and (max-width: 600px) {
   .chart-grid {
     display: grid;
@@ -524,6 +583,10 @@ a, a:active, a:visited {
   .chart-cell {
     grid-column-start: unset!important;
     grid-column-end: unset!important;
+  }
+
+  .chart-cell.mobile {
+    display: block;
   }
 
   .App-header-menu-icon-block {

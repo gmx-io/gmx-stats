@@ -49,6 +49,7 @@ import ChartWrapper from './components/ChartWrapper'
 import VolumeChart from './components/VolumeChart'
 import FeesChart from './components/FeesChart'
 import GenericChart from './components/GenericChart'
+import DateRangeSelect from './components/DateRangeSelect'
 
 import {
   useVolumeData,
@@ -76,18 +77,20 @@ function dateToValue(date) {
 }
 
 function Avalanche(props) {
-  const [fromValue, setFromValue] = useState("2022-01-06")
-  const [toValue, setToValue] = useState()
+  const [dataRange, setDataRange] = useState({fromValue: new Date("2022-01-06"), toValue: null})
 
   const setDateRange = useCallback(range => {
-    setFromValue(dateToValue(new Date(Date.now() - range * 1000)))
-    setToValue(undefined)
-  }, [setFromValue, setToValue])
+    let from = dateToValue(new Date(Date.now() - range * 1000))
+    if (window.innerWidth < 600) {
+      from = moment().subtract(2, 'month').toDate()
+    }
+    setDataRange({fromValue: from, toValue: undefined})
+  }, [setDataRange])
 
   const { mode } = props
 
-  const from = fromValue ? +new Date(fromValue) / 1000 : undefined
-  const to = toValue ? +new Date(toValue) / 1000 : NOW
+  const from = dataRange.fromValue ? Math.floor(+new Date(dataRange.fromValue) / 1000) : undefined
+  const to = dataRange.toValue ? Math.floor(+new Date(dataRange.toValue) / 1000) : NOW
 
   const params = { from, to, chainName: 'avalanche' }
 
@@ -165,6 +168,22 @@ function Avalanche(props) {
 
   const isObsolete = lastSubgraphBlock && lastBlock && lastBlock.timestamp - lastSubgraphBlock.timestamp > 3600
 
+  const onDateRangeChange = (dates) => {
+    const [start, end] = dates;
+    setDataRange({fromValue: start, toValue: end})
+  };
+
+  const dateRangeOptions = [{
+    label: "Last Month",
+    id: 1
+  }, {
+    label: "Last 2 Months",
+    id: 2
+  }, {
+    label: "Last 3 Months",
+    id: 3
+  }]
+
   return (
     <div className="Home">
       <h1>Analytics / Avalanche</h1>
@@ -237,6 +256,9 @@ function Avalanche(props) {
             </div>
           </> : null}
           {tradersLoading && <RiLoader5Fill size="3em" className="loader" />}
+        </div>
+        <div className="chart-cell mobile">
+          <DateRangeSelect options={dateRangeOptions} startDate={dataRange.fromValue} endDate={dataRange.toValue} onChange={onDateRangeChange} />
         </div>
         <div className="chart-cell">
           <VolumeChart
