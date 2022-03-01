@@ -21,9 +21,10 @@
        url('./fonts/relative/relative-bold-pro.woff') format('woff'), /* Modern Browsers */
        url('./fonts/relative/relative-bold-pro.ttf') format('truetype'); /* Safari, Android, iOS */
 }
+
 body {
   font-size: 0.9rem;
-  background: #f6f9ff;
+  /* background: #f6f9ff; */
   margin: 0;
   padding: 0;
   font-family: RelativeMono, sans-serif;
@@ -45,6 +46,7 @@ body {
 
 .App {
   color: #000;
+  background: #f6f9ff;
   line-height: 1.15;
   padding: 1rem;
   padding-top: 0;
@@ -131,10 +133,6 @@ label + input {
   grid-column-end: 9;
   margin-bottom: 0;
   margin-top: 2rem;
-}
-
-.total-stat-label {
-  /* color: #A0A3C4; */
 }
 
 .total-stat-value {
@@ -354,10 +352,6 @@ a, a:active, a:visited {
   align-items: center;
 }
 
-.nav-right .nav-link {
-  /* color: #A8AAC9; */
-}
-
 .modeselect {
   width: 30px;
   height: 26px;
@@ -385,14 +379,6 @@ a, a:active, a:visited {
 .page-title {
   font-size: 1.8125rem;
   line-height: 2.3125rem;
-}
-
-.page-description {
-  /* color: #A0A3C4; */
-}
-
-.page-description a {
-  /* text-decoration: none; */
 }
 
 .recharts-cartesian-axis-tick-value {
@@ -530,6 +516,16 @@ a, a:active, a:visited {
 }
 
 @media all and (max-width: 600px) {
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .chart-cell {
+    grid-column-start: unset!important;
+    grid-column-end: unset!important;
+  }
+
   .App-header-menu-icon-block {
     display: flex;
     align-items: center;

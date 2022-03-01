@@ -52,13 +52,15 @@ const App = () => {
 
   useEffect(() => {
     const savedMode = window.localStorage.getItem('mode');
-    const targetMode = savedMode == 'dark' ? 'dark' : 'light';
+    const targetMode = savedMode == 'light' ? 'light' : 'dark';
+    document.querySelector('body').style.backgroundColor = targetMode == 'dark' ? '#101124' : '#f6f9ff';
     setMode(targetMode);
   }, [])
 
   const switchMode = () => {
     const targetMode = mode == 'dark' ? 'light' : 'dark';
     window.localStorage.setItem('mode', targetMode);
+    document.querySelector('body').style.backgroundColor = targetMode == 'dark' ? '#101124' : '#f6f9ff';
     setMode(targetMode)
   }
 
