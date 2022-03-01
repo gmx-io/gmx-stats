@@ -570,6 +570,12 @@ a, a:active, a:visited {
   margin: 0.5rem;
 }
 
+.react-dropdown-select-content {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
 .chart-cell.mobile {
   display: none;
 }
