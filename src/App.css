@@ -526,6 +526,18 @@ a, a:active, a:visited {
 
 .react-dropdown-select {
   border: 1px solid #e6e6f7!important;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  width: 100%;
+  border-radius: 2px;
+  padding: 2px 5px;
+  flex-direction: row;
+  direction: ltr;
+  align-items: center;
+  cursor: pointer;
+  min-height: 36px;
+  pointer-events: all;
 }
 
 .App.dark .react-dropdown-select {
