@@ -530,6 +530,7 @@ a, a:active, a:visited {
   overflow: auto;
   z-index: 9;
   max-height: 430px!important;
+  width: 100%!important;
 }
 
 .App.dark .react-dropdown-select-dropdown {
@@ -551,10 +552,13 @@ a, a:active, a:visited {
   cursor: pointer;
   min-height: 36px;
   pointer-events: all;
+  max-width: 300px;
+  background-color: white;
 }
 
 .App.dark .react-dropdown-select {
   border: 1px solid #FFFFFF14!important;
+  background-color: #16182E;
 }
 
 .date-range-items {
@@ -637,5 +641,9 @@ a, a:active, a:visited {
 
   .nav-left .nav-link {
     display: none;
+  }
+
+  .react-dropdown-select {
+    max-width: 100%;
   }
 }
