@@ -194,6 +194,9 @@ function Avalanche(props) {
           &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
         </p>
       }
+      <div className="form">
+        <DateRangeSelect options={dateRangeOptions} startDate={dataRange.fromValue} endDate={dataRange.toValue} onChange={onDateRangeChange} />
+      </div>
       <div className="chart-grid">
         <div className="chart-cell stats">
           {totalVolume ? <>
@@ -256,9 +259,6 @@ function Avalanche(props) {
             </div>
           </> : null}
           {tradersLoading && <RiLoader5Fill size="3em" className="loader" />}
-        </div>
-        <div className="chart-cell mobile">
-          <DateRangeSelect options={dateRangeOptions} startDate={dataRange.fromValue} endDate={dataRange.toValue} onChange={onDateRangeChange} />
         </div>
         <div className="chart-cell">
           <VolumeChart
