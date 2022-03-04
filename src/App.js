@@ -7,6 +7,7 @@ import Arbitrum from './Arbitrum';
 import Avalanche from './Avalanche';
 import Trading from './Trading';
 import './App.css';
+import logoIcon from './img/logo_GMX.svg';
 import darkLogoIcon from './img/logo_GMX_dark.svg';
 import lightLogoIcon from './img/logo_GMX_light.svg';
 import { FaSun, FaMoon, FaTimes } from "react-icons/fa";
@@ -22,7 +23,7 @@ function AppHeaderLinks({ mode, small, clickCloseIcon }) {
             <FiX className="App-header-menu-icon" />
           </div>
           <NavLink exact activeClassName="active" className="App-header-link-main" to="/">
-            <img src={darkLogoIcon} alt="GMX Logo" />
+            <img src={logoIcon} alt="GMX Logo" />
           </NavLink>
         </div>
       }
