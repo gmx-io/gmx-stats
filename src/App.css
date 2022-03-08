@@ -551,13 +551,22 @@ a, a:active, a:visited {
   cursor: pointer;
   min-height: 36px;
   pointer-events: all;
-  max-width: 300px;
+  max-width: 270px;
   background-color: white;
+  padding-left: 1rem!important;
+}
+
+.react-dropdown-select:hover {
+  background-color: #EEE;
 }
 
 .App.dark .react-dropdown-select {
   border: 1px solid #FFFFFF14!important;
   background-color: #16182E;
+}
+
+.App.dark .react-dropdown-select:hover {
+  background-color: #101124;
 }
 
 .date-range-items {
@@ -577,7 +586,8 @@ a, a:active, a:visited {
   color: black;
 }
 
-.date-range-item.selected {
+.date-range-item.selected,
+.date-range-item:hover {
   background: #EEE!important;
 }
 
@@ -585,17 +595,15 @@ a, a:active, a:visited {
   color: white;
 }
 
-.App.dark .date-range-item.selected {
-  background-color: white;
-}
-
-.App.dark .date-range-item.selected .date-range-item__label {
+.App.dark .date-range-item.selected .date-range-item__label, 
+.App.dark .date-range-item:hover .date-range-item__label {
   color: black;
 }
 
 .date-range-custom {
   color: #000;
   margin: 0.5rem;
+  text-align: center;
 }
 
 .react-dropdown-select-content {

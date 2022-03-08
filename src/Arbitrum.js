@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import * as ethers from 'ethers'
 import moment from 'moment'
 import { RiLoader5Fill } from 'react-icons/ri'
@@ -79,14 +79,6 @@ function Arbitrum(props) {
   const [dataRange, setDataRange] = useState({fromValue: null, toValue: null})
 
   const { mode } = props
-
-  const setDateRange = useCallback(range => {
-    let from = new Date(Date.now() - range * 1000).toISOString().slice(0, 10)
-    if (window.innerWidth < 600) {
-      from = moment().subtract(2, 'month').toDate()
-    }
-    setDataRange({fromValue: from, toValue: undefined})
-  }, [setDataRange])
 
   const from = dataRange.fromValue ? Math.floor(+new Date(dataRange.fromValue) / 1000) : undefined
   const to = dataRange.toValue ? Math.floor(+new Date(dataRange.toValue) / 1000) : NOW

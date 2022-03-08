@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Select from 'react-dropdown-select'
 import DatePicker from 'react-datepicker'
 import "react-datepicker/dist/react-datepicker.css"
@@ -10,9 +10,13 @@ export default function DateRangeSelect({ options, startDate, endDate, onChange 
   const onSelectItem = (option) => {
     const end = new Date()
     const start = moment().subtract(option.id, 'month').toDate()
-    onChange([start, end])
     setSelectedDateRangeOption(option.id)
+    onChange([start, end])
   }
+
+  useEffect(() => {
+    onSelectItem({id: 2})
+  }, [setSelectedDateRangeOption])
 
   const customContentRenderer = ({ props, state }) => {
     const start = startDate && startDate.toISOString().slice(0, 10)
@@ -68,16 +72,11 @@ export default function DateRangeSelect({ options, startDate, endDate, onChange 
         multi
         contentRenderer={customContentRenderer}
         dropdownRenderer={customDropdownRenderer}
-        onChange={(value) =>
-          console.log(
-            `%c > onChange `,
-            'background: #555; color: tomato',
-            value
-          )
-        }
         labelField="label"
         options={options}
-        values={[]}
+        closeOnSelect={true}
+        closeOnScroll={true}
+        values={[selectedDateRangeOption]}
       />
     </div>
   )
