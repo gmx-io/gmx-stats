@@ -16,7 +16,7 @@ export default function DateRangeSelect({ options, startDate, endDate, onChange 
 
   useEffect(() => {
     onSelectItem({id: 2})
-  }, [setSelectedDateRangeOption])
+  }, [])
 
   const customContentRenderer = ({ props, state }) => {
     const start = startDate && startDate.toISOString().slice(0, 10)

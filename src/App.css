@@ -529,7 +529,7 @@ a, a:active, a:visited {
   overflow: auto;
   z-index: 9;
   max-height: 430px!important;
-  width: 100%!important;
+  width: 270px!important;
 }
 
 .App.dark .react-dropdown-select-dropdown {
@@ -551,7 +551,7 @@ a, a:active, a:visited {
   cursor: pointer;
   min-height: 36px;
   pointer-events: all;
-  max-width: 270px;
+  max-width: 220px;
   background-color: white;
   padding-left: 1rem!important;
 }
