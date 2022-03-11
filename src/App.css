@@ -551,9 +551,13 @@ a, a:active, a:visited {
   cursor: pointer;
   min-height: 36px;
   pointer-events: all;
-  max-width: 220px;
+  max-width: 195px;
   background-color: white;
   padding-left: 1rem!important;
+}
+
+.react-dropdown-select-dropdown-handle {
+  display: none;
 }
 
 .react-dropdown-select:hover {
