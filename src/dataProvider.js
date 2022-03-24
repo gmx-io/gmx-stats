@@ -5,14 +5,37 @@ import fetch from 'cross-fetch';
 import * as ethers from 'ethers'
 
 import { fillPeriods } from './helpers'
+import { addresses, getAddress, ARBITRUM, AVALANCHE } from './addresses'
 
 const BigNumber = ethers.BigNumber
 const formatUnits = ethers.utils.formatUnits
 const { JsonRpcProvider } = ethers.providers
 
+import RewardReader from '../abis/RewardReader.json'
+import GlpManager from '../abis/GlpManager.json'
+import Token from '../abis/v1/Token.json'
+
 const providers = {
   arbitrum: new JsonRpcProvider('https://arb1.arbitrum.io/rpc'),
   avalanche: new JsonRpcProvider('https://api.avax.network/ext/bc/C/rpc')
+}
+
+function getProvider(chainName) {
+  if (!(chainName in providers)) {
+    throw new Error(`Unknown chain ${chainName}`)
+  }
+  return providers[chainName]
+}
+
+function getChainId(chainName) {
+  const chainId = {
+    arbitrum: ARBITRUM,
+    avalanche: AVALANCHE
+  }[chainName]
+  if (!chainId) {
+    throw new Error(`Unknown chain ${chainName}`)
+  }
+  return chainId
 }
 
 const DEFAULT_GROUP_PERIOD = 86400
@@ -33,6 +56,67 @@ function fillNa(arr, keys) {
     }
   }
   return arr
+}
+
+export async function queryEarnData(chainName, account) {
+  const provider = getProvider(chainName)
+  const chainId = getChainId(chainName)
+  const rewardReader = new ethers.Contract(getAddress(chainId, 'RewardReader'), RewardReader.abi, provider)
+  const glpContract = new ethers.Contract(getAddress(chainId, 'GLP'), Token.abi, provider)
+  const glpManager = new ethers.Contract(getAddress(chainId, 'GlpManager'), GlpManager.abi, provider)
+
+  let depositTokens
+  let rewardTrackersForDepositBalances
+  let rewardTrackersForStakingInfo
+
+  if (chainId === ARBITRUM) {
+    depositTokens = ['0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a', '0xf42Ae1D54fd613C9bb14810b0588FaAa09a426cA', '0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0x35247165119B69A40edD5304969560D0ef486921', '0x4277f8F2c384827B5273592FF7CeBd9f2C1ac258']
+    rewardTrackersForDepositBalances = ['0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0xd2D1162512F927a7e282Ef43a362659E4F2a728F', '0xd2D1162512F927a7e282Ef43a362659E4F2a728F', '0x4e971a87900b931fF39d1Aad67697F49835400b6']
+    rewardTrackersForStakingInfo = ['0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0xd2D1162512F927a7e282Ef43a362659E4F2a728F', '0x1aDDD80E6039594eE970E5872D247bf0414C8903', '0x4e971a87900b931fF39d1Aad67697F49835400b6']
+  } else {
+    depositTokens = ['0x62edc0692BD897D2295872a9FFCac5425011c661', '0xFf1489227BbAAC61a9209A08929E4c2a526DdD17', '0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342', '0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x8087a341D32D445d9aC8aCc9c14F5781E04A26d2', '0x01234181085565ed162a948b6a5e88758CD7c7b8']
+    rewardTrackersForDepositBalances = ['0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342', '0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342', '0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0xd2D1162512F927a7e282Ef43a362659E4F2a728F']
+    rewardTrackersForStakingInfo = ['0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342', '0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0x9e295B5B976a184B14aD8cd72413aD846C299660', '0xd2D1162512F927a7e282Ef43a362659E4F2a728F']
+  }
+
+  const [
+    balances,
+    stakingInfo,
+    glpTotalSupply,
+    glpAum,
+    gmxPrice
+  ] = await Promise.all([
+    rewardReader.getDepositBalances(account, depositTokens, rewardTrackersForDepositBalances),
+    rewardReader.getStakingInfo(account, rewardTrackersForStakingInfo).then(info => {
+      return rewardTrackersForStakingInfo.map((_, i) => {
+        return info.slice(i * 5, (i + 1) * 5)
+      })
+    }),
+    glpContract.totalSupply(),
+    glpManager.getAumInUsdg(true),
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids=gmx&vs_currencies=usd').then(async res => {
+      const j = await res.json()
+      return j['gmx']['usd']
+    })
+  ])
+
+  const glpPrice = (glpAum / 1e18) / (glpTotalSupply / 1e18)
+
+  return {
+    GLP: {
+      stakedGLP: balances[5] / 1e18,
+      pendingETH: stakingInfo[4][0] / 1e18,
+      pendingEsGMX: stakingInfo[3][0] / 1e18,
+      glpPrice
+    },
+    GMX: {
+      stakedGMX: balances[0] / 1e18,
+      stakedEsGMX: balances[1] / 1e18,
+      pendingETH: stakingInfo[2][0] / 1e18,
+      pendingEsGMX: stakingInfo[0][0] / 1e18,
+      gmxPrice
+    }
+  }
 }
 
 export const tokenDecimals = {
