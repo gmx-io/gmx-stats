@@ -466,12 +466,18 @@ function createHttpError(code, message) {
 export default function routes(app) {
   app.get('/api/earn/:account', async (req, res, next) => {
     const chainName = req.query.chain || 'arbitrum'
+    const validChainNames = new Set(['arbitrum', 'avalanche'])
+    if (!validChainNames.has(chainName)) {
+      next(createHttpError(400, `Valid chains are: ${Array.from(validChainNames)}`))
+      return
+    }
     try {
       const earnData = await queryEarnData(chainName, req.params.account)
       res.send(earnData)
     } catch (ex) {
       logger.error(ex)
       next(createHttpError(500, ex.message))
+      return
     }
   })
 
