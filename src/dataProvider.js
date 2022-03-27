@@ -101,6 +101,7 @@ export async function queryEarnData(chainName, account) {
   ])
 
   const glpPrice = (glpAum / 1e18) / (glpTotalSupply / 1e18)
+  const now = new Date()
 
   return {
     GLP: {
@@ -115,7 +116,9 @@ export async function queryEarnData(chainName, account) {
       pendingETH: stakingInfo[2][0] / 1e18,
       pendingEsGMX: stakingInfo[0][0] / 1e18,
       gmxPrice
-    }
+    },
+    timestamp: parseInt(now / 1000),
+    datetime: now.toISOString()
   }
 }
 
