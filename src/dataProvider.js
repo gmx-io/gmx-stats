@@ -551,9 +551,29 @@ function getServerHostname(chainName) {
   return 'gmx-server-mainnet.uw.r.appspot.com'
 }
 
+export function useVolumeDataRequest(url, defaultValue, from, to, fetcher = defaultFetcher) {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState()
+  const [data, setData] = useState(defaultValue) 
+
+  useEffect(async () => {
+    try {
+      setLoading(true)
+      const data = await fetcher(url)
+      setData(data)
+    } catch (ex) {
+      console.error(ex)
+      setError(ex)
+    }
+    setLoading(false)
+  }, [url, from, to])
+
+  return [data, loading, error]
+}
+
 export function useVolumeDataFromServer({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
-  const [data, loading] = useRequest(`https://${getServerHostname(chainName)}/daily_volume`, null, async url => {
+  const [data, loading] = useVolumeDataRequest(`https://${getServerHostname(chainName)}/daily_volume`, null, from, to, async url => {
     let after
     const ret = []
     while (true) {
@@ -570,34 +590,34 @@ export function useVolumeDataFromServer({ from = FIRST_DATE_TS, to = NOW_TS, cha
   })
 
   const ret = useMemo(() => {
-     if (!data) {
-       return null
-     } 
+    if (!data) {
+      return null
+    } 
 
-     const tmp = data.reduce((memo, item) => {
-        const timestamp = item.data.timestamp
-        if (timestamp < from || timestamp > to) {
-          return memo
-        }
-
-        let type
-        if (item.data.action === 'Swap') {
-          type = 'swap'
-        } else if (item.data.action === 'SellUSDG') {
-          type = 'burn'
-        } else if (item.data.action === 'BuyUSDG') {
-          type = 'mint'
-        } else if (item.data.action.includes('LiquidatePosition')) {
-          type = 'liquidation'
-        } else {
-          type = 'margin'
-        }
-        const volume = Number(item.data.volume) / 1e30
-        memo[timestamp] = memo[timestamp] || {}
-        memo[timestamp][type] = memo[timestamp][type] || 0
-        memo[timestamp][type] += volume
+    const tmp = data.reduce((memo, item) => {
+      const timestamp = item.data.timestamp
+      if (timestamp < from || timestamp > to) {
         return memo
-     }, {})
+      }
+
+      let type
+      if (item.data.action === 'Swap') {
+        type = 'swap'
+      } else if (item.data.action === 'SellUSDG') {
+        type = 'burn'
+      } else if (item.data.action === 'BuyUSDG') {
+        type = 'mint'
+      } else if (item.data.action.includes('LiquidatePosition')) {
+        type = 'liquidation'
+      } else {
+        type = 'margin'
+      }
+      const volume = Number(item.data.volume) / 1e30
+      memo[timestamp] = memo[timestamp] || {}
+      memo[timestamp][type] = memo[timestamp][type] || 0
+      memo[timestamp][type] += volume
+      return memo
+    }, {})
 
     let cumulative = 0
     const cumulativeByTs = {}

@@ -1,11 +1,29 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Select from 'react-dropdown-select'
-import DatePicker from 'react-datepicker'
-import "react-datepicker/dist/react-datepicker.css"
 import moment from 'moment'
+import { DateRange } from 'react-date-range';
+import 'react-date-range/dist/styles.css'; // main css file
+import 'react-date-range/dist/theme/default.css'; // theme css file
 
 export default function DateRangeSelect({ options, startDate, endDate, onChange }) {
   const [selectedDateRangeOption, setSelectedDateRangeOption] = useState()
+  const [rangeState, setRangeState] = useState([
+    {
+      startDate: null,
+      endDate: null,
+      key: 'selection'
+    }
+  ]);
+
+  useEffect(() => {
+    setRangeState([
+      {
+        startDate: startDate,
+        endDate: endDate,
+        key: 'selection'
+      }
+    ])
+  }, [startDate, endDate])
 
   const onSelectItem = (option) => {
     const end = new Date()
@@ -15,8 +33,16 @@ export default function DateRangeSelect({ options, startDate, endDate, onChange 
   }
 
   useEffect(() => {
-    onSelectItem({id: 2})
+    onSelectItem({ id: 2 })
   }, [])
+
+  const onDateRangeChange = (item) => {
+    setRangeState([item.selection])
+    if (item.selection.startDate == item.selection.endDate) {
+      return
+    }
+    onChange([item.selection.startDate, item.selection.endDate])
+  }
 
   const customContentRenderer = ({ props, state }) => {
     const start = startDate && startDate.toISOString().slice(0, 10)
@@ -52,13 +78,12 @@ export default function DateRangeSelect({ options, startDate, endDate, onChange 
             })}
         </div>
         <div className="date-range-custom" color={props.color}>
-          <DatePicker
-            selected={startDate}
-            onChange={onChange}
-            startDate={startDate}
-            endDate={endDate}
-            selectsRange
-            inline
+          <DateRange
+            editableDateInputs={true}
+            onChange={onDateRangeChange}
+            moveRangeOnFirstSelection={false}
+            ranges={rangeState}
+            showDateDisplay={false}
           />
         </div>
       </div>

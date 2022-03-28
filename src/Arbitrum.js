@@ -92,7 +92,12 @@ function Arbitrum(props) {
     if (!volumeData) {
       return null
     }
-    return volumeData[volumeData.length - 1].all
+    try {
+      return volumeData[volumeData.length - 1].all
+    } catch (error) {
+      console.log(volumeData)
+      return null
+    }
   }, [volumeData])
 
   const [feesData, feesLoading] = useFeesData(params)
