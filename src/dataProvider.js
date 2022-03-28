@@ -182,9 +182,12 @@ const knownSwapSources = {
   avalanche: {
     '0x4296e307f108b2f583ff2f7b7270ee7831574ae5': 'GMX',
     '0x5f719c2f1095f7b9fc68a68e35b51194f4b6abe8': 'GMX',
+    '0x7d9d108445f7e59a67da7c16a2ceb08c85b76a35': 'GMX', // FastPriceFeed
+    '0xf2ec2e52c3b5f8b8bd5a3f93945d05628a233216': 'GMX', // PositionManager
     '0xc4729e56b831d74bbc18797e0e17a295fa77488c': 'Yak',
     '0x409e377a7affb1fd3369cfc24880ad58895d1dd9': 'Dodo',
-    '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean'
+    '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean',
+    '0x7c5c4af1618220c090a6863175de47afb20fa9df': 'Gelato'
   }
 }
 
