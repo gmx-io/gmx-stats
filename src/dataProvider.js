@@ -161,10 +161,23 @@ function getTokenDecimals(token) {
 
 const knownSwapSources = {
   arbitrum: {
-    '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX',
-    '0x09f77e8a13de9a35a7231028187e9fd5db8a2acb': 'GMX',
+    '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX', // Router
+    '0x09f77e8a13de9a35a7231028187e9fd5db8a2acb': 'GMX', // Orderbook
+    '0x98a00666CfCb2BA5A405415C2BF6547C63bf5491': 'GMX', // PositionManager old
+    '0x87a4088bd721f83b6c2e5102e2fa47022cb1c831': 'GMX', // PositionManager
+    '0x7257ac5d0a0aac04aa7ba2ac0a6eb742e332c3fb': 'GMX', // OrderExecutor
+    '0x1a0ad27350cccd6f7f168e052100b4960efdb774': 'GMX', // FastPriceFeed
     '0x3b6067d4caa8a14c63fdbe6318f27a0bbc9f9237': 'Dodo',
-    '0x11111112542d85b3ef69ae05771c2dccff4faa26': '1inch'
+    '0x11111112542d85b3ef69ae05771c2dccff4faa26': '1inch',
+    '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean', // OpenOceanExchangeProxy
+    '0x4775af8fef4809fe10bf05867d2b038a4b5b2146': 'Gelato',
+    '0x5a9fd7c39a6c488e715437d7b1f3c823d5596ed1': 'LiFiDiamond',
+    '0x1d838be5d58cc131ae4a23359bc6ad2dddb8b75a': 'Vovo', // Vovo BTC UP USDC (vbuUSDC)
+    '0xc4bed5eeeccbe84780c44c5472e800d3a5053454': 'Vovo', // Vovo ETH UP USDC (veuUSDC)
+    '0xe40beb54ba00838abe076f6448b27528dd45e4f0': 'Vovo', // Vovo BTC UP USDC (vbuUSDC)
+    '0x9ba57a1d3f6c61ff500f598f16b97007eb02e346': 'Vovo', // Vovo ETH UP USDC (veuUSDC)
+    '0xfa82f1ba00b0697227e2ad6c668abb4c50ca0b1f': 'JonesDAO',
+    '0x226cb17a52709034e2ec6abe0d2f0a9ebcec1059': 'WardenSwap'
   },
   avalanche: {
     '0x4296e307f108b2f583ff2f7b7270ee7831574ae5': 'GMX',
