@@ -177,7 +177,8 @@ const knownSwapSources = {
     '0xe40beb54ba00838abe076f6448b27528dd45e4f0': 'Vovo', // Vovo BTC UP USDC (vbuUSDC)
     '0x9ba57a1d3f6c61ff500f598f16b97007eb02e346': 'Vovo', // Vovo ETH UP USDC (veuUSDC)
     '0xfa82f1ba00b0697227e2ad6c668abb4c50ca0b1f': 'JonesDAO',
-    '0x226cb17a52709034e2ec6abe0d2f0a9ebcec1059': 'WardenSwap'
+    '0x226cb17a52709034e2ec6abe0d2f0a9ebcec1059': 'WardenSwap',
+    '0x1111111254fb6c44bAC0beD2854e76F90643097d': '1inch'
   },
   avalanche: {
     '0x4296e307f108b2f583ff2f7b7270ee7831574ae5': 'GMX',
@@ -187,7 +188,8 @@ const knownSwapSources = {
     '0xc4729e56b831d74bbc18797e0e17a295fa77488c': 'Yak',
     '0x409e377a7affb1fd3369cfc24880ad58895d1dd9': 'Dodo',
     '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean',
-    '0x7c5c4af1618220c090a6863175de47afb20fa9df': 'Gelato'
+    '0x7c5c4af1618220c090a6863175de47afb20fa9df': 'Gelato',
+    '0x1111111254fb6c44bAC0beD2854e76F90643097d': '1inch'
   }
 }
 
