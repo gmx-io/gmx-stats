@@ -238,10 +238,10 @@ export const tooltipLabelFormatterUnits = (label, args) => {
   const all = item && (item.payload.all)
 
   if (label.constructor !== Date) {
-    return `${label}, total: ${all}`
+    return all ? `${label}, total: ${all}` : label
   }
 
-  return `${date}, total: ${all}`
+  return all ? `${date}, total: ${all}` : date
 }
 
 export function tsToIso(ts) {

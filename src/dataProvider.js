@@ -1110,9 +1110,20 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
       return memo
     })
 
-    const BTC_WEIGHT = 0.25
-    const ETH_WEIGHT = 0.25
-    const STABLE_WEIGHT = 1 - BTC_WEIGHT - ETH_WEIGHT
+    let BTC_WEIGHT = 0
+    let ETH_WEIGHT = 0
+    let AVAX_WEIGHT = 0
+
+    if (chainName === "avalanche") {
+      BTC_WEIGHT = 0.166
+      ETH_WEIGHT = 0.166
+      AVAX_WEIGHT = 0.166
+    } else {
+      BTC_WEIGHT = 0.25
+      ETH_WEIGHT = 0.25
+    }
+
+    const STABLE_WEIGHT = 1 - BTC_WEIGHT - ETH_WEIGHT - AVAX_WEIGHT
     const GLP_START_PRICE = glpDataById[btcPrices[0].timestamp]?.glpPrice || 1.19
 
     const btcFirstPrice = btcPrices[0]?.value
@@ -1121,6 +1132,7 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
 
     const indexBtcCount = GLP_START_PRICE * BTC_WEIGHT / btcFirstPrice
     const indexEthCount = GLP_START_PRICE * ETH_WEIGHT / ethFirstPrice
+    const indexAvaxCount = GLP_START_PRICE * AVAX_WEIGHT / avaxFirstPrice
 
     const lpBtcCount = GLP_START_PRICE * 0.5 / btcFirstPrice
     const lpEthCount = GLP_START_PRICE * 0.5 / ethFirstPrice
@@ -1146,7 +1158,14 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
       lastGlpPrice = glpPrice
       const glpSupply = glpDataById[timestampGroup]?.glpSupply
       const dailyFees = feesDataById[timestampGroup]?.all
-      const syntheticPrice = indexBtcCount * btcPrice + indexEthCount * ethPrice + GLP_START_PRICE * STABLE_WEIGHT
+
+      const syntheticPrice = (
+        indexBtcCount * btcPrice
+        + indexEthCount * ethPrice
+        + indexAvaxCount * avaxPrice
+        + GLP_START_PRICE * STABLE_WEIGHT
+      )
+
       const lpBtcPrice = (lpBtcCount * btcPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(btcPrice / btcFirstPrice))
       const lpEthPrice = (lpEthCount * ethPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(ethPrice / ethFirstPrice))
       const lpAvaxPrice = (lpAvaxCount * avaxPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(avaxPrice / avaxFirstPrice))
@@ -1211,4 +1230,71 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
   }, [btcPrices, ethPrices, glpData, feesData])
 
   return [glpPerformanceChartData]
+}
+
+export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
+  const query = `{
+    globalStats(
+      first: 1000
+      orderBy: timestamp
+      orderDirection: desc
+      where: { period: "daily", timestamp_gte: ${from}, timestamp_lte: ${to} }
+    ) {
+      volume
+      volumeCumulative
+      totalRebateUsd
+      totalRebateUsdCumulative
+      discountUsd
+      discountUsdCumulative
+      referrersCount
+      referrersCountCumulative
+      referralCodesCount
+      referralCodesCountCumulative
+      timestamp
+    }
+  }`
+  const subgraph = chainName === "arbitrum" ? "gdev8317/gmx-arbitrum-referrals-staging" : ""
+  const [graphData, loading, error] = useGraph(query, { subgraph })
+
+  const data = graphData ? sortBy(graphData.globalStats, 'timestamp').map(item => {
+    const totalRebateUsd = item.totalRebateUsd / 1e30
+    const discountUsd = item.discountUsd / 1e30
+    return {
+      ...item,
+      volume: item.volume / 1e30,
+      volumeCumulative: item.volumeCumulative / 1e30,
+      totalRebateUsd,
+      totalRebateUsdCumulative: item.totalRebateUsdCumulative / 1e30,
+      discountUsd,
+      referrerRebateUsd: totalRebateUsd - discountUsd,
+      discountUsdCumulative: item.discountUsdCumulative / 1e30,
+      referralCodesCount: parseInt(item.referralCodesCount),
+      referralCodesCountCumulative: parseInt(item.referralCodesCountCumulative),
+      referrersCount: parseInt(item.referrersCount),
+      referrersCountCumulative: parseInt(item.referrersCountCumulative),
+    }
+  }) : null
+
+  // const prevUniqueCountCumulative = {}
+  // const data = graphData ? sortBy(graphData.userStats, 'timestamp').map(item => {
+  //   const newCountData = ['', 'Swap', 'Margin', 'MintBurn'].reduce((memo, type) => {
+  //     memo[`new${type}Count`] = prevUniqueCountCumulative[type]
+  //       ? item[`unique${type}CountCumulative`] - prevUniqueCountCumulative[type]
+  //       : item[`unique${type}Count`]
+  //     prevUniqueCountCumulative[type] = item[`unique${type}CountCumulative`]
+  //     return memo
+  //   }, {})
+  //   const oldCount = item.uniqueCount - newCountData.newCount
+  //   const oldPercent = (oldCount / item.uniqueCount * 100).toFixed(1)
+  //   return {
+  //     all: item.uniqueCount,
+  //     uniqueSum: item.uniqueSwapCount + item.uniqueMarginCount + item.uniqueMintBurnCount,
+  //     oldCount,
+  //     oldPercent,
+  //     ...newCountData,
+  //     ...item
+  //   }
+  // }) : null
+
+  return [data, loading, error]
 }
