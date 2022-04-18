@@ -108,6 +108,11 @@ function Referrals(props) {
     const totalReferrersCount = referralsData[referralsData.length - 1]?.referrersCountCumulative
     const prevTotalReferrersCount = referralsData[referralsData.length - 2]?.referrersCountCumulative
     const totalReferrersCountDelta = totalReferrersCount && prevTotalReferrersCount ? totalReferrersCount - prevTotalReferrersCount : null
+
+    const totalReferralsCount = referralsData[referralsData.length - 1]?.referralsCountCumulative
+    const prevTotalReferralsCount = referralsData[referralsData.length - 2]?.referralsCountCumulative
+    const totalReferralsCountDelta = totalReferralsCount && prevTotalReferralsCount ? totalReferralsCount - prevTotalReferralsCount : null
+
     return {
       totalVolume,
       totalVolumeDelta,
@@ -116,7 +121,9 @@ function Referrals(props) {
       totalReferrerRebateUsd,
       totalReferrerRebateUsdDelta,
       totalReferrersCount,
-      totalReferrersCountDelta
+      totalReferrersCountDelta,
+      totalReferralsCount,
+      totalReferralsCountDelta
     }
   }, [referralsData])
 
@@ -184,6 +191,15 @@ function Referrals(props) {
               {stats.totalReferrersCountDelta ?
                 <span className="total-stat-delta plus" title="Change since previous day">+{stats.totalReferrersCountDelta}</span> : null
               }
+            </div>
+          </> : <RiLoader5Fill size="3em" className="loader" />}
+        </div>
+        <div className="chart-cell stats">
+          {stats && stats.totalReferralsCount ? <>
+            <div className="total-stat-label">Referrals Registrations</div>
+            <div className="total-stat-value">
+              {stats.totalReferralsCount}
+              <span className="total-stat-delta plus" title="Change since previous day">+{stats.totalReferralsCountDelta}</span>
             </div>
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
