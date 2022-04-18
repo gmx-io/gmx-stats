@@ -86,7 +86,7 @@ function Referrals(props) {
 
   const from = fromValue ? +new Date(fromValue) / 1000 : undefined
   const to = toValue ? +new Date(toValue) / 1000 : NOW
-  const params = { from, to, chainName: props.match.params.chainName || 'arbitrum' }
+  const params = { from, to, chainName: props.match?.params?.chainName || 'arbitrum' }
 
   const [referralsData, referralsLoading] = useReferralsData(params)
   const stats = useMemo(() => {
