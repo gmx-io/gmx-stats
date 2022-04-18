@@ -199,7 +199,9 @@ function Referrals(props) {
             <div className="total-stat-label">Referrals Registrations</div>
             <div className="total-stat-value">
               {stats.totalReferralsCount}
-              <span className="total-stat-delta plus" title="Change since previous day">+{stats.totalReferralsCountDelta}</span>
+              {stats.totalReferralsCountDelta ?
+                <span className="total-stat-delta plus" title="Change since previous day">+{stats.totalReferralsCountDelta}</span> : null
+              }
             </div>
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
