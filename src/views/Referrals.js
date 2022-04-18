@@ -151,7 +151,7 @@ function Referrals(props) {
       }
       <div className="chart-grid">
         <div className="chart-cell stats">
-          {stats && stats.totalVolume ? <>
+          {stats ? <>
             <div className="total-stat-label">Referral Volume</div>
             <div className="total-stat-value">
               {formatNumber(stats.totalVolume, {currency: true})}
@@ -162,7 +162,7 @@ function Referrals(props) {
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
-          {stats && stats.totalDiscountUsd ? <>
+          {stats ? <>
             <div className="total-stat-label">Traders Rebates</div>
             <div className="total-stat-value">
               {formatNumber(stats.totalDiscountUsd, {currency: true})}
@@ -173,7 +173,7 @@ function Referrals(props) {
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
-          {stats && stats.totalReferrerRebateUsd ? <>
+          {stats ? <>
             <div className="total-stat-label">Affiliates Rebates</div>
             <div className="total-stat-value">
               {formatNumber(stats.totalReferrerRebateUsd, {currency: true})}
@@ -184,7 +184,7 @@ function Referrals(props) {
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
-          {stats && stats.totalReferrersCount ? <>
+          {stats ? <>
             <div className="total-stat-label">Affiliates Registered</div>
             <div className="total-stat-value">
               {stats.totalReferrersCount}
@@ -195,7 +195,7 @@ function Referrals(props) {
           </> : <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
-          {stats && stats.totalReferralsCount ? <>
+          {stats ? <>
             <div className="total-stat-label">Referrals Registrations</div>
             <div className="total-stat-value">
               {stats.totalReferralsCount}
