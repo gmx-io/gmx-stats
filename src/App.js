@@ -127,7 +127,7 @@ const App = () => {
             <Route exact path="/avalanche" render={(props) => (
               <Avalanche {...props} mode={mode} />
             )} />
-            <Route exact path="/referrals" render={(props) => (
+            <Route exact path="/referrals/:chainName" render={(props) => (
               <Referrals {...props} mode={mode} />
             )} />
             <Route exact path="/trading" component={Trading} />

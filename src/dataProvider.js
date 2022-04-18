@@ -1250,6 +1250,8 @@ export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName 
       referrersCountCumulative
       referralCodesCount
       referralCodesCountCumulative
+      referralsCount
+      referralsCountCumulative
       timestamp
     }
   }`
@@ -1272,29 +1274,10 @@ export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName 
       referralCodesCountCumulative: parseInt(item.referralCodesCountCumulative),
       referrersCount: parseInt(item.referrersCount),
       referrersCountCumulative: parseInt(item.referrersCountCumulative),
+      referralsCount: parseInt(item.referralsCount),
+      referralsCountCumulative: parseInt(item.referralsCountCumulative),
     }
   }) : null
-
-  // const prevUniqueCountCumulative = {}
-  // const data = graphData ? sortBy(graphData.userStats, 'timestamp').map(item => {
-  //   const newCountData = ['', 'Swap', 'Margin', 'MintBurn'].reduce((memo, type) => {
-  //     memo[`new${type}Count`] = prevUniqueCountCumulative[type]
-  //       ? item[`unique${type}CountCumulative`] - prevUniqueCountCumulative[type]
-  //       : item[`unique${type}Count`]
-  //     prevUniqueCountCumulative[type] = item[`unique${type}CountCumulative`]
-  //     return memo
-  //   }, {})
-  //   const oldCount = item.uniqueCount - newCountData.newCount
-  //   const oldPercent = (oldCount / item.uniqueCount * 100).toFixed(1)
-  //   return {
-  //     all: item.uniqueCount,
-  //     uniqueSum: item.uniqueSwapCount + item.uniqueMarginCount + item.uniqueMintBurnCount,
-  //     oldCount,
-  //     oldPercent,
-  //     ...newCountData,
-  //     ...item
-  //   }
-  // }) : null
 
   return [data, loading, error]
 }
