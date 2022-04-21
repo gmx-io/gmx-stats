@@ -44,6 +44,11 @@ const FIRST_DATE_TS = parseInt(+(new Date(2021, 7, 31)) / 1000)
 
 function fillNa(arr, keys) {
   const prevValues = {}
+  if (!keys && arr.length > 0) {
+    keys = Object.keys(arr[0])
+    delete keys.timestamp
+    delete keys.id
+  }
   for (const el of arr) {
     for (const key of keys) {
       if (!el[key]) {
@@ -1033,7 +1038,8 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
     
     let prevGlpSupply
     let prevAum
-    return sortBy(data.glpStats, item => item[timestampProp]).filter(item => item[timestampProp] % 86400 === 0).reduce((memo, item) => {
+
+    let ret = sortBy(data.glpStats, item => item[timestampProp]).filter(item => item[timestampProp] % 86400 === 0).reduce((memo, item) => {
       const last = memo[memo.length - 1]
 
       const aum = Number(item.aumInUsdg) / 1e18
@@ -1085,6 +1091,8 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
       return item
     })
 
+    ret = fillNa(ret)
+    return ret
   }, [data])
 
   return [glpChartData, loading, error]
