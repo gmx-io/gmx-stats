@@ -194,7 +194,8 @@ const knownSwapSources = {
     '0x409e377a7affb1fd3369cfc24880ad58895d1dd9': 'Dodo',
     '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean',
     '0x7c5c4af1618220c090a6863175de47afb20fa9df': 'Gelato',
-    '0x1111111254fb6c44bAC0beD2854e76F90643097d': '1inch'
+    '0x1111111254fb6c44bAC0beD2854e76F90643097d': '1inch',
+    '0xdef171fe48cf0115b1d80b88dc8eab59176fee57': 'ParaSwap'
   }
 }
 
