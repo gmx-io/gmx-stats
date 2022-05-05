@@ -195,7 +195,8 @@ const knownSwapSources = {
     '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean',
     '0x7c5c4af1618220c090a6863175de47afb20fa9df': 'Gelato',
     '0x1111111254fb6c44bac0bed2854e76f90643097d': '1inch',
-    '0xdef171fe48cf0115b1d80b88dc8eab59176fee57': 'ParaSwap'
+    '0xdef171fe48cf0115b1d80b88dc8eab59176fee57': 'ParaSwap',
+    '0x2ecf2a2e74b19aab2a62312167aff4b78e93b6c5': 'Aave',
   }
 }
 
