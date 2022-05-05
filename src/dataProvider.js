@@ -168,7 +168,7 @@ const knownSwapSources = {
   arbitrum: {
     '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX', // Router
     '0x09f77e8a13de9a35a7231028187e9fd5db8a2acb': 'GMX', // Orderbook
-    '0x98a00666CfCb2BA5A405415C2BF6547C63bf5491': 'GMX', // PositionManager old
+    '0x98a00666cfcb2ba5a405415c2bf6547c63bf5491': 'GMX', // PositionManager old
     '0x87a4088bd721f83b6c2e5102e2fa47022cb1c831': 'GMX', // PositionManager
     '0x7257ac5d0a0aac04aa7ba2ac0a6eb742e332c3fb': 'GMX', // OrderExecutor
     '0x1a0ad27350cccd6f7f168e052100b4960efdb774': 'GMX', // FastPriceFeed
@@ -183,7 +183,7 @@ const knownSwapSources = {
     '0x9ba57a1d3f6c61ff500f598f16b97007eb02e346': 'Vovo', // Vovo ETH UP USDC (veuUSDC)
     '0xfa82f1ba00b0697227e2ad6c668abb4c50ca0b1f': 'JonesDAO',
     '0x226cb17a52709034e2ec6abe0d2f0a9ebcec1059': 'WardenSwap',
-    '0x1111111254fb6c44bAC0beD2854e76F90643097d': '1inch'
+    '0x1111111254fb6c44bac0bed2854e76f90643097d': '1inch',
   },
   avalanche: {
     '0x4296e307f108b2f583ff2f7b7270ee7831574ae5': 'GMX',
@@ -194,7 +194,7 @@ const knownSwapSources = {
     '0x409e377a7affb1fd3369cfc24880ad58895d1dd9': 'Dodo',
     '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean',
     '0x7c5c4af1618220c090a6863175de47afb20fa9df': 'Gelato',
-    '0x1111111254fb6c44bAC0beD2854e76F90643097d': '1inch',
+    '0x1111111254fb6c44bac0bed2854e76f90643097d': '1inch',
     '0xdef171fe48cf0115b1d80b88dc8eab59176fee57': 'ParaSwap'
   }
 }
