@@ -286,7 +286,14 @@ function Arbitrum(props) {
             title="Glp Price Comparison"
             loading={glpLoading}
             data={glpPerformanceData}
-            csvFields={[{key: 'syntheticPrice'}, {key: 'glpPrice'}, {key: 'glpPlusFees'}, {key: 'lpBtcPrice'}, {key: 'lpEthPrice'}]}
+            csvFields={[
+              {key: 'syntheticPrice'},
+              {key: 'glpPrice'},
+              {key: 'glpPlusFees'},
+              {key: 'lpBtcPrice'},
+              {key: 'lpEthPrice'},
+              {key: 'performanceSyntheticCollectedFees'},
+            ]}
           >
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
               <LineChart data={glpPerformanceData} syncId="syncGlp">
@@ -522,7 +529,7 @@ function Arbitrum(props) {
               loading={usersLoading}
               title="New vs. Existing Users"
               data={usersData?.map(item => ({ ...item, all: item.uniqueCount }))}
-              yaxisDataKey="newCount"
+              yaxisDataKey="uniqueCount"
               rightYaxisDataKey="oldPercent"
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
