@@ -1124,7 +1124,7 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
     let ETH_WEIGHT = 0
     let AVAX_WEIGHT = 0
 
-    if (chainName === "avalanche" && false) {
+    if (chainName === "avalanche") {
       BTC_WEIGHT = 0.166
       ETH_WEIGHT = 0.166
       AVAX_WEIGHT = 0.166

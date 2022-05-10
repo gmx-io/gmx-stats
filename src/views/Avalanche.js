@@ -316,7 +316,7 @@ function Avalanche(props) {
                 <span style={{color: COLORS[3]}}>Glp with fees</span> is based on GLP share of fees received and excluding esGMX rewards<br/>
                 <span style={{color: COLORS[0]}}>% of Index (with fees)</span> is Glp with fees / Index Price * 100<br/>
                 <span style={{color: COLORS[4]}}>% of LP TOKEN-USDC (with fees)</span> is Glp Price with fees / LP TOKEN-USDC * 100<br/>
-                <span style={{color: COLORS[2]}}>Index Price</span> is 25% BTC, 25% ETH, 50% USDC
+                <span style={{color: COLORS[2]}}>Index Price</span> is 16.6% AVAX, 16.6% BTC, 16.6% ETH and 50% USDC
               </p>
             </div>
           </ChartWrapper>
