@@ -26,10 +26,17 @@ export default function DateRangeSelect({ options, startDate, endDate, onChange 
   }, [startDate, endDate])
 
   const onSelectItem = (option) => {
+    if (option.id == 4) {
+      onChange([null, null])
+    }
     const end = new Date()
     const start = moment().subtract(option.id, 'month').toDate()
     setSelectedDateRangeOption(option.id)
-    onChange([start, end])
+    if (option.id == 4) {
+      onChange([null, null])
+    } else {
+      onChange([start, end])
+    }
   }
 
   useEffect(() => {
@@ -91,7 +98,7 @@ export default function DateRangeSelect({ options, startDate, endDate, onChange 
   };
 
   return (
-    <div>
+    <div className="date-range-selector-wrapper">
       <Select
         placeholder="Select"
         multi

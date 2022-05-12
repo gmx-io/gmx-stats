@@ -514,10 +514,16 @@ a, a:active, a:visited {
   right: 0;
 }
 
+.date-range-selector-wrapper > div {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .react-dropdown-select-dropdown {
   position: absolute;
   top: 43px;
-  left: -1px;
+  right: 0px;
+  left: unset!important;
   border: 1px solid #ccc;
   width: 348px;
   padding: 0;
@@ -528,7 +534,7 @@ a, a:active, a:visited {
   box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%);
   overflow: auto;
   z-index: 9;
-  max-height: 430px!important;
+  max-height: 460px!important;
   width: 270px!important;
 }
 

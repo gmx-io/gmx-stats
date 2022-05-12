@@ -182,6 +182,9 @@ function Avalanche(props) {
   }, {
     label: "Last 3 Months",
     id: 3
+  }, {
+    label: "All time",
+    id: 4
   }]
 
   return (
