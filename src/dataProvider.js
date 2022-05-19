@@ -184,6 +184,8 @@ const knownSwapSources = {
     '0xfa82f1ba00b0697227e2ad6c668abb4c50ca0b1f': 'JonesDAO',
     '0x226cb17a52709034e2ec6abe0d2f0a9ebcec1059': 'WardenSwap',
     '0x1111111254fb6c44bac0bed2854e76f90643097d': '1inch',
+    '0x6d7a3177f3500bea64914642a49d0b5c0a7dae6d': 'deBridge',
+    '0xc30141b657f4216252dc59af2e7cdb9d8792e1b0': 'socket.tech'
   },
   avalanche: {
     '0x4296e307f108b2f583ff2f7b7270ee7831574ae5': 'GMX',
@@ -611,14 +613,31 @@ export function useSwapSources({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
     }
 
     const {a, b, c, d, e} = graphData
-    let ret = chain([...a, ...b, ...c, ...d, ...e])
+    const all = [...a, ...b, ...c, ...d, ...e]
+
+    const totalVolumeBySource = a.reduce((acc, item) => {
+      const source = knownSwapSources[chainName][item.source] || item.source
+      if (!acc[source]) {
+        acc[source] = 0
+      }
+      acc[source] += item.swap / 1e30
+      return acc
+    }, {})
+    const topVolumeSources = new Set(
+      Object.entries(totalVolumeBySource).sort((a, b) => b[1] - a[1]).map(item => item[0]).slice(0, 30)
+    )
+
+    let ret = chain(all)
       .groupBy(item => parseInt(item.timestamp / 86400) * 86400)
       .map((values, timestamp) => {
         let all = 0
         const retItem = {
           timestamp: Number(timestamp),
           ...values.reduce((memo, item) => {
-            const source = knownSwapSources[chainName][item.source] || item.source
+            let source = knownSwapSources[chainName][item.source] || item.source
+            if (!topVolumeSources.has(source)) {
+              source = 'Other'
+            }
             if (item.swap != 0) {
               const volume = item.swap / 1e30
               memo[source] = memo[source] || 0
