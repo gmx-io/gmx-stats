@@ -77,7 +77,7 @@ function dateToValue(date) {
 }
 
 function Avalanche(props) {
-  const [dataRange, setDataRange] = useState({fromValue: new Date("2022-01-06"), toValue: null})
+  const [dataRange, setDataRange] = useState({fromValue: moment().subtract(2, 'month').toDate(), toValue: null})
 
   const setDateRange = useCallback(range => {
     let from = dateToValue(new Date(Date.now() - range * 1000))
@@ -97,6 +97,7 @@ function Avalanche(props) {
   const [fundingRateData, fundingRateLoading] = useFundingRateData(params)
 
   const [volumeData, volumeLoading] = useVolumeData(params)
+  // const [volumeData, volumeLoading] = useVolumeDataFromServer(params)
   // const [totalVolume] = useTotalVolumeFromServer()
   const [totalVolume, totalVolumeDelta] = useMemo(() => {
     if (!volumeData) {

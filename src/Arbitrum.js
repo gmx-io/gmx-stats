@@ -76,7 +76,7 @@ function Arbitrum(props) {
   const DEFAULT_GROUP_PERIOD = 86400
   const [groupPeriod, setGroupPeriod] = useState(DEFAULT_GROUP_PERIOD)
 
-  const [dataRange, setDataRange] = useState({ fromValue: null, toValue: null })
+  const [dataRange, setDataRange] = useState({ fromValue: moment().subtract(2, 'month').toDate(), toValue: null })
 
   const { mode } = props
 
