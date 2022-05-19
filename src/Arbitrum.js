@@ -80,7 +80,7 @@ function Arbitrum(props) {
 
   const { mode } = props
 
-  const from = dataRange.fromValue ? Math.floor(+new Date(dataRange.fromValue) / 1000) : Math.floor(moment().subtract(2, 'month').toDate() / 1000)
+  const from = dataRange.fromValue ? Math.floor(+new Date(dataRange.fromValue) / 1000) : undefined
   const to = dataRange.toValue ? Math.floor(+new Date(dataRange.toValue) / 1000) : NOW
 
   const params = { from, to, groupPeriod }

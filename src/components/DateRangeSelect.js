@@ -55,7 +55,8 @@ export default function DateRangeSelect({ options, startDate, endDate, onChange 
     const start = startDate && startDate.toISOString().slice(0, 10)
     const end = endDate && endDate.toISOString().slice(0, 10)
     return (<div style={{ cursor: 'pointer' }}>
-      {start} ~ {end}
+      { startDate && endDate && `${start} ~ ${end}`}
+      { (!startDate || !endDate) && 'All time' }
     </div>)
   };
 

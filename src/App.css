@@ -558,6 +558,7 @@ a, a:active, a:visited {
   min-height: 36px;
   pointer-events: all;
   max-width: fit-content;
+  min-width: 210px!important;
   background-color: white;
   padding-left: 1rem!important;
   padding-right: 1rem!important;
@@ -600,21 +601,21 @@ a, a:active, a:visited {
 }
 
 .date-range-item__label {
-  color: black;
+  color: #A0A3C4;
 }
 
-.date-range-item.selected,
-.date-range-item:hover {
-  background: #EEE!important;
+.date-range-item.selected .date-range-item__label, 
+.date-range-item:hover .date-range-item__label {
+  color: #444;
 }
 
 .App.dark .date-range-item__label {
-  color: white;
+  color: #A0A3C4;
 }
 
 .App.dark .date-range-item.selected .date-range-item__label, 
 .App.dark .date-range-item:hover .date-range-item__label {
-  color: black;
+  color: white;
 }
 
 .date-range-custom {
