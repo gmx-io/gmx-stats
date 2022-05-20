@@ -97,16 +97,17 @@ function Avalanche(props) {
   const [fundingRateData, fundingRateLoading] = useFundingRateData(params)
 
   const [volumeData, volumeLoading] = useVolumeData(params)
+  const [totalVolumeData] = useVolumeData({ chainName: 'avalanche' })
   // const [volumeData, volumeLoading] = useVolumeDataFromServer(params)
   // const [totalVolume] = useTotalVolumeFromServer()
   const [totalVolume, totalVolumeDelta] = useMemo(() => {
-    if (!volumeData) {
+    if (!totalVolumeData) {
       return []
     }
-    const total = volumeData[volumeData.length - 1]?.cumulative
-    const delta = total - volumeData[volumeData.length - 2]?.cumulative
+    const total = totalVolumeData[totalVolumeData.length - 1]?.cumulative
+    const delta = total - totalVolumeData[totalVolumeData.length - 2]?.cumulative
     return [total, delta]
-  }, [volumeData])
+  }, [totalVolumeData])
 
   const [feesData, feesLoading] = useFeesData(params)
   const [totalFees, totalFeesDelta] = useMemo(() => {
