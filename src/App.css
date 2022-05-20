@@ -534,7 +534,7 @@ a, a:active, a:visited {
   box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%);
   overflow: auto;
   z-index: 9;
-  max-height: 460px!important;
+  max-height: 475px!important;
   width: 270px!important;
 }
 
@@ -558,7 +558,7 @@ a, a:active, a:visited {
   min-height: 36px;
   pointer-events: all;
   max-width: fit-content;
-  min-width: 210px!important;
+  min-width: 215px!important;
   background-color: white;
   padding-left: 1rem!important;
   padding-right: 1rem!important;
@@ -575,7 +575,7 @@ a, a:active, a:visited {
 }
 
 .react-dropdown-select:hover {
-  background-color: #EEE;
+  /* background-color: #EEE; */
 }
 
 .App.dark .react-dropdown-select {
@@ -584,7 +584,7 @@ a, a:active, a:visited {
 }
 
 .App.dark .react-dropdown-select:hover {
-  background-color: #101124;
+  /* background-color: #101124; */
 }
 
 .date-range-items {
@@ -689,6 +689,20 @@ a, a:active, a:visited {
 
 .rdrDayPassive {
   opacity: 0.5;
+}
+
+.page-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.page-title-section h1 {
+  margin: 0;
+}
+
+.page-description {
+  margin: 0;
 }
 
 @media (max-width: 1033px) {

@@ -188,16 +188,20 @@ function Arbitrum(props) {
 
   return (
     <div className="Home">
-      <h1>Analytics / Arbitrum</h1>
-      {lastSubgraphBlock && lastBlock &&
-        <p className={cx('page-description', { warning: isObsolete })} style={{ marginTop: '-1rem' }}>
-          {isObsolete && "Data is obsolete. "}
-          Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
-          &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
-        </p>
-      }
-      <div className="form">
-        <DateRangeSelect options={dateRangeOptions} startDate={dataRange.fromValue} endDate={dataRange.toValue} onChange={onDateRangeChange} />
+      <div className="page-title-section">
+        <div className="page-title-block">
+          <h1>Analytics / Arbitrum</h1>
+          {lastSubgraphBlock && lastBlock &&
+            <p className={cx('page-description', { warning: isObsolete })}>
+              {isObsolete && "Data is obsolete. "}
+              Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
+              &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
+            </p>
+          }
+        </div>
+        <div className="form">
+          <DateRangeSelect options={dateRangeOptions} startDate={dataRange.fromValue} endDate={dataRange.toValue} onChange={onDateRangeChange} />
+        </div>
       </div>
       {/* {showForm &&
         <div className="form">
