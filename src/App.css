@@ -712,6 +712,17 @@ a, a:active, a:visited {
 }
 
 @media all and (max-width: 600px) {
+  .page-title-section {
+    display: flex;
+    justify-content: unset;
+    align-items: unset;
+    flex-direction: column;
+  }
+
+  .page-title-section .form {
+    margin-top: 1rem;
+  }
+
   .chart-grid {
     display: grid;
     grid-template-columns: 1fr;
