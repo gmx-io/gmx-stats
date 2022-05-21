@@ -97,7 +97,7 @@ function Avalanche(props) {
   const [fundingRateData, fundingRateLoading] = useFundingRateData(params)
 
   const [volumeData, volumeLoading] = useVolumeData(params)
-  const [totalVolumeData] = useVolumeData({ chainName: 'avalanche' })
+  const [totalVolumeData, totalVolumeLoading] = useVolumeData({ chainName: 'avalanche' })
   // const [volumeData, volumeLoading] = useVolumeDataFromServer(params)
   // const [totalVolume] = useTotalVolumeFromServer()
   const [totalVolume, totalVolumeDelta] = useMemo(() => {
@@ -110,14 +110,15 @@ function Avalanche(props) {
   }, [totalVolumeData])
 
   const [feesData, feesLoading] = useFeesData(params)
+  const [totalFeesData, totalFeesLoading] = useFeesData({ chainName: 'avalanche' })
   const [totalFees, totalFeesDelta] = useMemo(() => {
-    if (!feesData) {
+    if (!totalFeesData) {
       return []
     }
-    const total = feesData[feesData.length - 1]?.cumulative
-    const delta = total - feesData[feesData.length - 2]?.cumulative
+    const total = totalFeesData[totalFeesData.length - 1]?.cumulative
+    const delta = total - totalFeesData[totalFeesData.length - 2]?.cumulative
     return [total, delta]
-  }, [feesData])
+  }, [totalFeesData])
 
   const [glpData, glpLoading] = useGlpData(params)
   const [totalAum, totalAumDelta] = useMemo(() => {
@@ -217,7 +218,7 @@ function Avalanche(props) {
               }
             </div>
           </> : null}
-          {volumeLoading && <RiLoader5Fill size="3em" className="loader" />}
+          {totalVolumeLoading && <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {totalFees ? <>
@@ -229,7 +230,7 @@ function Avalanche(props) {
               }
             </div>
           </> : null}
-          {feesLoading && <RiLoader5Fill size="3em" className="loader" />}
+          {totalFeesLoading && <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {totalAum ? <>
