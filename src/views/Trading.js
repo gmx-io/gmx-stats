@@ -2,8 +2,8 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
 import * as strftime from 'strftime'
 
-import { urlWithParams, tsToIso } from './helpers'
-import { useRequest } from './dataProvider'
+import { urlWithParams, tsToIso } from '../helpers'
+import { useRequest } from '../dataProvider'
 
 import {
   LineChart,

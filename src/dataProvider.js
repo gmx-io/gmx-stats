@@ -5,14 +5,37 @@ import fetch from 'cross-fetch';
 import * as ethers from 'ethers'
 
 import { fillPeriods } from './helpers'
+import { addresses, getAddress, ARBITRUM, AVALANCHE } from './addresses'
 
 const BigNumber = ethers.BigNumber
 const formatUnits = ethers.utils.formatUnits
 const { JsonRpcProvider } = ethers.providers
 
+import RewardReader from '../abis/RewardReader.json'
+import GlpManager from '../abis/GlpManager.json'
+import Token from '../abis/v1/Token.json'
+
 const providers = {
   arbitrum: new JsonRpcProvider('https://arb1.arbitrum.io/rpc'),
   avalanche: new JsonRpcProvider('https://api.avax.network/ext/bc/C/rpc')
+}
+
+function getProvider(chainName) {
+  if (!(chainName in providers)) {
+    throw new Error(`Unknown chain ${chainName}`)
+  }
+  return providers[chainName]
+}
+
+function getChainId(chainName) {
+  const chainId = {
+    arbitrum: ARBITRUM,
+    avalanche: AVALANCHE
+  }[chainName]
+  if (!chainId) {
+    throw new Error(`Unknown chain ${chainName}`)
+  }
+  return chainId
 }
 
 const DEFAULT_GROUP_PERIOD = 86400
@@ -21,6 +44,11 @@ const FIRST_DATE_TS = parseInt(+(new Date(2021, 7, 31)) / 1000)
 
 function fillNa(arr, keys) {
   const prevValues = {}
+  if (!keys && arr.length > 0) {
+    keys = Object.keys(arr[0])
+    delete keys.timestamp
+    delete keys.id
+  }
   for (const el of arr) {
     for (const key of keys) {
       if (!el[key]) {
@@ -33,6 +61,70 @@ function fillNa(arr, keys) {
     }
   }
   return arr
+}
+
+export async function queryEarnData(chainName, account) {
+  const provider = getProvider(chainName)
+  const chainId = getChainId(chainName)
+  const rewardReader = new ethers.Contract(getAddress(chainId, 'RewardReader'), RewardReader.abi, provider)
+  const glpContract = new ethers.Contract(getAddress(chainId, 'GLP'), Token.abi, provider)
+  const glpManager = new ethers.Contract(getAddress(chainId, 'GlpManager'), GlpManager.abi, provider)
+
+  let depositTokens
+  let rewardTrackersForDepositBalances
+  let rewardTrackersForStakingInfo
+
+  if (chainId === ARBITRUM) {
+    depositTokens = ['0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a', '0xf42Ae1D54fd613C9bb14810b0588FaAa09a426cA', '0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0x35247165119B69A40edD5304969560D0ef486921', '0x4277f8F2c384827B5273592FF7CeBd9f2C1ac258']
+    rewardTrackersForDepositBalances = ['0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0xd2D1162512F927a7e282Ef43a362659E4F2a728F', '0xd2D1162512F927a7e282Ef43a362659E4F2a728F', '0x4e971a87900b931fF39d1Aad67697F49835400b6']
+    rewardTrackersForStakingInfo = ['0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0xd2D1162512F927a7e282Ef43a362659E4F2a728F', '0x1aDDD80E6039594eE970E5872D247bf0414C8903', '0x4e971a87900b931fF39d1Aad67697F49835400b6']
+  } else {
+    depositTokens = ['0x62edc0692BD897D2295872a9FFCac5425011c661', '0xFf1489227BbAAC61a9209A08929E4c2a526DdD17', '0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342', '0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x8087a341D32D445d9aC8aCc9c14F5781E04A26d2', '0x01234181085565ed162a948b6a5e88758CD7c7b8']
+    rewardTrackersForDepositBalances = ['0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342', '0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342', '0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0xd2D1162512F927a7e282Ef43a362659E4F2a728F']
+    rewardTrackersForStakingInfo = ['0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342', '0x908C4D94D34924765f1eDc22A1DD098397c59dD4', '0x4d268a7d4C16ceB5a606c173Bd974984343fea13', '0x9e295B5B976a184B14aD8cd72413aD846C299660', '0xd2D1162512F927a7e282Ef43a362659E4F2a728F']
+  }
+
+  const [
+    balances,
+    stakingInfo,
+    glpTotalSupply,
+    glpAum,
+    gmxPrice
+  ] = await Promise.all([
+    rewardReader.getDepositBalances(account, depositTokens, rewardTrackersForDepositBalances),
+    rewardReader.getStakingInfo(account, rewardTrackersForStakingInfo).then(info => {
+      return rewardTrackersForStakingInfo.map((_, i) => {
+        return info.slice(i * 5, (i + 1) * 5)
+      })
+    }),
+    glpContract.totalSupply(),
+    glpManager.getAumInUsdg(true),
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids=gmx&vs_currencies=usd').then(async res => {
+      const j = await res.json()
+      return j['gmx']['usd']
+    })
+  ])
+
+  const glpPrice = (glpAum / 1e18) / (glpTotalSupply / 1e18)
+  const now = new Date()
+
+  return {
+    GLP: {
+      stakedGLP: balances[5] / 1e18,
+      pendingETH: stakingInfo[4][0] / 1e18,
+      pendingEsGMX: stakingInfo[3][0] / 1e18,
+      glpPrice
+    },
+    GMX: {
+      stakedGMX: balances[0] / 1e18,
+      stakedEsGMX: balances[1] / 1e18,
+      pendingETH: stakingInfo[2][0] / 1e18,
+      pendingEsGMX: stakingInfo[0][0] / 1e18,
+      gmxPrice
+    },
+    timestamp: parseInt(now / 1000),
+    datetime: now.toISOString()
+  }
 }
 
 export const tokenDecimals = {
@@ -74,16 +166,39 @@ function getTokenDecimals(token) {
 
 const knownSwapSources = {
   arbitrum: {
-    '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX',
-    '0x09f77e8a13de9a35a7231028187e9fd5db8a2acb': 'GMX',
+    '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX', // Router
+    '0x09f77e8a13de9a35a7231028187e9fd5db8a2acb': 'GMX', // Orderbook
+    '0x98a00666cfcb2ba5a405415c2bf6547c63bf5491': 'GMX', // PositionManager old
+    '0x87a4088bd721f83b6c2e5102e2fa47022cb1c831': 'GMX', // PositionManager
+    '0x7257ac5d0a0aac04aa7ba2ac0a6eb742e332c3fb': 'GMX', // OrderExecutor
+    '0x1a0ad27350cccd6f7f168e052100b4960efdb774': 'GMX', // FastPriceFeed
     '0x3b6067d4caa8a14c63fdbe6318f27a0bbc9f9237': 'Dodo',
-    '0x11111112542d85b3ef69ae05771c2dccff4faa26': '1inch'
+    '0x11111112542d85b3ef69ae05771c2dccff4faa26': '1inch',
+    '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean', // OpenOceanExchangeProxy
+    '0x4775af8fef4809fe10bf05867d2b038a4b5b2146': 'Gelato',
+    '0x5a9fd7c39a6c488e715437d7b1f3c823d5596ed1': 'LiFiDiamond',
+    '0x1d838be5d58cc131ae4a23359bc6ad2dddb8b75a': 'Vovo', // Vovo BTC UP USDC (vbuUSDC)
+    '0xc4bed5eeeccbe84780c44c5472e800d3a5053454': 'Vovo', // Vovo ETH UP USDC (veuUSDC)
+    '0xe40beb54ba00838abe076f6448b27528dd45e4f0': 'Vovo', // Vovo BTC UP USDC (vbuUSDC)
+    '0x9ba57a1d3f6c61ff500f598f16b97007eb02e346': 'Vovo', // Vovo ETH UP USDC (veuUSDC)
+    '0xfa82f1ba00b0697227e2ad6c668abb4c50ca0b1f': 'JonesDAO',
+    '0x226cb17a52709034e2ec6abe0d2f0a9ebcec1059': 'WardenSwap',
+    '0x1111111254fb6c44bac0bed2854e76f90643097d': '1inch',
+    '0x6d7a3177f3500bea64914642a49d0b5c0a7dae6d': 'deBridge',
+    '0xc30141b657f4216252dc59af2e7cdb9d8792e1b0': 'socket.tech'
   },
   avalanche: {
     '0x4296e307f108b2f583ff2f7b7270ee7831574ae5': 'GMX',
     '0x5f719c2f1095f7b9fc68a68e35b51194f4b6abe8': 'GMX',
+    '0x7d9d108445f7e59a67da7c16a2ceb08c85b76a35': 'GMX', // FastPriceFeed
+    '0xf2ec2e52c3b5f8b8bd5a3f93945d05628a233216': 'GMX', // PositionManager
     '0xc4729e56b831d74bbc18797e0e17a295fa77488c': 'Yak',
-    '0x409e377a7affb1fd3369cfc24880ad58895d1dd9': 'Dodo'
+    '0x409e377a7affb1fd3369cfc24880ad58895d1dd9': 'Dodo',
+    '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean',
+    '0x7c5c4af1618220c090a6863175de47afb20fa9df': 'Gelato',
+    '0x1111111254fb6c44bac0bed2854e76f90643097d': '1inch',
+    '0xdef171fe48cf0115b1d80b88dc8eab59176fee57': 'ParaSwap',
+    '0x2ecf2a2e74b19aab2a62312167aff4b78e93b6c5': 'ParaSwap',
   }
 }
 
@@ -498,14 +613,31 @@ export function useSwapSources({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
     }
 
     const {a, b, c, d, e} = graphData
-    let ret = chain([...a, ...b, ...c, ...d, ...e])
+    const all = [...a, ...b, ...c, ...d, ...e]
+
+    const totalVolumeBySource = a.reduce((acc, item) => {
+      const source = knownSwapSources[chainName][item.source] || item.source
+      if (!acc[source]) {
+        acc[source] = 0
+      }
+      acc[source] += item.swap / 1e30
+      return acc
+    }, {})
+    const topVolumeSources = new Set(
+      Object.entries(totalVolumeBySource).sort((a, b) => b[1] - a[1]).map(item => item[0]).slice(0, 30)
+    )
+
+    let ret = chain(all)
       .groupBy(item => parseInt(item.timestamp / 86400) * 86400)
       .map((values, timestamp) => {
         let all = 0
         const retItem = {
           timestamp: Number(timestamp),
           ...values.reduce((memo, item) => {
-            const source = knownSwapSources[chainName][item.source] || item.source
+            let source = knownSwapSources[chainName][item.source] || item.source
+            if (!topVolumeSources.has(source)) {
+              source = 'Other'
+            }
             if (item.swap != 0) {
               const volume = item.swap / 1e30
               memo[source] = memo[source] || 0
@@ -947,7 +1079,8 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
     
     let prevGlpSupply
     let prevAum
-    return sortBy(data.glpStats, item => item[timestampProp]).filter(item => item[timestampProp] % 86400 === 0).reduce((memo, item) => {
+
+    let ret = sortBy(data.glpStats, item => item[timestampProp]).filter(item => item[timestampProp] % 86400 === 0).reduce((memo, item) => {
       const last = memo[memo.length - 1]
 
       const aum = Number(item.aumInUsdg) / 1e18
@@ -999,6 +1132,8 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
       return item
     })
 
+    ret = fillNa(ret)
+    return ret
   }, [data])
 
   return [glpChartData, loading, error]
@@ -1024,9 +1159,20 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
       return memo
     })
 
-    const BTC_WEIGHT = 0.25
-    const ETH_WEIGHT = 0.25
-    const STABLE_WEIGHT = 1 - BTC_WEIGHT - ETH_WEIGHT
+    let BTC_WEIGHT = 0
+    let ETH_WEIGHT = 0
+    let AVAX_WEIGHT = 0
+
+    if (chainName === "avalanche") {
+      BTC_WEIGHT = 0.166
+      ETH_WEIGHT = 0.166
+      AVAX_WEIGHT = 0.166
+    } else {
+      BTC_WEIGHT = 0.25
+      ETH_WEIGHT = 0.25
+    }
+
+    const STABLE_WEIGHT = 1 - BTC_WEIGHT - ETH_WEIGHT - AVAX_WEIGHT
     const GLP_START_PRICE = glpDataById[btcPrices[0].timestamp]?.glpPrice || 1.19
 
     const btcFirstPrice = btcPrices[0]?.value
@@ -1035,6 +1181,7 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
 
     const indexBtcCount = GLP_START_PRICE * BTC_WEIGHT / btcFirstPrice
     const indexEthCount = GLP_START_PRICE * ETH_WEIGHT / ethFirstPrice
+    const indexAvaxCount = GLP_START_PRICE * AVAX_WEIGHT / avaxFirstPrice
 
     const lpBtcCount = GLP_START_PRICE * 0.5 / btcFirstPrice
     const lpEthCount = GLP_START_PRICE * 0.5 / ethFirstPrice
@@ -1060,7 +1207,14 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
       lastGlpPrice = glpPrice
       const glpSupply = glpDataById[timestampGroup]?.glpSupply
       const dailyFees = feesDataById[timestampGroup]?.all
-      const syntheticPrice = indexBtcCount * btcPrice + indexEthCount * ethPrice + GLP_START_PRICE * STABLE_WEIGHT
+
+      const syntheticPrice = (
+        indexBtcCount * btcPrice
+        + indexEthCount * ethPrice
+        + indexAvaxCount * avaxPrice
+        + GLP_START_PRICE * STABLE_WEIGHT
+      )
+
       const lpBtcPrice = (lpBtcCount * btcPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(btcPrice / btcFirstPrice))
       const lpEthPrice = (lpEthCount * ethPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(ethPrice / ethFirstPrice))
       const lpAvaxPrice = (lpAvaxCount * avaxPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(avaxPrice / avaxFirstPrice))
@@ -1125,4 +1279,54 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
   }, [btcPrices, ethPrices, glpData, feesData])
 
   return [glpPerformanceChartData]
+}
+
+export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
+  const query = `{
+    globalStats(
+      first: 1000
+      orderBy: timestamp
+      orderDirection: desc
+      where: { period: "daily", timestamp_gte: ${from}, timestamp_lte: ${to} }
+    ) {
+      volume
+      volumeCumulative
+      totalRebateUsd
+      totalRebateUsdCumulative
+      discountUsd
+      discountUsdCumulative
+      referrersCount
+      referrersCountCumulative
+      referralCodesCount
+      referralCodesCountCumulative
+      referralsCount
+      referralsCountCumulative
+      timestamp
+    }
+  }`
+  const subgraph = chainName === "arbitrum" ? "gdev8317/gmx-arbitrum-referrals-staging" : "gdev8317/gmx-avalanche-referrals-staging"
+  const [graphData, loading, error] = useGraph(query, { subgraph })
+
+  const data = graphData ? sortBy(graphData.globalStats, 'timestamp').map(item => {
+    const totalRebateUsd = item.totalRebateUsd / 1e30
+    const discountUsd = item.discountUsd / 1e30
+    return {
+      ...item,
+      volume: item.volume / 1e30,
+      volumeCumulative: item.volumeCumulative / 1e30,
+      totalRebateUsd,
+      totalRebateUsdCumulative: item.totalRebateUsdCumulative / 1e30,
+      discountUsd,
+      referrerRebateUsd: totalRebateUsd - discountUsd,
+      discountUsdCumulative: item.discountUsdCumulative / 1e30,
+      referralCodesCount: parseInt(item.referralCodesCount),
+      referralCodesCountCumulative: parseInt(item.referralCodesCountCumulative),
+      referrersCount: parseInt(item.referrersCount),
+      referrersCountCumulative: parseInt(item.referrersCountCumulative),
+      referralsCount: parseInt(item.referralsCount),
+      referralsCountCumulative: parseInt(item.referralsCountCumulative),
+    }
+  }) : null
+
+  return [data, loading, error]
 }

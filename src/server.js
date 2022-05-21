@@ -12,6 +12,12 @@ app
   .use(require('cors')())
   .use(requestLogger)
   .use(csp)
+  .use((req, res, next) => {
+    res.set('X-Content-Type-Options', 'nosniff')
+    res.set('X-Frame-Options', 'DENY')
+    res.set('Referrer-Policy', 'same-origin')
+    next()
+  })
 
 app.get('/ping', (req, res, next) => {
   res.send('ok')

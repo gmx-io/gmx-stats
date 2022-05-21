@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Route, Switch, NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
 import cx from "classnames";
-import Bsc from './Bsc';
-import Arbitrum from './Arbitrum';
-import Avalanche from './Avalanche';
-import Trading from './Trading';
+import Bsc from './views/Bsc';
+import Arbitrum from './views/Arbitrum';
+import Referrals from './views/Referrals';
+import Avalanche from './views/Avalanche';
+import Trading from './views/Trading';
 import './App.css';
 import logoIcon from './img/logo_GMX.svg';
 import darkLogoIcon from './img/logo_GMX_dark.svg';
@@ -126,6 +127,9 @@ const App = () => {
             <Route exact path="/bsc" component={Bsc} />
             <Route exact path="/avalanche" render={(props) => (
               <Avalanche {...props} mode={mode} />
+            )} />
+            <Route exact path="/referrals/:chainName" render={(props) => (
+              <Referrals {...props} mode={mode} />
             )} />
             <Route exact path="/trading" component={Trading} />
           </div>

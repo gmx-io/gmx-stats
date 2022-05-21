@@ -2,13 +2,13 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as ethers from 'ethers'
 import * as strftime from 'strftime'
 
-import { urlWithParams, tsToIsoDate, COINCOLORS } from './helpers'
+import { urlWithParams, tsToIsoDate, COINCOLORS } from '../helpers'
 import {
   useRequest,
   useGambitPoolStats,
   useGambitVolumeData,
   useGambitFeesData
-} from './dataProvider'
+} from '../dataProvider'
 
 import {
   LineChart,

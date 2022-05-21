@@ -9,6 +9,7 @@ import App from './App';
 import { ApolloClient, InMemoryCache, gql, HttpLink } from '@apollo/client'
 import { getLogger } from './helpers'
 import { addresses, ARBITRUM, AVALANCHE } from './addresses'
+import { queryEarnData } from './dataProvider'
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
@@ -463,6 +464,23 @@ function createHttpError(code, message) {
 }
 
 export default function routes(app) {
+  app.get('/api/earn/:account', async (req, res, next) => {
+    const chainName = req.query.chain || 'arbitrum'
+    const validChainNames = new Set(['arbitrum', 'avalanche'])
+    if (!validChainNames.has(chainName)) {
+      next(createHttpError(400, `Valid chains are: ${Array.from(validChainNames)}`))
+      return
+    }
+    try {
+      const earnData = await queryEarnData(chainName, req.params.account)
+      res.send(earnData)
+    } catch (ex) {
+      logger.error(ex)
+      next(createHttpError(500, ex.message))
+      return
+    }
+  })
+
   app.get('/api/gmx-supply', async (req, res) => {
     const apiResponse = await fetch('https://api.gmx.io/gmx_supply')
     const data = (await apiResponse.text()).toString()
@@ -531,6 +549,7 @@ export default function routes(app) {
         <App />
       </StaticRouter>
     );
+    res.set('Content-Type', 'text/html')
 
     res.status(200).send(
       `<!doctype html>
@@ -554,7 +573,16 @@ export default function routes(app) {
 
   app.use('/api', function (err, req, res, next) {
     res.set('Content-Type', 'text/plain')
-    res.status(err.code || 500)
-    res.send(err.message)
+    const statusCode = Number(err.code) || 500
+    let response = ''
+    if (IS_PRODUCTION) {
+      if (err.code === 400) {
+        response = err.message
+      }
+    } else {
+      response = err.stack
+    }
+    res.status(statusCode)
+    res.send(response)
   })
 }
