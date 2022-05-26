@@ -100,14 +100,15 @@ function Arbitrum(props) {
   }, [volumeData])
 
   const [feesData, feesLoading] = useFeesData(params)
+  const [totalFeesData, totalFeesLoading] = useFeesData({})
   const [totalFees, totalFeesDelta] = useMemo(() => {
-    if (!feesData) {
+    if (!totalFeesData) {
       return []
     }
-    const total = feesData[feesData.length - 1]?.cumulative
-    const delta = total - feesData[feesData.length - 2]?.cumulative
+    const total = totalFeesData[totalFeesData.length - 1]?.cumulative
+    const delta = total - totalFeesData[totalFeesData.length - 2]?.cumulative
     return [total, delta]
-  }, [feesData])
+  }, [totalFeesData])
 
   const [glpData, glpLoading] = useGlpData(params)
   const [totalAum, totalAumDelta] = useMemo(() => {

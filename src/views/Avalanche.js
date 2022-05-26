@@ -120,41 +120,44 @@ function Avalanche(props) {
   }, [totalFeesData])
 
   const [glpData, glpLoading] = useGlpData(params)
+  const [totalGlpData, totalGlpLoading] = useGlpData({ chainName: 'avalanche' })
   const [totalAum, totalAumDelta] = useMemo(() => {
-    if (!glpData) {
+    if (!totalGlpData) {
       return []
     }
-    const total = glpData[glpData.length - 1]?.aum
-    const delta = total - glpData[glpData.length - 2]?.aum
+    const total = totalGlpData[totalGlpData.length - 1]?.aum
+    const delta = total - totalGlpData[totalGlpData.length - 2]?.aum
     return [total, delta]
-  }, [glpData])
+  }, [totalGlpData])
 
   // const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData(params)
   const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, params)
 
   const [tradersData, tradersLoading] = useTradersData(params)
+  const [totalTradersData, totalTradersLoading] = useTradersData({ chainName: 'avalanche' })
   const [openInterest, openInterestDelta] = useMemo(() => {
-    if (!tradersData) {
+    if (!totalTradersData) {
       return []
     }
-    const total = tradersData.data[tradersData.data.length - 1]?.openInterest
-    const delta = total - tradersData.data[tradersData.data.length - 2]?.openInterest
+    const total = totalTradersData.data[totalTradersData.data.length - 1]?.openInterest
+    const delta = total - totalTradersData.data[totalTradersData.data.length - 2]?.openInterest
     return [total, delta]
-  }, [tradersData])
+  }, [totalTradersData])
 
   const [usersData, usersLoading] = useUsersData(params)
+  const [totalUsersData, totalUsersLoading] = useUsersData({ chainName: 'avalanche' })
   const [totalUsers, totalUsersDelta] = useMemo(() => {
-    if (!usersData) {
+    if (!totalUsersData) {
       return [null, null]
     }
-    const total = usersData[usersData.length - 1]?.uniqueCountCumulative
-    const prevTotal = usersData[usersData.length - 2]?.uniqueCountCumulative
+    const total = totalUsersData[totalUsersData.length - 1]?.uniqueCountCumulative
+    const prevTotal = totalUsersData[totalUsersData.length - 2]?.uniqueCountCumulative
     const delta = total && prevTotal ? total - prevTotal : null
     return [
       total,
       delta
     ]
-  }, [usersData])
+  }, [totalUsersData])
 
   const [swapSources, swapSourcesLoading] = useSwapSources(params)
   const swapSourcesKeys = Object.keys((swapSources || []).reduce((memo, el) => {
@@ -241,7 +244,7 @@ function Avalanche(props) {
               }
             </div>
           </> : null}
-          {glpLoading && <RiLoader5Fill size="3em" className="loader" />}
+          {totalGlpLoading && <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {totalUsers && <>
@@ -253,7 +256,7 @@ function Avalanche(props) {
               }
             </div>
           </>}
-          {usersLoading && <RiLoader5Fill size="3em" className="loader" />}
+          {totalUsersLoading && <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {openInterest ? <>
@@ -267,7 +270,7 @@ function Avalanche(props) {
               }
             </div>
           </> : null}
-          {tradersLoading && <RiLoader5Fill size="3em" className="loader" />}
+          {totalTradersLoading && <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell">
           <VolumeChart
