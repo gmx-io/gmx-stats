@@ -475,7 +475,7 @@ function Avalanche(props) {
               { key: 'newSwapCount', name: 'Swap' },
               { key: 'newMarginCount', name: 'Margin trading' },
               { key: 'newMintBurnCount', name: 'Mint & Burn' },
-              { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
+              { key: 'cumulativeNewUserCount', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
             ]}
             type="Composed"
           />

@@ -206,7 +206,7 @@ const defaultFetcher = url => fetch(url).then(res => res.json())
 export function useRequest(url, defaultValue, fetcher = defaultFetcher) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState()
-  const [data, setData] = useState(defaultValue) 
+  const [data, setData] = useState(defaultValue)
 
   useEffect(async () => {
     try {
@@ -263,7 +263,7 @@ export function useCoingeckoPrices(symbol, { from = FIRST_DATE_TS } = {}) {
 
 function getImpermanentLoss(change) {
   return 2 * Math.sqrt(change) / (1 + change) - 1
-} 
+}
 
 function getChainSubgraph(chainName) {
   return chainName === "arbitrum" ? "gmx-io/gmx-stats" : "gmx-io/gmx-avalanche-stats"
@@ -417,7 +417,7 @@ export function useGambitPoolStats({ from, to, groupPeriod }) {
   const ret = useMemo(() => {
     if (!data) {
        return null
-    } 
+    }
     let ret = data.poolStats.map(item => {
       return Object.entries(item).reduce((memo, [key, value]) => {
         if (key === 'id') memo.timestamp = value
@@ -464,14 +464,14 @@ export function useLastSubgraphBlock(chainName = "arbitrum") {
       block {
         number
       }
-    } 
+    }
   }`, { chainName })
   const [block, setBlock] = useState(null)
 
   useEffect(() => {
     if (!data) {
       return
-    } 
+    }
 
     providers[chainName].getBlock(data._meta.block.number).then(block => {
       setBlock(block)
@@ -646,7 +646,7 @@ export function useSwapSources({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
             }
             return memo
           }, {})
-        } 
+        }
 
         retItem.all = all
 
@@ -686,7 +686,7 @@ function getServerHostname(chainName) {
 export function useVolumeDataRequest(url, defaultValue, from, to, fetcher = defaultFetcher) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState()
-  const [data, setData] = useState(defaultValue) 
+  const [data, setData] = useState(defaultValue)
 
   useEffect(async () => {
     try {
@@ -724,7 +724,7 @@ export function useVolumeDataFromServer({ from = FIRST_DATE_TS, to = NOW_TS, cha
   const ret = useMemo(() => {
     if (!data) {
       return null
-    } 
+    }
 
     const tmp = data.reduce((memo, item) => {
       const timestamp = item.data.timestamp
@@ -807,6 +807,7 @@ export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "a
   const [graphData, loading, error] = useGraph(query, { chainName })
 
   const prevUniqueCountCumulative = {}
+  let cumulativeNewUserCount = 0;
   const data = graphData ? sortBy(graphData.userStats, 'timestamp').map(item => {
     const newCountData = ['', 'Swap', 'Margin', 'MintBurn'].reduce((memo, type) => {
       memo[`new${type}Count`] = prevUniqueCountCumulative[type]
@@ -815,6 +816,7 @@ export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "a
       prevUniqueCountCumulative[type] = item[`unique${type}CountCumulative`]
       return memo
     }, {})
+    cumulativeNewUserCount += newCountData.newCount;
     const oldCount = item.uniqueCount - newCountData.newCount
     const oldPercent = (oldCount / item.uniqueCount * 100).toFixed(1)
     return {
@@ -822,6 +824,7 @@ export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "a
       uniqueSum: item.uniqueSwapCount + item.uniqueMarginCount + item.uniqueMintBurnCount,
       oldCount,
       oldPercent,
+      cumulativeNewUserCount,
       ...newCountData,
       ...item
     }
@@ -1076,7 +1079,7 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
     }
 
     const getTimestamp = item => item.timestamp || parseInt(item[timestampProp])
-    
+
     let prevGlpSupply
     let prevAum
 
