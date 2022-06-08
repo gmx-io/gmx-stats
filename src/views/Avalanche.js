@@ -379,7 +379,7 @@ function Avalanche(props) {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#22c761' : '#f93333'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke={COLORS[4]} dataKey="pnlCumulative" name="Cumulative PnL" />
+                <Line type="monotone" strokeWidth={2} stroke={COLORS[4]} dataKey="currentPnlCumulative" name="Cumulative PnL" />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -407,8 +407,8 @@ function Avalanche(props) {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Area yAxisId="right" type="monotone" stroke={0} fill="#22c761" fillOpacity="0.4" dataKey="profitCumulative" name="Cumulative Profit" />
-                <Area yAxisId="right" type="monotone" stroke={0} fill="#f93333" fillOpacity="0.4" dataKey="lossCumulative" name="Cumulative Loss" />
+                <Area yAxisId="right" type="monotone" stroke={0} fill="#22c761" fillOpacity="0.4" dataKey="currentProfitCumulative" name="Cumulative Profit" />
+                <Area yAxisId="right" type="monotone" stroke={0} fill="#f93333" fillOpacity="0.4" dataKey="currentLossCumulative" name="Cumulative Loss" />
                 <Bar type="monotone" fill="#22c761" dot={false} dataKey="profit" name="Profit" />
                 <Bar type="monotone" fill="#f93333" dot={false} dataKey="loss" name="Loss" />
               </ComposedChart>

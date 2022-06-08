@@ -516,6 +516,9 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
   }, [feesData])
 
   let ret = null
+  let currentPnlCumulative = 0;
+  let currentProfitCumulative = 0;
+  let currentLossCumulative = 0;
   const data = closedPositionsData ? sortBy(closedPositionsData.tradingStats, i => i.timestamp).map(dataItem => {
     const longOpenInterest = dataItem.longOpenInterest / 1e30
     const shortOpenInterest = dataItem.shortOpenInterest / 1e30
@@ -530,6 +533,9 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
     const lossCumulative = dataItem.lossCumulative / 1e30
     const pnlCumulative = profitCumulative - lossCumulative
     const pnl = profit - loss
+    currentProfitCumulative += profit
+    currentLossCumulative -= loss
+    currentPnlCumulative += pnl
     return {
       longOpenInterest,
       shortOpenInterest,
@@ -540,7 +546,10 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
       lossCumulative: -lossCumulative,
       pnl,
       pnlCumulative,
-      timestamp: dataItem.timestamp
+      timestamp: dataItem.timestamp,
+      currentPnlCumulative,
+      currentLossCumulative,
+      currentProfitCumulative
     }
   }) : null
 
