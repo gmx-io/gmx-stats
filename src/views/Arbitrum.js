@@ -481,7 +481,7 @@ function Arbitrum(props) {
             data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
             yaxisDataKey="openInterest"
             items={[{ key: 'shortOpenInterest', name: 'Short', color: "#f93333" }, { key: 'longOpenInterest', name: 'Long', color: '#22c761' }]}
-            type="Bar"
+            type="Composed"
           />
         </div>
         <div className="chart-cell">

@@ -439,7 +439,7 @@ function Avalanche(props) {
             data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
             yaxisDataKey="openInterest"
             items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: GREEN }]}
-            type="Bar"
+            type="Composed"
           />
         </div>
         <div className="chart-cell">
