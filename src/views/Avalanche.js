@@ -282,6 +282,38 @@ function Avalanche(props) {
         </div>
         <div className="chart-cell">
           <ChartWrapper
+            title="Glp Performance"
+            loading={glpLoading}
+            data={glpPerformanceData}
+            csvFields={[{key: 'syntheticPrice'}, {key: 'glpPrice'}, {key: 'glpPlusFees'}, {key: 'lpBtcPrice'}, {key: 'lpEthPrice'}]}
+          >
+            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+              <LineChart data={glpPerformanceData} syncId="syncGlp">
+                <CartesianGrid strokeDasharray="10 10" />
+                <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
+                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[85, 145]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <Tooltip
+                  formatter={tooltipFormatterNumber}
+                  labelFormatter={tooltipLabelFormatter}
+                  contentStyle={{ textAlign: 'left' }}
+                />
+                <Legend />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" dataKey="performanceLpBtcCollectedFees" name="% LP BTC-USDC" stroke={COLORS[2]} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" dataKey="performanceLpEthCollectedFees" name="% LP ETH-USDC" stroke={COLORS[4]} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" dataKey="performanceSyntheticCollectedFees" name="% Index" stroke={COLORS[0]} />
+              </LineChart>
+            </ResponsiveContainer>
+            <div className="chart-description">
+              <p>
+                <span style={{color: COLORS[0]}}>% of Index</span> is Glp with fees / Index Price * 100. Index is 16.6% AVAX, 16.6% BTC, 16.6% ETH and 50% USDC rebalanced once a week
+                  <br/>
+                <span style={{color: COLORS[4]}}>% of LP TOKEN-USDC</span> is Glp Price with fees / LP TOKEN-USDC * 100<br/>
+              </p>
+            </div>
+          </ChartWrapper>
+        </div>
+        <div className="chart-cell">
+          <ChartWrapper
             title="Glp Price Comparison"
             loading={glpLoading}
             data={glpPerformanceData}
@@ -291,32 +323,26 @@ function Avalanche(props) {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[60, 210]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
-                <YAxis dataKey="glpPrice" domain={[0.4, 1.7]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="glpPrice" domain={[0.3, 1.4]} tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpBtcCollectedFees" name="% LP BTC-USDC (w/ fees)" stroke={COLORS[2]} />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEthCollectedFees" name="% LP ETH-USDC (w/ fees)" stroke={COLORS[4]} />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceSyntheticCollectedFees" name="% Index (w/ fees)" stroke={COLORS[0]} />
 
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
-                <Line isAnimationActive={false} type="monotone" yAxisId="right" unit="$" strokeWidth={1} dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} strokeWidth={1} />
-                <Line isAnimationActive={false} type="monotone" yAxisId="right" unit="$" strokeWidth={1} dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={COLORS[3]} strokeWidth={1} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[4]} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpAvaxPrice" name="LP AVAX-USDC" stroke={COLORS[5]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={2} dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={COLORS[3]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[4]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="lpAvaxPrice" name="LP AVAX-USDC" stroke={COLORS[5]} />
               </LineChart>
             </ResponsiveContainer>
             <div className="chart-description">
               <p>
                 <span style={{color: COLORS[3]}}>Glp with fees</span> is based on GLP share of fees received and excluding esGMX rewards<br/>
-                <span style={{color: COLORS[0]}}>% of Index (with fees)</span> is Glp with fees / Index Price * 100<br/>
-                <span style={{color: COLORS[4]}}>% of LP TOKEN-USDC (with fees)</span> is Glp Price with fees / LP TOKEN-USDC * 100<br/>
-                <span style={{color: COLORS[2]}}>Index Price</span> is 16.6% AVAX, 16.6% BTC, 16.6% ETH and 50% USDC
+                <span style={{color: COLORS[2]}}>Index Price</span> is 16.6% AVAX, 16.6% BTC, 16.6% ETH and 50% USDC rebalanced once a day
               </p>
             </div>
           </ChartWrapper>

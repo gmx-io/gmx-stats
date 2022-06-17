@@ -1159,9 +1159,10 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
     const ethFirstPrice = ethPrices[0]?.value
     const avaxFirstPrice = avaxPrices[0]?.value
 
-    const indexBtcCount = GLP_START_PRICE * BTC_WEIGHT / btcFirstPrice
-    const indexEthCount = GLP_START_PRICE * ETH_WEIGHT / ethFirstPrice
-    const indexAvaxCount = GLP_START_PRICE * AVAX_WEIGHT / avaxFirstPrice
+    let indexBtcCount = GLP_START_PRICE * BTC_WEIGHT / btcFirstPrice
+    let indexEthCount = GLP_START_PRICE * ETH_WEIGHT / ethFirstPrice
+    let indexAvaxCount = GLP_START_PRICE * AVAX_WEIGHT / avaxFirstPrice
+    let indexStableCount = GLP_START_PRICE * STABLE_WEIGHT 
 
     const lpBtcCount = GLP_START_PRICE * 0.5 / btcFirstPrice
     const lpEthCount = GLP_START_PRICE * 0.5 / ethFirstPrice
@@ -1192,8 +1193,15 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
         indexBtcCount * btcPrice
         + indexEthCount * ethPrice
         + indexAvaxCount * avaxPrice
-        + GLP_START_PRICE * STABLE_WEIGHT
+        + indexStableCount
       )
+      
+      if (i % 7 == 0) {
+        indexBtcCount = syntheticPrice * BTC_WEIGHT / btcPrice
+        indexEthCount = syntheticPrice * ETH_WEIGHT / ethPrice
+        indexAvaxCount = syntheticPrice * AVAX_WEIGHT / avaxPrice
+        indexStableCount = syntheticPrice * STABLE_WEIGHT 
+      }
 
       const lpBtcPrice = (lpBtcCount * btcPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(btcPrice / btcFirstPrice))
       const lpEthPrice = (lpEthCount * ethPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(ethPrice / ethFirstPrice))
@@ -1239,17 +1247,19 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
         glpPlusDistributedUsd,
         glpPlusDistributedEth,
 
-        performanceLpEth: (glpPrice / lpEthPrice * 100).toFixed(1),
-        performanceLpEthCollectedFees: (glpPlusFees / lpEthPrice * 100).toFixed(1),
-        performanceLpEthDistributedUsd: (glpPlusDistributedUsd / lpEthPrice * 100).toFixed(1),
-        performanceLpEthDistributedEth: (glpPlusDistributedEth / lpEthPrice * 100).toFixed(1),
+        performanceLpEth: (glpPrice / lpEthPrice * 100).toFixed(2),
+        performanceLpEthCollectedFees: (glpPlusFees / lpEthPrice * 100).toFixed(2),
+        performanceLpEthDistributedUsd: (glpPlusDistributedUsd / lpEthPrice * 100).toFixed(2),
+        performanceLpEthDistributedEth: (glpPlusDistributedEth / lpEthPrice * 100).toFixed(2),
 
-        performanceLpBtcCollectedFees: (glpPlusFees / lpBtcPrice * 100).toFixed(1),
+        performanceLpBtcCollectedFees: (glpPlusFees / lpBtcPrice * 100).toFixed(2),
 
-        performanceSynthetic: (glpPrice / syntheticPrice * 100).toFixed(1),
-        performanceSyntheticCollectedFees: (glpPlusFees / syntheticPrice * 100).toFixed(1),
-        performanceSyntheticDistributedUsd: (glpPlusDistributedUsd / syntheticPrice * 100).toFixed(1),
-        performanceSyntheticDistributedEth: (glpPlusDistributedEth / syntheticPrice * 100).toFixed(1),
+        performanceLpAvaxCollectedFees: (glpPlusFees / lpAvaxPrice * 100).toFixed(2),
+
+        performanceSynthetic: (glpPrice / syntheticPrice * 100).toFixed(2),
+        performanceSyntheticCollectedFees: (glpPlusFees / syntheticPrice * 100).toFixed(2),
+        performanceSyntheticDistributedUsd: (glpPlusDistributedUsd / syntheticPrice * 100).toFixed(2),
+        performanceSyntheticDistributedEth: (glpPlusDistributedEth / syntheticPrice * 100).toFixed(2),
 
         glpApr
       })
