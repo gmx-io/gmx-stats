@@ -293,6 +293,14 @@ function Arbitrum(props) {
               {key: 'lpBtcPrice'},
               {key: 'lpEthPrice'},
               {key: 'performanceSyntheticCollectedFees'},
+              {key: 'indexBtcCount'},
+              {key: 'indexEthCount'},
+              {key: 'indexAvaxCount'},
+              {key: 'indexStableCount'},
+              {key: 'BTC_WEIGHT'},
+              {key: 'ETH_WEIGHT'},
+              {key: 'AVAX_WEIGHT'},
+              {key: 'STABLE_WEIGHT'},
             ]}
           >
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
@@ -332,6 +340,14 @@ function Arbitrum(props) {
               {key: 'lpBtcPrice'},
               {key: 'lpEthPrice'},
               {key: 'performanceSyntheticCollectedFees'},
+              {key: 'indexBtcCount'},
+              {key: 'indexEthCount'},
+              {key: 'indexAvaxCount'},
+              {key: 'indexStableCount'},
+              {key: 'BTC_WEIGHT'},
+              {key: 'ETH_WEIGHT'},
+              {key: 'AVAX_WEIGHT'},
+              {key: 'STABLE_WEIGHT'},
             ]}
           >
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>

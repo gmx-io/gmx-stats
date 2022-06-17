@@ -1246,6 +1246,16 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
         glpPlusFees,
         glpPlusDistributedUsd,
         glpPlusDistributedEth,
+        
+        indexBtcCount,
+        indexEthCount,
+        indexAvaxCount,
+        indexStableCount,
+        
+        BTC_WEIGHT,
+        ETH_WEIGHT,
+        AVAX_WEIGHT,
+        STABLE_WEIGHT,
 
         performanceLpEth: (glpPrice / lpEthPrice * 100).toFixed(2),
         performanceLpEthCollectedFees: (glpPlusFees / lpEthPrice * 100).toFixed(2),
