@@ -1196,7 +1196,8 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
         + indexStableCount
       )
       
-      if (i % 7 == 0) {
+      // rebalance each day. can rebalance each X days
+      if (i % 1 == 0) {
         indexBtcCount = syntheticPrice * BTC_WEIGHT / btcPrice
         indexEthCount = syntheticPrice * ETH_WEIGHT / ethPrice
         indexAvaxCount = syntheticPrice * AVAX_WEIGHT / avaxPrice

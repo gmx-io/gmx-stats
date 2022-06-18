@@ -305,7 +305,7 @@ function Avalanche(props) {
             </ResponsiveContainer>
             <div className="chart-description">
               <p>
-                <span style={{color: COLORS[0]}}>% of Index</span> is Glp with fees / Index Price * 100. Index is 16.6% AVAX, 16.6% BTC, 16.6% ETH and 50% USDC rebalanced once a week
+                <span style={{color: COLORS[0]}}>% of Index</span> is Glp with fees / Index Price * 100. Index is 16.6% AVAX, 16.6% BTC, 16.6% ETH and 50% USDC rebalanced once a day
                   <br/>
                 <span style={{color: COLORS[4]}}>% of LP TOKEN-USDC</span> is Glp Price with fees / LP TOKEN-USDC * 100<br/>
               </p>

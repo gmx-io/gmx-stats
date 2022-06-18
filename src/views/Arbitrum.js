@@ -321,7 +321,7 @@ function Arbitrum(props) {
             </ResponsiveContainer>
             <div className="chart-description">
               <p>
-                <span style={{color: COLORS[0]}}>% of Index (with fees)</span> is Glp with fees / Index Price * 100. Index is 25% BTC, 25% ETH, 50% USDC rebalanced once a week
+                <span style={{color: COLORS[0]}}>% of Index (with fees)</span> is Glp with fees / Index Price * 100. Index is 25% BTC, 25% ETH, 50% USDC rebalanced once a day
 <br/>
                 <span style={{color: COLORS[4]}}>% of LP ETH-USDC (with fees)</span> is Glp Price with fees / LP ETH-USDC * 100<br/>
               </p>
