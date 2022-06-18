@@ -291,7 +291,7 @@ function Avalanche(props) {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[85, 145]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[90, 200]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
@@ -300,12 +300,13 @@ function Avalanche(props) {
                 <Legend />
                 <Line dot={false} isAnimationActive={false} type="monotone" unit="%" dataKey="performanceLpBtcCollectedFees" name="% LP BTC-USDC" stroke={COLORS[2]} />
                 <Line dot={false} isAnimationActive={false} type="monotone" unit="%" dataKey="performanceLpEthCollectedFees" name="% LP ETH-USDC" stroke={COLORS[4]} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" dataKey="performanceLpAvaxCollectedFees" name="% LP AVAX-USDC" stroke={COLORS[3]} />
                 <Line dot={false} isAnimationActive={false} type="monotone" unit="%" dataKey="performanceSyntheticCollectedFees" name="% Index" stroke={COLORS[0]} />
               </LineChart>
             </ResponsiveContainer>
             <div className="chart-description">
               <p>
-                <span style={{color: COLORS[0]}}>% of Index</span> is Glp with fees / Index Price * 100. Index is 16.6% AVAX, 16.6% BTC, 16.6% ETH and 50% USDC rebalanced once a day
+                <span style={{color: COLORS[0]}}>% of Index</span> is Glp with fees / Index Price * 100. Index is a basket 16.6% AVAX, 16.6% BTC, 16.6% ETH and 50% USDC rebalanced once&nbsp;a&nbsp;day
                   <br/>
                 <span style={{color: COLORS[4]}}>% of LP TOKEN-USDC</span> is Glp Price with fees / LP TOKEN-USDC * 100<br/>
               </p>
@@ -342,7 +343,7 @@ function Avalanche(props) {
             <div className="chart-description">
               <p>
                 <span style={{color: COLORS[3]}}>Glp with fees</span> is based on GLP share of fees received and excluding esGMX rewards<br/>
-                <span style={{color: COLORS[2]}}>Index Price</span> is 16.6% AVAX, 16.6% BTC, 16.6% ETH and 50% USDC rebalanced once a day
+                <span style={{color: COLORS[2]}}>Index Price</span> is a basket 16.6% AVAX, 16.6% BTC, 16.6% ETH and 50% USDC rebalanced once&nbsp;a&nbsp;day
               </p>
             </div>
           </ChartWrapper>
