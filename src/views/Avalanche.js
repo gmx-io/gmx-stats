@@ -413,6 +413,16 @@ function Avalanche(props) {
         </div>
         <div className="chart-cell">
            <GenericChart
+              loading={tradersLoading}
+              title="Open Interest"
+              data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
+              yaxisDataKey="openInterest"
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: GREEN }]}
+              type="Bar"
+            />
+        </div>
+        <div className="chart-cell">
+           <GenericChart
               loading={fundingRateLoading}
               title="Borrowing Rate Annualized"
               data={fundingRateData}
@@ -422,16 +432,6 @@ function Avalanche(props) {
               items={[{ key: 'WETH.e' }, { key: 'WBTC.e' }, { key: 'AVAX' }, { key: 'MIM' }, { key: 'USDC' }, { key: 'USDC.e' }]}
               type="Line"
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
-            />
-        </div>
-        <div className="chart-cell">
-           <GenericChart
-              loading={tradersLoading}
-              title="Open Interest"
-              data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
-              yaxisDataKey="openInterest"
-              items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: GREEN }]}
-              type="Bar"
             />
         </div>
         <div className="chart-cell">

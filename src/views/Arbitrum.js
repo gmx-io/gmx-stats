@@ -484,6 +484,16 @@ function Arbitrum(props) {
         </div>
         <div className="chart-cell">
            <GenericChart
+              loading={tradersLoading}
+              title="Open Interest"
+              data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
+              yaxisDataKey="openInterest"
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#f93333" }, { key: 'longOpenInterest', name: 'Long', color: '#22c761' }]}
+              type="Bar"
+            />
+        </div>
+        <div className="chart-cell">
+           <GenericChart
               loading={fundingRateLoading}
               title="Borrowing Rate Annualized"
               data={fundingRateData}
@@ -494,16 +504,6 @@ function Arbitrum(props) {
               type="Line"
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
               isCoinChart={true}
-            />
-        </div>
-        <div className="chart-cell">
-           <GenericChart
-              loading={tradersLoading}
-              title="Open Interest"
-              data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
-              yaxisDataKey="openInterest"
-              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#f93333" }, { key: 'longOpenInterest', name: 'Long', color: '#22c761' }]}
-              type="Bar"
             />
         </div>
         <div className="chart-cell">
