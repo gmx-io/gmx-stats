@@ -154,7 +154,7 @@ function Arbitrum(props) {
     ]
   }, [usersData])
 
-  const [lastSubgraphBlock] = useLastSubgraphBlock()
+  const [lastSubgraphBlock, _, lastSubgraphBlockError] = useLastSubgraphBlock()
   const [lastBlock] = useLastBlock()
 
   const isObsolete = lastSubgraphBlock && lastBlock && lastBlock.timestamp - lastSubgraphBlock.timestamp > 3600
@@ -174,6 +174,12 @@ function Arbitrum(props) {
           {isObsolete && "Data is obsolete. "}
           Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
           &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
+        </p>
+      }
+      {
+        lastSubgraphBlockError &&
+        <p className="page-description warning">
+          Subgraph data is temporarily unavailable.
         </p>
       }
       {showForm &&
@@ -207,7 +213,7 @@ function Arbitrum(props) {
               {formatNumber(totalFees, {currency: true})}
               <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalFeesDelta, {currency: true, compact: true})}</span>
             </div>
-          </> : <RiLoader5Fill size="3em" className="loader" />}
+          </> : (feesLoading ? <RiLoader5Fill size="3em" className="loader" /> : null)}
         </div>
         <div className="chart-cell stats">
           {totalAum ? <>
@@ -216,7 +222,7 @@ function Arbitrum(props) {
               {formatNumber(totalAum, {currency: true})}
               <span className={cx("total-stat-delta", (totalAumDelta > 0 ? 'plus' : 'minus'))} title="Change since previous day">{totalAumDelta > 0 ? '+' : ''}{formatNumber(totalAumDelta, {currency: true, compact: true})}</span>
             </div>
-          </> : <RiLoader5Fill size="3em" className="loader" />}
+          </> : (glpLoading ? <RiLoader5Fill size="3em" className="loader" /> : null)}
         </div>
         <div className="chart-cell stats">
           {totalUsers ? <>
@@ -225,7 +231,7 @@ function Arbitrum(props) {
               {formatNumber(totalUsers)}
               <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalUsersDelta)}</span>
             </div>
-          </> : <RiLoader5Fill size="3em" className="loader" />}
+          </> : (usersLoading ? <RiLoader5Fill size="3em" className="loader" /> : null)}
         </div>
         <div className="chart-cell stats">
           {openInterest ? <>
@@ -236,7 +242,7 @@ function Arbitrum(props) {
                 {openInterestDelta > 0 ? '+' : ''}{formatNumber(openInterestDelta, {currency: true, compact: true})}
               </span>
             </div>
-          </> : <RiLoader5Fill size="3em" className="loader" />}
+          </> : (tradersLoading ? <RiLoader5Fill size="3em" className="loader" /> : null)}
         </div>
         <div className="chart-cell">
           <VolumeChart
