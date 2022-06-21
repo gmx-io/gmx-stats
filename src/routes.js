@@ -1,3 +1,5 @@
+import os from 'os'
+
 import { ethers } from 'ethers'
 import React from 'react';
 import { StaticRouter } from 'react-router-dom';
@@ -198,7 +200,12 @@ async function precacheOldPrices(chainId, entitiesKey) {
     i++
   }
 }
-if (!process.env.DISABLE_PRICES) {
+
+function pricesEnabled() {
+  return Boolean(process.env.PRICES_ENABLED) || os.type() !== 'Darwin'
+}
+
+if (pricesEnabled()) {
   precacheOldPrices(ARBITRUM, "chainlinkPrices")
   precacheOldPrices(ARBITRUM, "fastPrices")
   precacheOldPrices(AVALANCHE, "chainlinkPrices")
@@ -233,7 +240,7 @@ async function precacheNewPrices(chainId, entitiesKey) {
 
   setTimeout(precacheNewPrices, 1000 * 60 * 1, chainId, entitiesKey)
 }
-if (!process.env.DISABLE_PRICES) {
+if (pricesEnabled()) {
   precacheNewPrices(ARBITRUM, "chainlinkPrices")
   precacheNewPrices(ARBITRUM, "fastPrices")
   precacheNewPrices(AVALANCHE, "chainlinkPrices")

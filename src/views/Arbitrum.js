@@ -155,7 +155,7 @@ function Arbitrum(props) {
     ]
   }, [usersData])
 
-  const [lastSubgraphBlock] = useLastSubgraphBlock()
+  const [lastSubgraphBlock, _, lastSubgraphBlockError] = useLastSubgraphBlock()
   const [lastBlock] = useLastBlock()
 
   const isObsolete = lastSubgraphBlock && lastBlock && lastBlock.timestamp - lastSubgraphBlock.timestamp > 3600
@@ -198,6 +198,12 @@ function Arbitrum(props) {
               &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
             </p>
           }
+          {
+            lastSubgraphBlockError &&
+            <p className="page-description warning">
+              Subgraph data is temporarily unavailable.
+            </p>
+          }
         </div>
         <div className="form">
           <DateRangeSelect options={dateRangeOptions} startDate={dataRange.fromValue} endDate={dataRange.toValue} onChange={onDateRangeChange} />
@@ -234,7 +240,7 @@ function Arbitrum(props) {
               {formatNumber(totalFees, { currency: true })}
               <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalFeesDelta, { currency: true, compact: true })}</span>
             </div>
-          </> : <RiLoader5Fill size="3em" className="loader" />}
+          </> : (feesLoading ? <RiLoader5Fill size="3em" className="loader" /> : null)}
         </div>
         <div className="chart-cell stats">
           {totalAum ? <>
@@ -243,7 +249,7 @@ function Arbitrum(props) {
               {formatNumber(totalAum, { currency: true })}
               <span className={cx("total-stat-delta", (totalAumDelta > 0 ? 'plus' : 'minus'))} title="Change since previous day">{totalAumDelta > 0 ? '+' : ''}{formatNumber(totalAumDelta, { currency: true, compact: true })}</span>
             </div>
-          </> : <RiLoader5Fill size="3em" className="loader" />}
+          </> : (glpLoading ? <RiLoader5Fill size="3em" className="loader" /> : null)}
         </div>
         <div className="chart-cell stats">
           {totalUsers ? <>
@@ -252,7 +258,7 @@ function Arbitrum(props) {
               {formatNumber(totalUsers)}
               <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalUsersDelta)}</span>
             </div>
-          </> : <RiLoader5Fill size="3em" className="loader" />}
+          </> : (usersLoading ? <RiLoader5Fill size="3em" className="loader" /> : null)}
         </div>
         <div className="chart-cell stats">
           {openInterest ? <>
@@ -263,7 +269,7 @@ function Arbitrum(props) {
                 {openInterestDelta > 0 ? '+' : ''}{formatNumber(openInterestDelta, { currency: true, compact: true })}
               </span>
             </div>
-          </> : <RiLoader5Fill size="3em" className="loader" />}
+          </> : (tradersLoading ? <RiLoader5Fill size="3em" className="loader" /> : null)}
         </div>
         <div className="chart-cell">
           <VolumeChart
@@ -310,6 +316,46 @@ function Arbitrum(props) {
         </div>
         <div className="chart-cell">
           <ChartWrapper
+            title="Glp Performance"
+            loading={glpLoading}
+            data={glpPerformanceData}
+            csvFields={[
+              {key: 'syntheticPrice'},
+              {key: 'glpPrice'},
+              {key: 'glpPlusFees'},
+              {key: 'lpBtcPrice'},
+              {key: 'lpEthPrice'},
+              {key: 'performanceSyntheticCollectedFees'},
+            ]}
+          >
+            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+              <LineChart data={glpPerformanceData} syncId="syncGlp">
+                <CartesianGrid strokeDasharray="10 10" />
+                <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
+                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[80, 170]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <Tooltip
+                  formatter={tooltipFormatterNumber}
+                  labelFormatter={tooltipLabelFormatter}
+                  contentStyle={{ textAlign: 'left' }}
+                />
+                <Legend />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" dataKey="performanceLpBtcCollectedFees" name="% LP BTC-USDC (w/ fees)" stroke={COLORS[2]} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" dataKey="performanceLpEthCollectedFees" name="% LP ETH-USDC (w/ fees)" stroke={COLORS[4]} />
+                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" dataKey="performanceSyntheticCollectedFees" name="% Index (w/ fees)" stroke={COLORS[0]} />
+              </LineChart>
+            </ResponsiveContainer>
+            <div className="chart-description">
+              <p>
+                <span style={{color: COLORS[3]}}>Glp with fees</span> is based on GLP share of fees received and excluding esGMX rewards<br/>
+                <span style={{color: COLORS[0]}}>% of Index (with fees)</span> is Glp with fees / Index Price * 100<br/>
+                <span style={{color: COLORS[4]}}>% of LP ETH-USDC (with fees)</span> is Glp Price with fees / LP ETH-USDC * 100<br/>
+                <span style={{color: COLORS[2]}}>Index Price</span> is 25% BTC, 25% ETH, 50% USDC
+              </p>
+            </div>
+          </ChartWrapper>
+        </div>
+        <div className="chart-cell">
+          <ChartWrapper
             title="Glp Price Comparison"
             loading={glpLoading}
             data={glpPerformanceData}
@@ -326,23 +372,18 @@ function Arbitrum(props) {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[60, 210]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
-                <YAxis dataKey="glpPrice" domain={[0.4, 1.7]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="glpPrice" domain={[0.4, 1.7]} tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpBtcCollectedFees" name="% LP BTC-USDC (w/ fees)" stroke={COLORS[2]} />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceLpEthCollectedFees" name="% LP ETH-USDC (w/ fees)" stroke={COLORS[4]} />
-                <Line dot={false} isAnimationActive={false} type="monotone" unit="%" strokeWidth={2} dataKey="performanceSyntheticCollectedFees" name="% Index (w/ fees)" stroke={COLORS[0]} />
-
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={COLORS[3]} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
-                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} yAxisId="right" dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[4]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="syntheticPrice" name="Index Price" stroke={COLORS[2]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="glpPrice" name="Glp Price" stroke={COLORS[1]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={2} dot={false} dataKey="glpPlusFees" name="Glp w/ fees" stroke={COLORS[3]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="lpBtcPrice" name="LP BTC-USDC" stroke={COLORS[2]} />
+                <Line isAnimationActive={false} type="monotone" unit="$" strokeWidth={1} dot={false} dataKey="lpEthPrice" name="LP ETH-USDC" stroke={COLORS[4]} />
               </LineChart>
             </ResponsiveContainer>
             <div className="chart-description">
