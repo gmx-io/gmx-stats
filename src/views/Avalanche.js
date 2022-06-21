@@ -52,12 +52,8 @@ import DateRangeSelect from '../components/DateRangeSelect'
 
 import {
   useVolumeData,
-  useTotalVolumeFromServer,
-  useVolumeDataFromServer,
   useFeesData,
   useGlpData,
-  useAumPerformanceData,
-  useCoingeckoPrices,
   useGlpPerformanceData,
   useTradersData,
   useSwapSources,
@@ -67,24 +63,10 @@ import {
   useLastBlock
 } from '../dataProvider'
 
-const { BigNumber } = ethers
-const { formatUnits } = ethers.utils
 const NOW = Math.floor(Date.now() / 1000)
 
-function dateToValue(date) {
-  return date.toISOString().slice(0, 10)
-}
-
 function Avalanche(props) {
-  const [dataRange, setDataRange] = useState({ fromValue: moment().subtract(2, 'month').toDate(), toValue: null })
-
-  const setDateRange = useCallback(range => {
-    let from = dateToValue(new Date(Date.now() - range * 1000))
-    if (window.innerWidth < 600) {
-      from = moment().subtract(2, 'month').toDate()
-    }
-    setDataRange({ fromValue: from, toValue: undefined })
-  }, [setDataRange])
+  const [dataRange, setDataRange] = useState({ fromValue: moment().subtract(3, 'month').toDate(), toValue: null })
 
   const { mode } = props
 
@@ -186,7 +168,8 @@ function Avalanche(props) {
     id: 2
   }, {
     label: "Last 3 Months",
-    id: 3
+    id: 3,
+    isDefault: true
   }, {
     label: "All time",
     id: 4
@@ -326,7 +309,7 @@ function Avalanche(props) {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[90, 200]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="performanceLpAvaxCollectedFees" domain={[80, 180]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}

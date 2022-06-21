@@ -67,13 +67,11 @@ import {
   useLastBlock
 } from '../dataProvider'
 
-const { BigNumber } = ethers
-const { formatUnits } = ethers.utils
 const NOW = Math.floor(Date.now() / 1000)
 
 function Arbitrum(props) {
   const DEFAULT_GROUP_PERIOD = 86400
-  const [groupPeriod, setGroupPeriod] = useState(DEFAULT_GROUP_PERIOD)
+  const [groupPeriod] = useState(DEFAULT_GROUP_PERIOD)
 
   const [dataRange, setDataRange] = useState({ fromValue: moment().subtract(2, 'month').toDate(), toValue: null })
 
@@ -180,7 +178,8 @@ function Arbitrum(props) {
     id: 2
   }, {
     label: "Last 3 Months",
-    id: 3
+    id: 3,
+    isDefault: true
   }, {
     label: "All time",
     id: 4

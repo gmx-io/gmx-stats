@@ -40,7 +40,17 @@ export default function DateRangeSelect({ options, startDate, endDate, onChange 
   }
 
   useEffect(() => {
-    onSelectItem({ id: 2 })
+    let selected = false
+    for (const option of options) {
+      if (option.isDefault) {
+        selected = true
+        onSelectItem(option)
+        break
+      }
+    }
+    if (!selected) {
+      onSelectItem(options[0])
+    }
   }, [])
 
   const onDateRangeChange = (item) => {
