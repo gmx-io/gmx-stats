@@ -299,6 +299,14 @@ function Arbitrum(props) {
               {key: 'lpBtcPrice'},
               {key: 'lpEthPrice'},
               {key: 'performanceSyntheticCollectedFees'},
+              {key: 'indexBtcCount'},
+              {key: 'indexEthCount'},
+              {key: 'indexAvaxCount'},
+              {key: 'indexStableCount'},
+              {key: 'BTC_WEIGHT'},
+              {key: 'ETH_WEIGHT'},
+              {key: 'AVAX_WEIGHT'},
+              {key: 'STABLE_WEIGHT'},
             ]}
           >
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
@@ -319,10 +327,9 @@ function Arbitrum(props) {
             </ResponsiveContainer>
             <div className="chart-description">
               <p>
-                <span style={{color: COLORS[3]}}>Glp with fees</span> is based on GLP share of fees received and excluding esGMX rewards<br/>
-                <span style={{color: COLORS[0]}}>% of Index (with fees)</span> is Glp with fees / Index Price * 100<br/>
+                <span style={{color: COLORS[0]}}>% of Index (with fees)</span> is Glp with fees / Index Price * 100. Index is a basket of 25% BTC, 25% ETH, 50% USDC rebalanced once&nbsp;a&nbsp;day
+<br/>
                 <span style={{color: COLORS[4]}}>% of LP ETH-USDC (with fees)</span> is Glp Price with fees / LP ETH-USDC * 100<br/>
-                <span style={{color: COLORS[2]}}>Index Price</span> is 25% BTC, 25% ETH, 50% USDC
               </p>
             </div>
           </ChartWrapper>
@@ -339,6 +346,14 @@ function Arbitrum(props) {
               {key: 'lpBtcPrice'},
               {key: 'lpEthPrice'},
               {key: 'performanceSyntheticCollectedFees'},
+              {key: 'indexBtcCount'},
+              {key: 'indexEthCount'},
+              {key: 'indexAvaxCount'},
+              {key: 'indexStableCount'},
+              {key: 'BTC_WEIGHT'},
+              {key: 'ETH_WEIGHT'},
+              {key: 'AVAX_WEIGHT'},
+              {key: 'STABLE_WEIGHT'},
             ]}
           >
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
@@ -362,9 +377,8 @@ function Arbitrum(props) {
             <div className="chart-description">
               <p>
                 <span style={{color: COLORS[3]}}>Glp with fees</span> is based on GLP share of fees received and excluding esGMX rewards<br/>
-                <span style={{color: COLORS[0]}}>% of Index (with fees)</span> is Glp with fees / Index Price * 100<br/>
-                <span style={{color: COLORS[4]}}>% of LP ETH-USDC (with fees)</span> is Glp Price with fees / LP ETH-USDC * 100<br/>
-                <span style={{color: COLORS[2]}}>Index Price</span> is 25% BTC, 25% ETH, 50% USDC
+                <span style={{color: COLORS[2]}}>Index Price</span> is a basket of 25% BTC, 25% ETH, 50% USDC rebalanced once&nbsp;a&nbsp;day
+
               </p>
             </div>
           </ChartWrapper>
@@ -476,6 +490,16 @@ function Arbitrum(props) {
         </div>
         <div className="chart-cell">
            <GenericChart
+              loading={tradersLoading}
+              title="Open Interest"
+              data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
+              yaxisDataKey="openInterest"
+              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#f93333" }, { key: 'longOpenInterest', name: 'Long', color: '#22c761' }]}
+              type="Bar"
+            />
+        </div>
+        <div className="chart-cell">
+           <GenericChart
               loading={fundingRateLoading}
               title="Borrowing Rate Annualized"
               data={fundingRateData}
@@ -486,16 +510,6 @@ function Arbitrum(props) {
               type="Line"
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
               isCoinChart={true}
-            />
-        </div>
-        <div className="chart-cell">
-           <GenericChart
-              loading={tradersLoading}
-              title="Open Interest"
-              data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
-              yaxisDataKey="openInterest"
-              items={[{ key: 'shortOpenInterest', name: 'Short', color: "#f93333" }, { key: 'longOpenInterest', name: 'Long', color: '#22c761' }]}
-              type="Bar"
             />
         </div>
         <div className="chart-cell">
