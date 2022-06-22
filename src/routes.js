@@ -166,11 +166,13 @@ async function precacheOldPrices(chainId, entitiesKey) {
   logger.info('precache old prices into memory for %s...', chainId)
 
   const baseRetryTimeout = 10000
+  const maxRetryTimeout = 60 * 10 * 1000
+  
   let oldestTimestamp = parseInt(Date.now() / 1000)
-  let i = 0
   let retryTimeout = baseRetryTimeout
   let failCount = 0
-  while (i < 100) {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
     try {
       const prices = await loadPrices({ before: oldestTimestamp, chainId, entitiesKey })
       if (prices.length === 0) {
@@ -194,10 +196,12 @@ async function precacheOldPrices(chainId, entitiesKey) {
           chainId, entitiesKey, retryTimeout / 1000)
         await sleep(retryTimeout)
         retryTimeout *= 2
+        if (retryTimeout > maxRetryTimeout) {
+          retryTimeout = maxRetryTimeout
+        }
       }
       await sleep(500)
     }
-    i++
   }
 }
 
