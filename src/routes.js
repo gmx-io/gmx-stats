@@ -65,7 +65,7 @@ const cachedPrices = {
     [AVALANCHE]: {}
   }
 }
-const AVALANCHE_LAUNCH_TS = 1641416400
+const PRICE_START_TIMESTAMP = 1641416400 // Avalanche launch date
 function putPricesIntoCache(prices, chainId, entitiesKey) {
   if (!prices || !chainId || !entitiesKey) {
     throw new Error('Invalid arguments')
@@ -78,10 +78,10 @@ function putPricesIntoCache(prices, chainId, entitiesKey) {
   for (const price of prices) {
     const token = price.token.toLowerCase()
     const timestamp = price.timestamp
-    if (chainId === AVALANCHE && entitiesKey === "fastPrices" && timestamp < AVALANCHE_LAUNCH_TS) {
+    if (entitiesKey === "fastPrices" && timestamp < PRICE_START_TIMESTAMP) {
       logger.info("Reject older prices on Avalanche. Price ts: %s launch ts: %s",
         toReadable(timestamp),
-        toReadable(AVALANCHE_LAUNCH_TS)
+        toReadable(PRICE_START_TIMESTAMP)
       )
       ret = false
       break
