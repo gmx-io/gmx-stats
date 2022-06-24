@@ -403,7 +403,7 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
 
   ttlCache.set(cacheKey, prices)
 
-  logger.debug('getPrices took %sms cacheKey %s', Date.now() - start, cacheKey)
+  logger.info('getPrices took %sms cacheKey %s', Date.now() - start, cacheKey)
 
   return prices
 }
