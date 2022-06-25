@@ -65,7 +65,7 @@ const cachedPrices = {
     [AVALANCHE]: {}
   }
 }
-const PRICE_START_TIMESTAMP = 1641416400 // Avalanche launch date
+const PRICE_START_TIMESTAMP = 1648155600 // 25 mar
 function putPricesIntoCache(prices, chainId, entitiesKey) {
   const start = Date.now()
   if (!prices || !chainId || !entitiesKey) {
@@ -115,7 +115,13 @@ function putPricesIntoCache(prices, chainId, entitiesKey) {
     logger.debug('Estimated price cache size: %s MB, prices count: %s', size, pricesCount)
   }
 
-  logger.info("Put %s prices into cache for chain %s, entities %s, took %s ms", prices.length, chainId, entitiesKey, Date.now() - start)
+  logger.info("Put %s prices into cache total chain %s entities %s took %s ms hostname: %s",
+    prices.length,
+    chainId,
+    entitiesKey,
+    Date.now() - start,
+    process.env.HOSTNAME
+  )
   return ret
 }
 
