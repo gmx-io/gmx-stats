@@ -67,6 +67,7 @@ const cachedPrices = {
 }
 const PRICE_START_TIMESTAMP = 1641416400 // Avalanche launch date
 function putPricesIntoCache(prices, chainId, entitiesKey) {
+  const start = Date.now()
   if (!prices || !chainId || !entitiesKey) {
     throw new Error('Invalid arguments')
   }
@@ -114,6 +115,7 @@ function putPricesIntoCache(prices, chainId, entitiesKey) {
     logger.debug('Estimated price cache size: %s MB, prices count: %s', size, pricesCount)
   }
 
+  logger.info("Put %s prices into cache for chain %s, entities %s, took %s ms", prices.length, chainId, entitiesKey, Date.now() - start)
   return ret
 }
 
