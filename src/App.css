@@ -604,7 +604,7 @@ a, a:active, a:visited {
   color: #A0A3C4;
 }
 
-.date-range-item.selected .date-range-item__label, 
+.date-range-item.selected .date-range-item__label,
 .date-range-item:hover .date-range-item__label {
   color: #444;
 }
@@ -613,7 +613,7 @@ a, a:active, a:visited {
   color: #A0A3C4;
 }
 
-.App.dark .date-range-item.selected .date-range-item__label, 
+.App.dark .date-range-item.selected .date-range-item__label,
 .App.dark .date-range-item:hover .date-range-item__label {
   color: white;
 }
@@ -634,57 +634,57 @@ a, a:active, a:visited {
   display: none;
 }
 
-.rdrDay {
-  padding: 0!important;
-  margin: 0!important;
-  background: transparent!important;
-  border: none!important;
+.date-range-selector-wrapper .rdrDay {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
 }
 
-.rdrMonth {
-  width: 240px!important;
+.date-range-selector-wrapper .rdrMonth {
+  width: 240px;
 }
 
-.rdrMonthAndYearPickers select {
-  padding: 10px!important;
-  color: black!important;
+.date-range-selector-wrapper .rdrMonthAndYearPickers select {
+  padding: 10px;
+  color: black;
 }
 
-.App.dark .rdrMonthAndYearPickers select {
-  color: white!important;
-  background: #16182E!important;
+.App.dark .date-range-selector-wrapper .rdrMonthAndYearPickers select {
+  color: white;
+  background: #16182E;
 }
 
-.rdrNextPrevButton {
-  padding: 0!important;
+.date-range-selector-wrapper .rdrNextPrevButton {
+  padding: 0;
 }
 
-.rdrCalendarWrapper {
-  background-color: #EEE!important;
+.date-range-selector-wrapper .rdrCalendarWrapper {
+  background-color: #EEE;
 }
 
-.App.dark .rdrCalendarWrapper {
-  background-color: #16182E!important;
+.App.dark .date-range-selector-wrapper .rdrCalendarWrapper {
+  background-color: #16182E;
 }
 
-.rdrWeekDay {
-  color: black!important;
+.date-range-selector-wrapper .rdrWeekDay {
+  color: black;
 }
 
-.App.dark .rdrWeekDay {
-  color: white!important;
+.App.dark .date-range-selector-wrapper .rdrWeekDay {
+  color: white;
 }
 
-.rdrDayNumber span {
-  color: black!important;
+.date-range-selector-wrapper .rdrDayNumber span {
+  color: black;
 }
 
-.App.dark .rdrDayNumber span {
-  color: white!important;
+.App.dark .date-range-selector-wrapper .rdrDayNumber span {
+  color: white;
 }
 
-.rdrDayToday .rdrDayNumber span:after {
-  bottom: 1px!important;
+.date-range-selector-wrapper .rdrDayToday .rdrDayNumber span:after {
+  bottom: 1px;
 }
 
 .rdrDayPassive {
