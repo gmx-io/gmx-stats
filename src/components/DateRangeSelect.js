@@ -5,6 +5,8 @@ import { DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css'; // main css file
 import 'react-date-range/dist/theme/default.css'; // theme css file
 
+const ALL_TIME_ID = 4;
+
 export default function DateRangeSelect({ options, startDate, endDate, onChange }) {
   const [selectedDateRangeOption, setSelectedDateRangeOption] = useState()
   const [rangeState, setRangeState] = useState([
@@ -26,13 +28,13 @@ export default function DateRangeSelect({ options, startDate, endDate, onChange 
   }, [startDate, endDate])
 
   const onSelectItem = (option) => {
-    if (option.id == 4) {
+    if (option.id == ALL_TIME_ID) {
       onChange([null, null])
     }
     const end = new Date()
     const start = moment().subtract(option.id, 'month').toDate()
     setSelectedDateRangeOption(option.id)
-    if (option.id == 4) {
+    if (option.id == ALL_TIME_ID) {
       onChange([null, null])
     } else {
       onChange([start, end])
