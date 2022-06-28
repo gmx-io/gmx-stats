@@ -65,8 +65,9 @@ const cachedPrices = {
     [AVALANCHE]: {}
   }
 }
-const AVALANCHE_LAUNCH_TS = 1641416400
+const PRICE_START_TIMESTAMP = 1648155600 // 25 mar
 function putPricesIntoCache(prices, chainId, entitiesKey) {
+  const start = Date.now()
   if (!prices || !chainId || !entitiesKey) {
     throw new Error('Invalid arguments')
   }
@@ -78,10 +79,10 @@ function putPricesIntoCache(prices, chainId, entitiesKey) {
   for (const price of prices) {
     const token = price.token.toLowerCase()
     const timestamp = price.timestamp
-    if (chainId === AVALANCHE && entitiesKey === "fastPrices" && timestamp < AVALANCHE_LAUNCH_TS) {
+    if (entitiesKey === "fastPrices" && timestamp < PRICE_START_TIMESTAMP) {
       logger.info("Reject older prices on Avalanche. Price ts: %s launch ts: %s",
         toReadable(timestamp),
-        toReadable(AVALANCHE_LAUNCH_TS)
+        toReadable(PRICE_START_TIMESTAMP)
       )
       ret = false
       break
@@ -114,6 +115,13 @@ function putPricesIntoCache(prices, chainId, entitiesKey) {
     logger.debug('Estimated price cache size: %s MB, prices count: %s', size, pricesCount)
   }
 
+  logger.info("Put %s prices into cache total chain %s entities %s took %s ms hostname: %s",
+    prices.length,
+    chainId,
+    entitiesKey,
+    Date.now() - start,
+    process.env.HOSTNAME
+  )
   return ret
 }
 
@@ -166,11 +174,13 @@ async function precacheOldPrices(chainId, entitiesKey) {
   logger.info('precache old prices into memory for %s...', chainId)
 
   const baseRetryTimeout = 10000
+  const maxRetryTimeout = 60 * 10 * 1000
+  
   let oldestTimestamp = parseInt(Date.now() / 1000)
-  let i = 0
   let retryTimeout = baseRetryTimeout
   let failCount = 0
-  while (i < 100) {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
     try {
       const prices = await loadPrices({ before: oldestTimestamp, chainId, entitiesKey })
       if (prices.length === 0) {
@@ -194,10 +204,12 @@ async function precacheOldPrices(chainId, entitiesKey) {
           chainId, entitiesKey, retryTimeout / 1000)
         await sleep(retryTimeout)
         retryTimeout *= 2
+        if (retryTimeout > maxRetryTimeout) {
+          retryTimeout = maxRetryTimeout
+        }
       }
       await sleep(500)
     }
-    i++
   }
 }
 
@@ -399,7 +411,7 @@ function getPrices(from, to, preferableChainId = ARBITRUM, preferableSource = "c
 
   ttlCache.set(cacheKey, prices)
 
-  logger.debug('getPrices took %sms cacheKey %s', Date.now() - start, cacheKey)
+  logger.info('getPrices took %sms cacheKey %s', Date.now() - start, cacheKey)
 
   return prices
 }

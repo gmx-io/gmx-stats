@@ -182,28 +182,21 @@ function Arbitrum(props) {
 
   return (
     <div className="Home">
-      <div className="page-title-section">
-        <div className="page-title-block">
-          <h1>Analytics / Arbitrum</h1>
-          {lastSubgraphBlock && lastBlock &&
-            <p className={cx('page-description', { warning: isObsolete })}>
-              {isObsolete && "Data is obsolete. "}
-              Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
-              &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
-            </p>
-          }
-          {
-            lastSubgraphBlockError &&
-            <p className="page-description warning">
-              Subgraph data is temporarily unavailable.
-            </p>
-          }
-        </div>
-        <div className="form">
-          <DateRangeSelect options={dateRangeOptions} startDate={dataRange.fromValue} endDate={dataRange.toValue} onChange={onDateRangeChange} />
-        </div>
-      </div>
-      {/* {showForm &&
+      <h1>Analytics / Arbitrum</h1>
+      {lastSubgraphBlock && lastBlock &&
+        <p className={cx('page-description', { warning: isObsolete })} style={{ marginTop: '-1rem' }}>
+          {isObsolete && "Data is obsolete. "}
+          Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
+          &nbsp;at block <a rel="noreferrer" target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
+        </p>
+      }
+      {
+        lastSubgraphBlockError &&
+        <p className="page-description warning">
+          Subgraph data is temporarily unavailable.
+        </p>
+      }
+      {showForm &&
         <div className="form">
           <p>
             <label>Period</label>
@@ -334,7 +327,7 @@ function Arbitrum(props) {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[80, 170]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[80, 180]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
