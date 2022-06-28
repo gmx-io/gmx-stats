@@ -86,15 +86,10 @@ function Arbitrum(props) {
   const [volumeData, volumeLoading] = useVolumeDataFromServer(params)
   const [totalVolume] = useTotalVolumeFromServer()
   const totalVolumeDelta = useMemo(() => {
-    if (!volumeData) {
+    if (!volumeData || !volumeData.length) {
       return null
     }
-    try {
-      return volumeData[volumeData.length - 1].all
-    } catch (error) {
-      console.log(volumeData)
-      return null
-    }
+    return volumeData[volumeData.length - 1].all
   }, [volumeData])
 
   const [feesData, feesLoading] = useFeesData(params)

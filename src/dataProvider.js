@@ -1194,7 +1194,7 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
     let indexBtcCount = GLP_START_PRICE * BTC_WEIGHT / btcFirstPrice
     let indexEthCount = GLP_START_PRICE * ETH_WEIGHT / ethFirstPrice
     let indexAvaxCount = GLP_START_PRICE * AVAX_WEIGHT / avaxFirstPrice
-    let indexStableCount = GLP_START_PRICE * STABLE_WEIGHT 
+    let indexStableCount = GLP_START_PRICE * STABLE_WEIGHT
 
     const lpBtcCount = GLP_START_PRICE * 0.5 / btcFirstPrice
     const lpEthCount = GLP_START_PRICE * 0.5 / ethFirstPrice
@@ -1227,13 +1227,13 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
         + indexAvaxCount * avaxPrice
         + indexStableCount
       )
-      
+
       // rebalance each day. can rebalance each X days
       if (i % 1 == 0) {
         indexBtcCount = syntheticPrice * BTC_WEIGHT / btcPrice
         indexEthCount = syntheticPrice * ETH_WEIGHT / ethPrice
         indexAvaxCount = syntheticPrice * AVAX_WEIGHT / avaxPrice
-        indexStableCount = syntheticPrice * STABLE_WEIGHT 
+        indexStableCount = syntheticPrice * STABLE_WEIGHT
       }
 
       const lpBtcPrice = (lpBtcCount * btcPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(btcPrice / btcFirstPrice))
@@ -1279,12 +1279,12 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
         glpPlusFees,
         glpPlusDistributedUsd,
         glpPlusDistributedEth,
-        
+
         indexBtcCount,
         indexEthCount,
         indexAvaxCount,
         indexStableCount,
-        
+
         BTC_WEIGHT,
         ETH_WEIGHT,
         AVAX_WEIGHT,
