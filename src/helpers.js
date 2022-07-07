@@ -1,3 +1,5 @@
+/* eslint-disable no-constant-condition */
+/* eslint-disable no-mixed-spaces-and-tabs */
 import Logger from 'console-log-level'
 import { ethers } from 'ethers'
 import strftime from 'strftime'
@@ -199,15 +201,15 @@ export const yaxisFormatterNumber = value => {
   return compactNumber(value)
 }
 
-export const yaxisFormatter = (value, ...args) => {
+export const yaxisFormatter = (value) => {
   return formatNumber(value, { currency: true, compact: true })
 }
 
-export const tooltipFormatterNumber = (value, name, item) => {
+export const tooltipFormatterNumber = (value) => {
   return formatNumber(value)
 }
 
-export const tooltipFormatterPercent = (value, name, item) => {
+export const tooltipFormatterPercent = (value) => {
   return value.toFixed(2) + '%'
 }
 
