@@ -33,7 +33,7 @@ const cachedPrices = {
   [ARBITRUM]: {},
   [AVALANCHE]: {}
 }
-const seenPrices = new Set()
+const seenIds = new Set()
 // both Arbitrum and Avalanche don't have older prices
 const PRICE_START_TIMESTAMP = Math.floor(+new Date(2022, 0, 6) / 1000) // 6th of January 2022
 function putPriceIntoCache(prices, chainId, append) {
@@ -77,12 +77,13 @@ function putPriceIntoCache(prices, chainId, append) {
       if (prices_.length === 0) {
         continue
       }
-      const firstCandle = priceToCandle(prices_[prices_.length - 1]) // prices are requested in descending order
+      const newSeenCandles = []
       const candles = prices_.filter(price => {
-        if (seenPrices.has(price.id)) {
+        if (seenIds.has(price.id)) {
+          newSeenCandles.push(priceToCandle(price))
           return false
         }
-        seenPrices.add(price.id)
+        seenIds.add(price.id)
         return true
       }).reverse().map(priceToCandle)
 
@@ -91,14 +92,16 @@ function putPriceIntoCache(prices, chainId, append) {
       if (append) {
         const l = cachedPrices[chainId][token][period].length
         const lastStoredCandle = cachedPrices[chainId][token][period][l - 1]
-        if (lastStoredCandle && !isEqual(lastStoredCandle, firstCandle)) {
-          logger.debug("replace data for last stored candle token: %s close before: %s close after: %s",
-            token,
-            lastStoredCandle.c,
-            firstCandle.c
-          )
-          // replace last stored candle with the new one with the same timestamp
-          cachedPrices[chainId][token][period][l - 1] = firstCandle
+        for (const newSeenCandle of newSeenCandles) {
+          if (lastStoredCandle && lastStoredCandle.t === newSeenCandle.t && !isEqual(lastStoredCandle, newSeenCandle)) {
+            logger.debug("replace data for last stored candle token: %s close before: %s close after: %s",
+              token,
+              lastStoredCandle.c,
+              newSeenCandle.c
+            )
+            // replace last stored candle with the new one with the same timestamp
+            cachedPrices[chainId][token][period][l - 1] = newSeenCandle
+          }
         }
         cachedPrices[chainId][token][period].push(...candles)
       } else {
@@ -279,7 +282,7 @@ async function loadOldPrices(chainId, period) {
   const graphClient = getPricesClient(chainId)
 
   let before = Math.floor(Date.now() / 1000)
-  let seenPrices = new Set()
+  const seenOldPrices = new Set()
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
@@ -299,10 +302,10 @@ async function loadOldPrices(chainId, period) {
           break
         }
         for (const price of part) {
-          if (seenPrices.has(price.id)) {
+          if (seenOldPrices.has(price.id)) {
             continue
           }
-          seenPrices.add(price.id)
+          seenOldPrices.add(price.id)
           prices.push(price)
         }
       }
