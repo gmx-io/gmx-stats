@@ -77,34 +77,32 @@ function putPriceIntoCache(prices, chainId, append) {
       if (prices_.length === 0) {
         continue
       }
-      const newSeenCandles = []
+      const firstCandle = priceToCandle(prices_[0])
       const candles = prices_.filter(price => {
         if (seenIds.has(price.id)) {
-          newSeenCandles.push(priceToCandle(price))
           return false
         }
         seenIds.add(price.id)
         return true
-      }).reverse().map(priceToCandle)
+      }).map(priceToCandle)
 
       cachedPrices[chainId][token] = cachedPrices[chainId][token] || {}
       cachedPrices[chainId][token][period] = cachedPrices[chainId][token][period] || []
       if (append) {
-        const l = cachedPrices[chainId][token][period].length
-        const lastStoredCandle = cachedPrices[chainId][token][period][l - 1]
-        for (const newSeenCandle of newSeenCandles) {
-          if (lastStoredCandle && lastStoredCandle.t === newSeenCandle.t && !isEqual(lastStoredCandle, newSeenCandle)) {
-            logger.debug("replace data for last stored candle token: %s close before: %s close after: %s",
-              token,
-              lastStoredCandle.c,
-              newSeenCandle.c
-            )
-            // replace last stored candle with the new one with the same timestamp
-            cachedPrices[chainId][token][period][l - 1] = newSeenCandle
-          }
+        const len = cachedPrices[chainId][token][period].length
+        const lastStoredCandle = cachedPrices[chainId][token][period][len - 1]
+        if (lastStoredCandle && lastStoredCandle.t === firstCandle.t && !isEqual(lastStoredCandle, firstCandle)) {
+          logger.debug(
+            "replace data for last stored candle token: %s close %s -> %s high %s -> %s low %s -> %s",
+            token, lastStoredCandle.c, firstCandle.c, lastStoredCandle.h, firstCandle.h, lastStoredCandle.l, firstCandle.l
+          )
+          lastStoredCandle.c = firstCandle.c
+          lastStoredCandle.h = firstCandle.h
+          lastStoredCandle.l = firstCandle.l
         }
         cachedPrices[chainId][token][period].push(...candles)
       } else {
+        candles.reverse()
         cachedPrices[chainId][token][period].unshift(...candles)
       }
       
@@ -210,7 +208,6 @@ async function loadNewPrices(chainId, period) {
     priceCandles(
       first: 1000
       orderBy: timestamp
-      orderDirection: desc
       where: { timestamp_gte: ${after}, period: "${period}" }
     ) { ${CANDLE_PROPS} }
   }`
@@ -234,7 +231,7 @@ async function loadNewPrices(chainId, period) {
       } else {
         logger.info("chainId: %s period: %s prices: %s", chainId, period, prices.length)
         putPriceIntoCache(prices, chainId, true)
-        after = prices[0].timestamp
+        after = prices[prices.length - 1].timestamp
         logger.info("New after: %s", toReadable(after))
       }
     } catch (ex) {
