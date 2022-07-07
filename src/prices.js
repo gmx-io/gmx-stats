@@ -92,7 +92,7 @@ function putPriceIntoCache(prices, chainId, append) {
         const len = cachedPrices[chainId][token][period].length
         const lastStoredCandle = cachedPrices[chainId][token][period][len - 1]
         if (lastStoredCandle && lastStoredCandle.t === firstCandle.t && !isEqual(lastStoredCandle, firstCandle)) {
-          logger.debug(
+          logger.info(
             "replace data for last stored candle token: %s close %s -> %s high %s -> %s low %s -> %s",
             token, lastStoredCandle.c, firstCandle.c, lastStoredCandle.h, firstCandle.h, lastStoredCandle.l, firstCandle.l
           )
