@@ -65,10 +65,10 @@ function putPriceIntoCache(prices, chainId, append) {
   function priceToCandle(price) {
     return {
       t: price.timestamp,
-      o: Number((price.open / 1e30).toFixed(2)),
-      c: Number((price.close / 1e30).toFixed(2)),
-      h: Number((price.high / 1e30).toFixed(2)),
-      l: Number((price.low / 1e30).toFixed(2))
+      o: Number((price.open / 1e30).toFixed(4)),
+      c: Number((price.close / 1e30).toFixed(4)),
+      h: Number((price.high / 1e30).toFixed(4)),
+      l: Number((price.low / 1e30).toFixed(4))
     }
   }
 
