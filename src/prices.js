@@ -11,6 +11,8 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 const logger = getLogger('prices')
 const ttlCache = new TtlCache(60, 1000)
 
+const LOAD_NEW_PRICES_LOOP_INTERVAL = IS_PRODUCTION ? 60000 : 5000
+const LOAD_OLD_PRICES_LOOP_INTERVAL = IS_PRODUCTION ? 5000 : 5000
 const PERIOD_TO_SECONDS = {
   '5m': 60 * 5,
   '15m': 60 * 15,
@@ -33,10 +35,14 @@ const cachedPrices = {
   [ARBITRUM]: {},
   [AVALANCHE]: {}
 }
-const seenIds = new Set()
+const oldPricesLoadedForChainIdAndPeriod = {
+  [ARBITRUM]: {},
+  [AVALANCHE]: {} 
+}
+const candleByPriceId = {}
 // both Arbitrum and Avalanche don't have older prices
 const PRICE_START_TIMESTAMP = Math.floor(+new Date(2022, 0, 6) / 1000) // 6th of January 2022
-function putPriceIntoCache(prices, chainId, append) {
+function putPricesIntoCache(prices, chainId, append) {
   if (append === undefined) {
     throw new Error('Explicit append is required')
   }
@@ -61,63 +67,13 @@ function putPriceIntoCache(prices, chainId, append) {
     acc[token][price.period].push(price)
     return acc
   }, {})
-  
-  function priceToCandle(price) {
-    return {
-      t: price.timestamp,
-      o: Number((price.open / 1e30).toFixed(4)),
-      c: Number((price.close / 1e30).toFixed(4)),
-      h: Number((price.high / 1e30).toFixed(4)),
-      l: Number((price.low / 1e30).toFixed(4))
-    }
-  }
 
   for (const token in groupByTokenAndPeriod) {
-    for (let [period, prices_] of Object.entries(groupByTokenAndPeriod[token])) {
-      if (prices_.length === 0) {
+    for (let [period, pricesForTokenAndPeriod] of Object.entries(groupByTokenAndPeriod[token])) {
+      if (pricesForTokenAndPeriod.length === 0) {
         continue
       }
-      const firstCandle = priceToCandle(prices_[0])
-      const candles = prices_.filter(price => {
-        if (seenIds.has(price.id)) {
-          return false
-        }
-        seenIds.add(price.id)
-        return true
-      }).map(priceToCandle)
-
-      cachedPrices[chainId][token] = cachedPrices[chainId][token] || {}
-      cachedPrices[chainId][token][period] = cachedPrices[chainId][token][period] || []
-      if (append) {
-        const len = cachedPrices[chainId][token][period].length
-        const lastStoredCandle = cachedPrices[chainId][token][period][len - 1]
-        if (lastStoredCandle && lastStoredCandle.t === firstCandle.t && !isEqual(lastStoredCandle, firstCandle)) {
-          logger.info(
-            "replace data for last stored candle token: %s close %s -> %s high %s -> %s low %s -> %s",
-            token, lastStoredCandle.c, firstCandle.c, lastStoredCandle.h, firstCandle.h, lastStoredCandle.l, firstCandle.l
-          )
-          lastStoredCandle.c = firstCandle.c
-          lastStoredCandle.h = firstCandle.h
-          lastStoredCandle.l = firstCandle.l
-        }
-        cachedPrices[chainId][token][period].push(...candles)
-      } else {
-        candles.reverse()
-        cachedPrices[chainId][token][period].unshift(...candles)
-      }
-      
-      if (!IS_PRODUCTION) {
-        let prev = null
-        cachedPrices[chainId][token][period].forEach(p => {
-          if (prev && p.t < prev.t) {
-            throw new Error(`Invalid order chainId ${chainId} token ${token} period ${period}`)
-          }
-          if (prev && p.t === prev.t) {
-            throw new Error(`Duplicated timestamp chainId ${chainId} token ${token} period ${period}`)
-          }
-          prev = p
-        })
-      }
+      putPricesForTokenAndPeriodIntoCache(pricesForTokenAndPeriod, chainId, token, period, append)
     }
   }
   logger.info("Put %s prices into cache total chain %s took %sms hostname: %s",
@@ -128,6 +84,68 @@ function putPriceIntoCache(prices, chainId, append) {
   )
   
   return ret
+}
+  
+function priceToCandle(price) {
+  return {
+    t: price.timestamp,
+    o: Number((price.open / 1e30).toFixed(4)),
+    c: Number((price.close / 1e30).toFixed(4)),
+    h: Number((price.high / 1e30).toFixed(4)),
+    l: Number((price.low / 1e30).toFixed(4))
+  }
+}
+
+function putPricesForTokenAndPeriodIntoCache(prices, chainId, token, period, append) {
+  cachedPrices[chainId][token] = cachedPrices[chainId][token] || {}
+  cachedPrices[chainId][token][period] = cachedPrices[chainId][token][period] || []
+
+  const candles = cachedPrices[chainId][token][period]
+  if (append) {
+    prices.reverse()
+  }
+
+  for (const price of prices) {
+    const candle = priceToCandle(price)
+    if (candleByPriceId[price.id]) {
+      if (!isEqual(candleByPriceId[price.id], candle)) {
+        logger.info(
+          "replace data for last stored candle token: %s period: %s close: %s->%s high: %s->%s low: %s->%s",
+          token,
+          period,
+          candleByPriceId[price.id].c,
+          candle.c,
+          candleByPriceId[price.id].h,
+          candle.h,
+          candleByPriceId[price.id].l,
+          candle.l
+        )
+        candleByPriceId[price.id].c = candle.c
+        candleByPriceId[price.id].h = candle.h
+        candleByPriceId[price.id].l = candle.l
+      }
+    } else {
+      if (append) {
+        candles.push(candle)
+      } else {
+        candles.unshift(candle)
+      }
+      candleByPriceId[price.id] = candle
+    }
+  }
+  
+  if (!IS_PRODUCTION) {
+    let prev = null
+    cachedPrices[chainId][token][period].forEach(p => {
+      if (prev && p.t < prev.t) {
+        throw new Error(`Invalid order ${p.t} < ${prev.t} chainId ${chainId} token ${token} period ${period}`)
+      }
+      if (prev && p.t === prev.t) {
+        throw new Error(`Duplicated timestamp ${p.t} chainId ${chainId} token ${token} period ${period}`)
+      }
+      prev = p
+    })
+  }
 }
 
 function getPriceRange(prices, from, to, inbound = false) {
@@ -195,20 +213,17 @@ let latestUpdateTimestamp = Math.floor(Date.now() / 1000)
 const CANDLE_PROPS = 'timestamp token period id open high low close'
 
 async function loadNewPrices(chainId, period) {
-  const logger = getLogger('prices.loadNewPrices')
+  const logger = getLogger(`prices.loadNewPrices ${chainId}/${period}`)
   if (!chainId) {
     throw new Error('requires chainId')
   }
-  logger.info('chainId: %s period: %s',
-    chainId,
-    period
-  )
   
-  const getQuery = (after) => `{
+  const getQuery = () => `{
     priceCandles(
-      first: 1000
+      first: 50
       orderBy: timestamp
-      where: { timestamp_gte: ${after}, period: "${period}" }
+      orderDirection: desc
+      where: { period: "${period}" }
     ) { ${CANDLE_PROPS} }
   }`
 
@@ -216,41 +231,39 @@ async function loadNewPrices(chainId, period) {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
-      let after = Math.floor(Date.now() / 1000 / PERIOD_TO_SECONDS[period]) * PERIOD_TO_SECONDS[period]
+      if (!oldPricesLoadedForChainIdAndPeriod[chainId][period]) {
+        logger.info("old prices were not loaded. wait")
+        await sleep(1000)
+        continue
+      } 
 
-      const query = getQuery(after)
+      const query = getQuery()
       const start = Date.now()
-      logger.info("requesting prices after %s for period %s", toReadable(after), period)
+      logger.info("requesting prices after %s", period)
       const { data } = await graphClient.query({ query: gql(query) })
-      logger.info("request done in %sms", Date.now() - start)
+      logger.info("request done in %sms loaded %s prices", Date.now() - start, data.priceCandles.length)
       latestUpdateTimestamp = Math.floor(Date.now() / 1000)
       const prices = data.priceCandles
 
       if (prices.length === 0) {
         logger.info("No prices returned")
       } else {
-        logger.info("chainId: %s period: %s prices: %s", chainId, period, prices.length)
-        putPriceIntoCache(prices, chainId, true)
-        after = prices[prices.length - 1].timestamp
-        logger.info("New after: %s", toReadable(after))
+        logger.info("prices: %s", prices.length)
+        putPricesIntoCache(prices, chainId, true)
       }
     } catch (ex) {
       logger.warn("loop failed")
       logger.warn(ex)
     }
-    await sleep(15000)
+    await sleep(LOAD_NEW_PRICES_LOOP_INTERVAL)
   }
 }
 
 async function loadOldPrices(chainId, period) {
-  const logger = getLogger('prices.loadOldPrices')
+  const logger = getLogger(`prices.loadOldPrices ${chainId}/${period}`)
   if (!chainId) {
     throw new Error('requires chainId')
   }
-  logger.info('chainId: %s period: %s',
-    chainId,
-    period
-  )
 
   const getQueryPart = (before, skip) => `
     priceCandles(
@@ -285,7 +298,7 @@ async function loadOldPrices(chainId, period) {
     try {
       const query = getQuery(before)
       const start = Date.now()
-      logger.info("requesting prices before %s for period %s", toReadable(before), period)
+      logger.info("requesting prices before %s", toReadable(before))
       const { data } = await graphClient.query({ query: gql(query) })
       logger.info("request done in %sms", Date.now() - start)
       if (!data || !data.p0) {
@@ -310,15 +323,17 @@ async function loadOldPrices(chainId, period) {
         logger.info("No unseen prices returned. Break")
         break
       }
-      logger.info("chainId: %s period: %s prices: %s time range %s - %s", chainId, prices.length, period, toReadable(prices[prices.length - 1].timestamp), toReadable(prices[0].timestamp))
+      logger.info("prices: %s time range %s - %s", prices.length, toReadable(prices[prices.length - 1].timestamp), toReadable(prices[0].timestamp))
 
-      if (!putPriceIntoCache(prices, chainId, false)) {
-        logger.info("putPriceIntoCache returned false. Stop")
+      if (!putPricesIntoCache(prices, chainId, false)) {
+        logger.info("putPricesIntoCache returned false. Stop")
         break
       }
       before = prices[prices.length - 1].timestamp
       logger.info("New before: %s", toReadable(before))
-      await sleep(5000)
+      
+      oldPricesLoadedForChainIdAndPeriod[chainId][period] = true
+      await sleep(LOAD_OLD_PRICES_LOOP_INTERVAL)
     } catch (ex) {
       logger.warn("loop failed, sleep 15 seconds")
       logger.warn(ex)
@@ -327,12 +342,14 @@ async function loadOldPrices(chainId, period) {
   }
 }
 
-for (const period of Object.keys(PERIOD_TO_SECONDS)) {
-  loadNewPrices(ARBITRUM, period)
-  loadNewPrices(AVALANCHE, period)
+if (IS_PRODUCTION || process.env.ENABLE_PRICES) {
+  for (const period of Object.keys(PERIOD_TO_SECONDS)) {
+    loadNewPrices(ARBITRUM, period)
+    loadNewPrices(AVALANCHE, period)
 
-  loadOldPrices(ARBITRUM, period)
-  loadOldPrices(AVALANCHE, period)
+    loadOldPrices(ARBITRUM, period)
+    loadOldPrices(AVALANCHE, period)
+  }
 }
 
 function getLastUpdatedTimestamp() {
