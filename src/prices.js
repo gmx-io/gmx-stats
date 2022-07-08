@@ -35,10 +35,6 @@ const cachedPrices = {
   [ARBITRUM]: {},
   [AVALANCHE]: {}
 }
-const oldPricesLoadedForChainIdAndPeriod = {
-  [ARBITRUM]: {},
-  [AVALANCHE]: {} 
-}
 const candleByPriceId = {}
 // both Arbitrum and Avalanche don't have older prices
 const PRICE_START_TIMESTAMP = Math.floor(+new Date(2022, 0, 6) / 1000) // 6th of January 2022
@@ -231,12 +227,6 @@ async function loadNewPrices(chainId, period) {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
-      if (!oldPricesLoadedForChainIdAndPeriod[chainId][period]) {
-        logger.info("old prices were not loaded. wait")
-        await sleep(1000)
-        continue
-      } 
-
       const query = getQuery()
       const start = Date.now()
       logger.info("requesting prices after %s", period)
@@ -332,7 +322,6 @@ async function loadOldPrices(chainId, period) {
       before = prices[prices.length - 1].timestamp
       logger.info("New before: %s", toReadable(before))
       
-      oldPricesLoadedForChainIdAndPeriod[chainId][period] = true
       await sleep(LOAD_OLD_PRICES_LOOP_INTERVAL)
     } catch (ex) {
       logger.warn("loop failed, sleep 15 seconds")
