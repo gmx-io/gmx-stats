@@ -30,10 +30,10 @@ function convertToPercents(items) {
 export default function PoolAmountChart({
     from,
     to,
-    groupPeriod,
+    chainName,
 }) {
     const [isPercentsView, setIsPercentsView] = useState(false);
-    const [tokenStatsData, tokenStatsLoading] = useTokenStats({from, to, groupPeriod});
+    const [tokenStatsData, tokenStatsLoading] = useTokenStats({from, to, chainName});
 
     const data = useMemo(() => {
         if (!tokenStatsData) {

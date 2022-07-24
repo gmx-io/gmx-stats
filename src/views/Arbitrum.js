@@ -518,7 +518,6 @@ function Arbitrum(props) {
           <PoolAmountChart 
             from={from}
             to={to}
-            groupPeriod={groupPeriod}
           />
         </div>
         <div className="chart-cell">
