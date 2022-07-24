@@ -1,0 +1,32 @@
+.root {
+    position: relative;
+}
+
+.controls {
+    display: flex;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
+
+.button {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    line-height: 8px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-left: 6px;
+    border: 1px solid #19376f;
+    outline: none;
+    color: white;
+    background-color: transparent;
+    transition: background-color .2s ease-in-out;
+}
+  
+.button.active {
+    padding: 8px 12px;
+    cursor: pointer;
+    background-color: #19376f;
+    color: white;
+}

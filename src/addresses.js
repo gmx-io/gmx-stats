@@ -20,6 +20,7 @@ export const addresses = {
         ETH: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
         LINK: '0xf97f4df75117a78c1a5a0dbb814af92458539fb4',
         UNI: '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0',
+        DAI: '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1',
         RewardReader: '0x8BFb8e82Ee4569aee78D03235ff465Bd436D40E0',
         GLP: '0x4277f8F2c384827B5273592FF7CeBd9f2C1ac258',
         GlpManager: '0x321F653eED006AD1C29D174e17d96351BDe22649'

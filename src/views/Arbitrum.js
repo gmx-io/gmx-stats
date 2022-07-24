@@ -65,6 +65,7 @@ import {
   useLastSubgraphBlock,
   useLastBlock
 } from '../dataProvider'
+import PoolAmountChart from '../components/PoolAmountChart';
 
 const { BigNumber } = ethers
 const { formatUnits} = ethers.utils
@@ -90,6 +91,7 @@ function Arbitrum(props) {
   const params = { from, to, groupPeriod }
 
   const [fundingRateData, fundingRateLoading] = useFundingRateData(params)
+
   const [volumeData, volumeLoading] = useVolumeDataFromServer(params)
   const [totalVolume] = useTotalVolumeFromServer()
   const totalVolumeDelta = useMemo(() => {
@@ -511,6 +513,13 @@ function Arbitrum(props) {
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
               isCoinChart={true}
             />
+        </div>
+        <div className="chart-cell">
+          <PoolAmountChart 
+            from={from}
+            to={to}
+            groupPeriod={groupPeriod}
+          />
         </div>
         <div className="chart-cell">
            <GenericChart
