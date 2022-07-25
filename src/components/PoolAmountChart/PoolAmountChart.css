@@ -6,7 +6,7 @@
     display: flex;
     position: absolute;
     top: 0px;
-    right: 0px;
+    right: 5px;
 }
 
 .button {
@@ -14,19 +14,22 @@
     display: flex;
     align-items: center;
     line-height: 8px;
-    padding: 4px 12px;
-    border-radius: 4px;
-    margin-left: 6px;
-    border: 1px solid #19376f;
-    outline: none;
+    padding: 8px 12px;
+    background-color: #1D1F32;
+    border: 1px solid hsla(0,0%,100%,0.1607843137254902);;
     color: white;
-    background-color: transparent;
+    outline: none;
+    font-weight: normal;
+    border-radius: 4px;
     transition: background-color .2s ease-in-out;
+}
+
+.button:hover {
+    background-color:  rgba(128,138,255,0.0784313725490196);;
 }
   
 .button.active {
-    padding: 8px 12px;
     cursor: pointer;
-    background-color: #19376f;
-    color: white;
+    border: 1px solid rgba(129,140,239,0.2);
+    background-color: rgba(129,140,239,0.2);
 }

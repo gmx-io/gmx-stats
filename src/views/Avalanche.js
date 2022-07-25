@@ -282,6 +282,12 @@ function Avalanche(props) {
           </ChartWrapper>
         </div>
         <div className="chart-cell">
+          <PoolAmountChart 
+            from={from}
+            to={to}
+          />
+        </div>
+        <div className="chart-cell">
           <ChartWrapper
             title="Glp Performance"
             loading={glpLoading}

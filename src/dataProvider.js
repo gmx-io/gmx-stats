@@ -1305,8 +1305,6 @@ export function useTokenStats({
     }
   }`
 
- // {timestamp, ETH: ...}
-
   const [graphData, loading, error] = useGraph(query, { chainName, subgraphUrl: 'https://api.thegraph.com/subgraphs/id/QmXzfL9d8fGe39UCMCTJaBwYnZUHU7CuGgiffp1NNyc73p' })
 
   const data = useMemo(() => {
@@ -1348,11 +1346,12 @@ export function useTokenStats({
       Object.keys(resultStats).forEach(statKey => {
 
         const tokensData = Object.entries(dataItem).reduce((memo, [token, stats]) => {
+            memo.total += stats[statKey];
             memo[token] = stats[statKey];
             memo.timestamp = timestamp;
 
             return memo;
-        }, {});
+        }, {total: 0});
 
         resultStats[statKey].push(tokensData)
       })

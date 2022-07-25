@@ -290,6 +290,12 @@ function Arbitrum(props) {
           </ChartWrapper>
         </div>
         <div className="chart-cell">
+          <PoolAmountChart 
+            from={from}
+            to={to}
+          />
+        </div>
+        <div className="chart-cell">
           <ChartWrapper
             title="Glp Performance"
             loading={glpLoading}
@@ -513,12 +519,6 @@ function Arbitrum(props) {
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
               isCoinChart={true}
             />
-        </div>
-        <div className="chart-cell">
-          <PoolAmountChart 
-            from={from}
-            to={to}
-          />
         </div>
         <div className="chart-cell">
            <GenericChart
