@@ -1331,13 +1331,7 @@ export function useTokenStats({
       memo[timestamp] = memo[timestamp || 0] || {};
 
       memo[timestamp][symbol] = {
-        poolAmount: parseInt(stats.poolAmount),
         poolAmountUsd: parseInt(stats.poolAmountUsd) / 1e30,
-
-        reservedAmount: parseInt(stats.reservedAmount),
-        reservedAmountUsd: parseInt(stats.reservedAmountUsd) / 1e30,
-
-        usdgAmount: parseInt(stats.usdgAmount),
       };
 
       return memo;
