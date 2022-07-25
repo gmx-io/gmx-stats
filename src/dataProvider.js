@@ -1288,31 +1288,42 @@ export function useTokenStats({
   period = 'daily',
   chainName = "arbitrum" 
 } = {}) {
+
+  const tokenFieldsQ = `
+    poolAmountUsd
+    timestamp
+    token
+  `;
+
+  const commonParamsQ = `
+    orderBy: timestamp,
+    orderDirection: desc,
+    where: { period: ${period}, timestamp_gte: ${from}, timestamp_lte: ${to} }
+  `
+
+  // Request more than 1000 records to retrieve maximum stats for period
   const query = `{
-    tokenStats(
-      first: 1000,
-      orderBy: timestamp,
-      orderDirection: desc,
-      where: { period: ${period}, timestamp_gte: ${from}, timestamp_lte: ${to} }
-    ) {
-      token
-      timestamp
-      poolAmount
-      poolAmountUsd
-      usdgAmount
-      reservedAmount
-      reservedAmountUsd
-    }
+    a: tokenStats(first: 1000, ${commonParamsQ}) {${tokenFieldsQ}},
+    b: tokenStats(first: 1000, skip: 1000 ${commonParamsQ}) {${tokenFieldsQ}},
+    c: tokenStats(first: 1000, skip: 2000 ${commonParamsQ}) {${tokenFieldsQ}},
+    d: tokenStats(first: 1000, skip: 3000 ${commonParamsQ}) {${tokenFieldsQ}},
+    e: tokenStats(first: 1000, skip: 4000 ${commonParamsQ}) {${tokenFieldsQ}},
+    f: tokenStats(first: 1000, skip: 5000 ${commonParamsQ}) {${tokenFieldsQ}}
   }`
 
-  const [graphData, loading, error] = useGraph(query, { chainName, subgraphUrl: 'https://api.thegraph.com/subgraphs/id/QmXzfL9d8fGe39UCMCTJaBwYnZUHU7CuGgiffp1NNyc73p' })
+  const [graphData, loading, error] = useGraph(query, { chainName })
 
   const data = useMemo(() => {
     if (!graphData) {
       return null
     }
 
-    const timestampGroups = graphData.tokenStats.reduce((memo, item) => {
+    const fullData = Object.values(graphData).reduce((memo, records) => {
+      memo.push(...records);
+      return memo;
+    }, []);
+
+    const timestampGroups = fullData.reduce((memo, item) => {
       const {timestamp, token, ...stats} = item;
 
       const symbol = tokenSymbols[token] || token.slice(6);
@@ -1333,13 +1344,7 @@ export function useTokenStats({
     }, {});
 
     const resultStats = {
-      poolAmount: [],
       poolAmountUsd: [],
-
-      reservedAmount: [],
-      reservedAmountUsd: [],
-
-      usdgAmount: [],
     };
 
     Object.entries(timestampGroups).forEach(([timestamp, dataItem]) => {
