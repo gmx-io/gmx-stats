@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useTokenStats } from '../../dataProvider';
 import { tooltipFormatter, tooltipFormatterPercent, yaxisFormatter, yaxisFormatterPercent } from '../../helpers';
-import './PoolAmountChart.css';
 import GenericChart from "../GenericChart"
 import cx from 'classnames';
 
@@ -30,12 +29,13 @@ export default function PoolAmountChart({
     from,
     to,
     chainName,
+    syncId,
 }) {
     const [isPercentsView, setIsPercentsView] = useState(false);
     const [tokenStatsData, tokenStatsLoading] = useTokenStats({from, to, chainName});
 
     const data = useMemo(() => {
-        if (!tokenStatsData) {
+        if (!tokenStatsData || !tokenStatsData.poolAmountUsd) {
             return [];
         }
 
@@ -43,15 +43,19 @@ export default function PoolAmountChart({
             return convertToPercents(tokenStatsData.poolAmountUsd)
         }
 
-        return tokenStatsData.poolAmountUsd
+        return tokenStatsData.poolAmountUsd;
 
-    }, [isPercentsView, tokenStatsData])
+    }, [isPercentsView, tokenStatsData]);
+
+    const chartLegendItems = Object.keys(data[0] || {})
+        .filter(key => !['timestamp', 'total'].includes(key))
+        .map(token => ({key: token}));
 
     return (
-        <div className='root'>
-            <div className='controls'>
+        <div style={{position: 'relative'}}>
+            <div className='chart-controls'>
                 <div 
-                    className={cx('PoolAmoutChart', {button: true, active: isPercentsView})}
+                    className={cx('PoolAmoutChart', {'chart-control-checkbox': true, active: isPercentsView})}
                     onClick={() => setIsPercentsView(old => !old)}
                 >
                     %
@@ -59,13 +63,14 @@ export default function PoolAmountChart({
             </div>
             
             <GenericChart
+                syncId={syncId}
                 loading={tokenStatsLoading}
                 title="Pool Composition"
                 data={data}
                 yaxisTickFormatter={isPercentsView ? yaxisFormatterPercent : yaxisFormatter}
                 tooltipFormatter={isPercentsView ? tooltipFormatterPercent : tooltipFormatter}
                 yaxisDataKey={'total'}
-                items={[{ key: 'ETH' }, { key: 'BTC' }, { key: 'UNI' }, { key: 'LINK' }, { key: 'USDC' }, { key: 'USDT' }, { key: 'MIM' }, { key: 'FRAX'}, { key: 'DAI' }]}
+                items={chartLegendItems}
                 type="Bar"
             />
         </div>

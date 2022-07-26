@@ -293,6 +293,7 @@ function Arbitrum(props) {
           <PoolAmountChart 
             from={from}
             to={to}
+            syncId="syncGlp"
           />
         </div>
         <div className="chart-cell">

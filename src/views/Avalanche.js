@@ -285,6 +285,8 @@ function Avalanche(props) {
           <PoolAmountChart 
             from={from}
             to={to}
+            chainName={params.chainName}
+            syncId="syncGlp"
           />
         </div>
         <div className="chart-cell">
@@ -440,13 +442,6 @@ function Avalanche(props) {
               type="Line"
               yaxisDomain={[0, 90 /* ~87% is a maximum yearly borrow rate */]}
             />
-        </div>
-        <div className="chart-cell">
-          <PoolAmountChart 
-            from={from}
-            to={to}
-            chainName={params.chainName}
-          />
         </div>
         <div className="chart-cell">
            <GenericChart

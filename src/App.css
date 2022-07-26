@@ -216,6 +216,51 @@ label + input {
   opacity: 1;
 }
 
+.chart-controls {
+    display: flex;
+    position: absolute;
+    top: 0px;
+    right: 5px;
+}
+
+.chart-control-checkbox {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 8px;
+  width: 30px;
+  height: 26px;
+  border: 1px solid #e6e6f7;
+  color: #e6e6f7;
+  outline: none;
+  font-weight: normal;
+  border-radius: 2px;
+  transition: background-color .2s ease-in-out;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.chart-control-checkbox:hover {
+  filter: brightness(0.8);
+}
+
+.chart-control-checkbox.active {
+  background-color: #e6e6f7;
+  border: 1px solid #A0A3C4;
+  color: #A0A3C4;
+}
+
+.App.dark .chart-control-checkbox {
+  border: 1px solid #FFFFFF14;
+  color: #FFFFFF14;
+}
+
+.App.dark .chart-control-checkbox.active {
+  background-color: rgba(129,140,239,0.05);
+  color: #e6e6f7;
+}
+
 .form input[type="date"],
 .form input[type="text"] {
   border: 1px solid #aaa;

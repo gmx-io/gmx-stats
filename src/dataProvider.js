@@ -1289,26 +1289,28 @@ export function useTokenStats({
   chainName = "arbitrum" 
 } = {}) {
 
-  const tokenFieldsQ = `
-    poolAmountUsd
-    timestamp
-    token
-  `;
-
-  const commonParamsQ = `
-    orderBy: timestamp,
-    orderDirection: desc,
-    where: { period: ${period}, timestamp_gte: ${from}, timestamp_lte: ${to} }
+  const getTokenStatsFragment = ({skip = 0} = {}) => `
+    tokenStats(
+      first: 1000,
+      skip: ${skip},
+      orderBy: timestamp,
+      orderDirection: desc,
+      where: { period: ${period}, timestamp_gte: ${from}, timestamp_lte: ${to} }
+    ) {
+      poolAmountUsd
+      timestamp
+      token
+    }
   `
 
   // Request more than 1000 records to retrieve maximum stats for period
   const query = `{
-    a: tokenStats(first: 1000, ${commonParamsQ}) {${tokenFieldsQ}},
-    b: tokenStats(first: 1000, skip: 1000 ${commonParamsQ}) {${tokenFieldsQ}},
-    c: tokenStats(first: 1000, skip: 2000 ${commonParamsQ}) {${tokenFieldsQ}},
-    d: tokenStats(first: 1000, skip: 3000 ${commonParamsQ}) {${tokenFieldsQ}},
-    e: tokenStats(first: 1000, skip: 4000 ${commonParamsQ}) {${tokenFieldsQ}},
-    f: tokenStats(first: 1000, skip: 5000 ${commonParamsQ}) {${tokenFieldsQ}}
+    a: ${getTokenStatsFragment()}
+    b: ${getTokenStatsFragment({skip: 1000})},
+    c: ${getTokenStatsFragment({skip: 2000})},
+    d: ${getTokenStatsFragment({skip: 3000})},
+    e: ${getTokenStatsFragment({skip: 4000})},
+    f: ${getTokenStatsFragment({skip: 5000})},
   }`
 
   const [graphData, loading, error] = useGraph(query, { chainName })
@@ -1326,7 +1328,7 @@ export function useTokenStats({
     const timestampGroups = fullData.reduce((memo, item) => {
       const {timestamp, token, ...stats} = item;
 
-      const symbol = tokenSymbols[token] || token.slice(6);
+      const symbol = tokenSymbols[token] || token;
 
       memo[timestamp] = memo[timestamp || 0] || {};
 
