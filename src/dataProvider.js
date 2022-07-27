@@ -837,6 +837,9 @@ export function useFundingRateData({ from = FIRST_DATE_TS, to = NOW_TS, chainNam
 
     const groups = graphData.fundingRates.reduce((memo, item) => {
       const symbol = tokenSymbols[item.token]
+      if (symbol === 'MIM') {
+        return memo
+      }
       memo[item.timestamp] = memo[item.timestamp] || {
         timestamp: item.timestamp
       }
