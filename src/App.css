@@ -229,36 +229,38 @@ label + input {
   align-items: center;
   justify-content: center;
   line-height: 8px;
-  width: 30px;
-  height: 26px;
-  border: 1px solid #e6e6f7;
-  color: #e6e6f7;
-  outline: none;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  color: #bcbcc4;
   font-weight: normal;
-  border-radius: 2px;
+  border-radius: 4px;
   transition: background-color .2s ease-in-out;
-  font-weight: bold;
   font-size: 16px;
 }
 
 .chart-control-checkbox:hover {
-  filter: brightness(0.8);
+  border: 1px solid #bcbcc4;
+  color: #8b8c96;
 }
 
 .chart-control-checkbox.active {
-  background-color: #e6e6f7;
-  border: 1px solid #A0A3C4;
-  color: #A0A3C4;
+  background-color: rgb(246, 249, 255);
 }
 
 .App.dark .chart-control-checkbox {
-  border: 1px solid #FFFFFF14;
-  color: #FFFFFF14;
+  border: 1px solid #37384a;
+  color: #494b5f;
+}
+
+.App.dark .chart-control-checkbox:hover {
+  border: 1px solid #8b8c96;
+  color: #8b8c96;
 }
 
 .App.dark .chart-control-checkbox.active {
   background-color: rgba(129,140,239,0.05);
-  color: #e6e6f7;
+  border: 1px solid #8b8c96;
+  color: #8b8c96;
 }
 
 .form input[type="date"],
