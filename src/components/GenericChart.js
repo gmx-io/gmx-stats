@@ -64,6 +64,8 @@ export default function GenericChart(props) {
     ChartComponent = LineChart
   } else if (type === 'Bar') {
     ChartComponent = BarChart
+  } else if (type === 'Area') {
+    ChartComponent = AreaChart
   } else {
     ChartComponent = ComposedChart
   }
@@ -89,7 +91,12 @@ export default function GenericChart(props) {
     if (item.type === 'Line' || type === 'Line') {
       return <Line {...props} isAnimationActive={false} />
     }
-    return <Bar {...props} isAnimationActive={false} />
+
+    if (type === 'Bar') {
+      return <Bar {...props} isAnimationActive={false} />
+    }
+
+    return <Area {...props} isAnimationActive={false} />
   })
 
   const csvFields = items.map(item => ({ key: item.key, name: item.name }))

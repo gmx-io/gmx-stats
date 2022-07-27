@@ -1316,8 +1316,8 @@ export function useTokenStats({
   const [graphData, loading, error] = useGraph(query, { chainName })
 
   const data = useMemo(() => {
-    if (!graphData) {
-      return null
+    if (loading || !graphData) {
+      return null;
     }
 
     const fullData = Object.values(graphData).reduce((memo, records) => {
@@ -1325,10 +1325,14 @@ export function useTokenStats({
       return memo;
     }, []);
 
+    const retrievedTokens = new Set();
+
     const timestampGroups = fullData.reduce((memo, item) => {
       const {timestamp, token, ...stats} = item;
 
       const symbol = tokenSymbols[token] || token;
+
+      retrievedTokens.add(symbol);
 
       memo[timestamp] = memo[timestamp || 0] || {};
 
@@ -1339,27 +1343,25 @@ export function useTokenStats({
       return memo;
     }, {});
 
-    const resultStats = {
-      poolAmountUsd: [],
-    };
+    const poolAmountUsdRecords = [];
 
     Object.entries(timestampGroups).forEach(([timestamp, dataItem]) => {
-      Object.keys(resultStats).forEach(statKey => {
-
-        const tokensData = Object.entries(dataItem).reduce((memo, [token, stats]) => {
-            memo.total += stats[statKey];
-            memo[token] = stats[statKey];
+        const poolAmountUsdRecord = Object.entries(dataItem).reduce((memo, [token, stats]) => {
+            memo.total += stats.poolAmountUsd;
+            memo[token] = stats.poolAmountUsd;
             memo.timestamp = timestamp;
 
             return memo;
         }, {total: 0});
 
-        resultStats[statKey].push(tokensData)
-      })
+        poolAmountUsdRecords.push(poolAmountUsdRecord);
     })
 
-    return resultStats;
-  }, [graphData])
+    return {
+      poolAmountUsd: poolAmountUsdRecords,
+      tokenSymbols: Array.from(retrievedTokens),
+    };
+  }, [graphData, loading])
 
   return [data, loading, error]
 }

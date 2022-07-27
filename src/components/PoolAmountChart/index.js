@@ -1,8 +1,14 @@
 import React, { useMemo, useState } from 'react'
 import { useTokenStats } from '../../dataProvider';
-import { tooltipFormatter, tooltipFormatterPercent, yaxisFormatter, yaxisFormatterPercent } from '../../helpers';
-import GenericChart from "../GenericChart"
+import { 
+    COINCOLORS,
+    tooltipFormatter,
+    tooltipFormatterPercent,
+    yaxisFormatter,
+    yaxisFormatterPercent
+ } from '../../helpers';
 import cx from 'classnames';
+import GenericChart from '../GenericChart';
 
 function convertToPercents(items) {
     return items.map(item => {
@@ -23,6 +29,10 @@ function convertToPercents(items) {
             timestamp
         }
     })
+}
+
+function getTokenColor(index) {
+    return COINCOLORS[index % COINCOLORS.length];
 }
 
 export default function PoolAmountChart({
@@ -47,9 +57,14 @@ export default function PoolAmountChart({
 
     }, [isPercentsView, tokenStatsData]);
 
-    const chartLegendItems = Object.keys(data[0] || {})
-        .filter(key => !['timestamp', 'total'].includes(key))
-        .map(token => ({key: token}));
+    const chartLegendItems = (tokenStatsData && tokenStatsData.tokenSymbols)
+        ? tokenStatsData.tokenSymbols.map((token, i) => ({
+            key: token,
+            color: getTokenColor(i),
+            fillOpacity: 0.5
+        }))
+        : [];
+
 
     return (
         <div style={{position: 'relative'}}>
@@ -61,7 +76,7 @@ export default function PoolAmountChart({
                     %
                 </div>
             </div>
-            
+
             <GenericChart
                 syncId={syncId}
                 loading={tokenStatsLoading}
@@ -71,7 +86,7 @@ export default function PoolAmountChart({
                 tooltipFormatter={isPercentsView ? tooltipFormatterPercent : tooltipFormatter}
                 yaxisDataKey={'total'}
                 items={chartLegendItems}
-                type="Bar"
+                type="Area"
             />
         </div>
     )
