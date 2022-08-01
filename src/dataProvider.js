@@ -524,8 +524,8 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
     const shortOpenInterest = dataItem.shortOpenInterest / 1e30
     const openInterest = longOpenInterest + shortOpenInterest
 
-    const fees = (marginFeesByTs[dataItem.timestamp]?.fees || 0)
-    const feesCumulative = (marginFeesByTs[dataItem.timestamp]?.feesCumulative || 0)
+    // const fees = (marginFeesByTs[dataItem.timestamp]?.fees || 0)
+    // const feesCumulative = (marginFeesByTs[dataItem.timestamp]?.feesCumulative || 0)
 
     const profit = dataItem.profit / 1e30
     const loss = dataItem.loss / 1e30
@@ -560,25 +560,28 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
 
     const maxPnl = maxBy(data, item => item.pnl).pnl
     const minPnl = minBy(data, item => item.pnl).pnl
-    const maxCumulativePnl = maxBy(data, item => item.pnlCumulative).pnlCumulative
-    const minCumulativePnl = minBy(data, item => item.pnlCumulative).pnlCumulative
+    const maxCurrentCumulativePnl = maxBy(data, item => item.currentPnlCumulative).currentPnlCumulative
+    const minCurrentCumulativePnl = minBy(data, item => item.currentPnlCumulative).currentPnlCumulative
 
-    const profitCumulative = data[data.length - 1].profitCumulative
-    const lossCumulative = data[data.length - 1].lossCumulative
+    const currentProfitCumulative = data[data.length - 1].currentProfitCumulative
+    const currentLossCumulative = data[data.length - 1].currentLossCumulative
     const stats = {
       maxProfit,
       maxLoss,
       maxProfitLoss,
-      profitCumulative,
-      lossCumulative,
-      maxCumulativeProfitLoss: Math.max(profitCumulative, -lossCumulative),
+      currentProfitCumulative,
+      currentLossCumulative,
+      maxCurrentCumulativeProfitLoss: Math.max(currentProfitCumulative, -currentLossCumulative),
 
-      maxAbsOfPnlAndCumulativePnl: Math.max(
+      maxAbsPnl: Math.max(
         Math.abs(maxPnl),
-        Math.abs(maxCumulativePnl),
         Math.abs(minPnl),
-        Math.abs(minCumulativePnl)
       ),
+      maxAbsCumulativePnl: Math.max(
+        Math.abs(maxCurrentCumulativePnl),
+        Math.abs(minCurrentCumulativePnl)
+      ),
+      
     }
 
     ret = {

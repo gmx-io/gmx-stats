@@ -3,7 +3,6 @@ import {
   BarChart,
   Line,
   Bar,
-  Label,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -45,8 +44,9 @@ export default function GenericChart(props) {
     height = CHART_HEIGHT,
     yaxisWidth = YAXIS_WIDTH,
     yaxisDataKey = 'all',
+    yaxisScale,
     yaxisTickFormatter = yaxisFormatter,
-    yaxisDomain,
+    yaxisDomain = ['auto', 'auto'],
     xaxisDataKey = 'timestamp',
     xaxisTickFormatter = tooltipLabelFormatter_,
     tooltipFormatter = tooltipFormatter_,
@@ -99,7 +99,7 @@ export default function GenericChart(props) {
       {React.createElement(ChartComponent, { data, syncId }, [
         <CartesianGrid strokeDasharray="10 10" key="a" />,
         <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} key="b" />,
-        <YAxis domain={yaxisDomain} dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} key="c" />,
+        <YAxis scale={yaxisScale} domain={yaxisDomain} dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} key="c" />,
         (
           rightYaxisDataKey ?
             <YAxis dataKey={rightYaxisDataKey} tickFormatter={yaxisTickFormatter} orientation="right" yAxisId="right" key="c2" />

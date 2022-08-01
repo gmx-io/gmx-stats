@@ -165,11 +165,11 @@ function Avalanche(props) {
     id: 1
   }, {
     label: "Last 2 Months",
-    id: 2
+    id: 2,
+    isDefault: true,
   }, {
     label: "Last 3 Months",
     id: 3,
-    isDefault: true
   }, {
     label: "All time",
     id: 4
@@ -377,7 +377,15 @@ function Avalanche(props) {
               <ComposedChart data={tradersData?.data}>
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis domain={[-tradersData?.stats.maxAbsOfPnlAndCumulativePnl * 1.05, tradersData?.stats.maxAbsOfPnlAndCumulativePnl * 1.05]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
+                <YAxis
+                  domain={[-tradersData?.stats.maxAbsCumulativePnl * 1.05, tradersData?.stats.maxAbsCumulativePnl * 1.05]}
+                  orientation="right"
+                  yAxisId="right"
+                  tickFormatter={yaxisFormatter}
+                  width={YAXIS_WIDTH}
+                  tick={{ fill: COLORS[4] }}
+                />
+                <YAxis domain={[-tradersData?.stats.maxAbsPnl * 1.05, tradersData?.stats.maxAbsPnl * 1.05]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatter}
                   labelFormatter={tooltipLabelFormatter}
@@ -389,7 +397,14 @@ function Avalanche(props) {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#22c761' : '#f93333'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke={COLORS[4]} dataKey="currentPnlCumulative" name="Cumulative PnL" />
+                <Line
+                  type="monotone"
+                  strokeWidth={2}
+                  stroke={COLORS[4]}
+                  dataKey="currentPnlCumulative"
+                  name="Cumulative PnL"
+                  yAxisId="right"
+                />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -410,7 +425,7 @@ function Avalanche(props) {
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis domain={[-tradersData?.stats.maxProfitLoss * 1.05, tradersData?.stats.maxProfitLoss * 1.05]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
-                <YAxis domain={[-tradersData?.stats.maxCumulativeProfitLoss * 1.1, tradersData?.stats.maxCumulativeProfitLoss * 1.1]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
+                <YAxis domain={[-tradersData?.stats.maxCurrentCumulativeProfitLoss * 1.1, tradersData?.stats.maxCurrentCumulativeProfitLoss * 1.1]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatter}
                   labelFormatter={tooltipLabelFormatter}
@@ -458,6 +473,7 @@ function Avalanche(props) {
               loading={usersLoading}
               title="Unique Users"
               data={usersData}
+              yaxisScale="log"
               yaxisDataKey="uniqueSum"
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
@@ -477,6 +493,7 @@ function Avalanche(props) {
             title="New Users"
             data={usersData?.map(item => ({ ...item, all: item.newCount }))}
             yaxisDataKey="newCount"
+            yaxisScale="log"
             rightYaxisDataKey="uniqueCountCumulative"
             yaxisTickFormatter={yaxisFormatterNumber}
             tooltipFormatter={tooltipFormatterNumber}

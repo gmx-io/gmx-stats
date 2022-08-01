@@ -158,8 +158,6 @@ function Arbitrum(props) {
     setIsExperiment(window.localStorage.getItem('experiment'))
   }, [setIsExperiment])
 
-  const showForm = false
-
   const onDateRangeChange = (dates) => {
     const [start, end] = dates;
     setDataRange({ fromValue: start, toValue: end })
@@ -170,11 +168,11 @@ function Arbitrum(props) {
     id: 1
   }, {
     label: "Last 2 Months",
-    id: 2
+    id: 2,
+    isDefault: true
   }, {
     label: "Last 3 Months",
     id: 3,
-    isDefault: true
   }, {
     label: "All time",
     id: 4
@@ -182,32 +180,27 @@ function Arbitrum(props) {
 
   return (
     <div className="Home">
-      <h1>Analytics / Arbitrum</h1>
-      {lastSubgraphBlock && lastBlock &&
-        <p className={cx('page-description', { warning: isObsolete })} style={{ marginTop: '-1rem' }}>
-          {isObsolete && "Data is obsolete. "}
-          Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
-          &nbsp;at block <a rel="noreferrer" target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
-        </p>
-      }
-      {
-        lastSubgraphBlockError &&
-        <p className="page-description warning">
-          Subgraph data is temporarily unavailable.
-        </p>
-      }
-      {showForm &&
-        <div className="form">
-          <p>
-            <label>Period</label>
-            <input type="date" value={dataRange.fromValue} onChange={evt => setFromValue(evt.target.value)} />
-            &nbsp;—&nbsp;
-            <input type="date" value={toValue} onChange={evt => setToValue(evt.target.value)} />
-            <button onClick={evt => setDateRange(86400 * 29)}>30 days</button>
-            <button onClick={evt => setDateRange(86400 * 6)}>7 days</button>
-          </p>
+      <div className="page-title-section">
+        <div className="page-title-block">
+          <h1>Analytics / Arbitrum</h1>
+          {lastSubgraphBlock && lastBlock &&
+            <p className={cx('page-description', { warning: isObsolete })}>
+              {isObsolete && "Data is obsolete. "}
+              Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
+              &nbsp;at block <a rel="noreferrer" target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
+            </p>
+          }
+          {
+            lastSubgraphBlockError &&
+            <p className="page-description warning">
+              Subgraph data is temporarily unavailable.
+            </p>
+          }
         </div>
-      }
+        <div className="form">
+          <DateRangeSelect options={dateRangeOptions} startDate={dataRange.fromValue} endDate={dataRange.toValue} onChange={onDateRangeChange} />
+        </div>
+      </div>
       <div className="chart-grid">
         <div className="chart-cell stats">
           {totalVolume ? <>
@@ -450,7 +443,15 @@ function Arbitrum(props) {
               <ComposedChart data={tradersData?.data}>
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis domain={[-tradersData?.stats.maxAbsOfPnlAndCumulativePnl * 1.05, tradersData?.stats.maxAbsOfPnlAndCumulativePnl * 1.05]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
+                <YAxis
+                  domain={[-tradersData?.stats.maxAbsCumulativePnl * 1.05, tradersData?.stats.maxAbsCumulativePnl * 1.05]}
+                  orientation="right"
+                  yAxisId="right"
+                  tickFormatter={yaxisFormatter}
+                  width={YAXIS_WIDTH}
+                  tick={{ fill: COLORS[4] }}
+                />
+                <YAxis domain={[-tradersData?.stats.maxAbsPnl * 1.05, tradersData?.stats.maxAbsPnl * 1.05]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatter}
                   labelFormatter={tooltipLabelFormatter}
@@ -462,7 +463,14 @@ function Arbitrum(props) {
                     return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#22c761' : '#f93333'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke={COLORS[4]} dataKey="currentPnlCumulative" name="Cumulative PnL" />
+                <Line
+                  type="monotone"
+                  strokeWidth={2}
+                  stroke={COLORS[4]}
+                  dataKey="currentPnlCumulative"
+                  name="Cumulative PnL"
+                  yAxisId="right"
+                />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -483,7 +491,7 @@ function Arbitrum(props) {
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis domain={[-tradersData?.stats.maxProfitLoss * 1.05, tradersData?.stats.maxProfitLoss * 1.05]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
-                <YAxis domain={[-tradersData?.stats.maxCumulativeProfitLoss * 1.1, tradersData?.stats.maxCumulativeProfitLoss * 1.1]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
+                <YAxis domain={[-tradersData?.stats.maxCurrentCumulativeProfitLoss * 1.1, tradersData?.stats.maxCurrentCumulativeProfitLoss * 1.1]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatter}
                   labelFormatter={tooltipLabelFormatter}
@@ -560,6 +568,7 @@ function Arbitrum(props) {
             loading={usersLoading}
             title="Unique Users"
             data={usersData}
+            yaxisScale="log"
             yaxisDataKey="uniqueSum"
             yaxisTickFormatter={yaxisFormatterNumber}
             tooltipFormatter={tooltipFormatterNumber}
@@ -578,6 +587,7 @@ function Arbitrum(props) {
             loading={usersLoading}
             title="New Users"
             data={usersData?.map(item => ({ ...item, all: item.newCount }))}
+            yaxisScale="log"
             yaxisDataKey="newCount"
             rightYaxisDataKey="uniqueCountCumulative"
             yaxisTickFormatter={yaxisFormatterNumber}
@@ -598,6 +608,7 @@ function Arbitrum(props) {
               loading={usersLoading}
               title="New vs. Existing Users"
               data={usersData?.map(item => ({ ...item, all: item.uniqueCount }))}
+              yaxisScale="log"
               yaxisDataKey="uniqueCount"
               rightYaxisDataKey="oldPercent"
               yaxisTickFormatter={yaxisFormatterNumber}
@@ -619,6 +630,7 @@ function Arbitrum(props) {
             data={(usersData || []).map(item => ({ ...item, all: item.actionCount }))}
             yaxisDataKey="actionCount"
             yaxisTickFormatter={yaxisFormatterNumber}
+            yaxisScale="log"
             tooltipFormatter={tooltipFormatterNumber}
             tooltipLabelFormatter={tooltipLabelFormatterUnits}
             items={[{ key: 'actionSwapCount', name: 'Swaps' }, { key: 'actionMarginCount', name: 'Margin trading' }, { key: 'actionMintBurnCount', name: 'Mint & Burn GLP' }]}
