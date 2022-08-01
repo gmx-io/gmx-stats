@@ -483,6 +483,7 @@ function Avalanche(props) {
               title="Unique Users"
               data={usersData}
               yaxisScale="log"
+              yaxisDomain={['auto', 'auto']}
               yaxisDataKey="uniqueSum"
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
@@ -503,6 +504,7 @@ function Avalanche(props) {
             data={usersData?.map(item => ({ ...item, all: item.newCount }))}
             yaxisDataKey="newCount"
             yaxisScale="log"
+            yaxisDomain={['auto', 'auto']}
             rightYaxisDataKey="uniqueCountCumulative"
             yaxisTickFormatter={yaxisFormatterNumber}
             tooltipFormatter={tooltipFormatterNumber}

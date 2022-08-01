@@ -46,13 +46,13 @@ export default function GenericChart(props) {
     yaxisDataKey = 'all',
     yaxisScale,
     yaxisTickFormatter = yaxisFormatter,
-    yaxisDomain = ['auto', 'auto'],
+    yaxisDomain = [0, 'auto'],
     xaxisDataKey = 'timestamp',
     xaxisTickFormatter = tooltipLabelFormatter_,
     tooltipFormatter = tooltipFormatter_,
     tooltipLabelFormatter = tooltipLabelFormatter_,
     items,
-    type,
+    type = 'Bar',
     syncId,
     children,
     rightYaxisDataKey,
@@ -60,6 +60,7 @@ export default function GenericChart(props) {
   } = props
 
   let ChartComponent
+
   if (type === 'Line') {
     ChartComponent = LineChart
   } else if (type === 'Bar') {
@@ -88,15 +89,16 @@ export default function GenericChart(props) {
       strokeWidth: item.strokeWidth,
       yAxisId: item.yAxisId
     }
+
     if (item.type === 'Line' || type === 'Line') {
       return <Line {...props} isAnimationActive={false} />
     }
 
-    if (type === 'Bar') {
-      return <Bar {...props} isAnimationActive={false} />
+    if (type === 'Area') {
+      return <Area {...props} isAnimationActive={false} />
     }
 
-    return <Area {...props} isAnimationActive={false} />
+    return <Bar {...props} isAnimationActive={false} />
   })
 
   const csvFields = items.map(item => ({ key: item.key, name: item.name }))
