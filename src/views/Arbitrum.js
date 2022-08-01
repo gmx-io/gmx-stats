@@ -207,7 +207,7 @@ function Arbitrum(props) {
             <button onClick={evt => setDateRange(86400 * 6)}>7 days</button>
           </p>
         </div>
-      } */}
+      }
       <div className="chart-grid">
         <div className="chart-cell stats">
           {totalVolume ? <>
