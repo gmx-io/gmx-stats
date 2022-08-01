@@ -136,7 +136,7 @@ export const tokenDecimals = {
   "0xf97f4df75117a78c1a5a0dbb814af92458539fb4": 18, // LINK
   "0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a": 18, // MIM
   "0x17fc002b466eec40dae837fc4be5c67993ddbd6f": 18, // FRAX
-  "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1": 18, // DAI
+  "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1": 18, // DAI
 }
 
 export const tokenSymbols = {
@@ -149,7 +149,7 @@ export const tokenSymbols = {
   '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 'USDT',
   '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a': 'MIM',
   '0x17fc002b466eec40dae837fc4be5c67993ddbd6f': 'FRAX',
-  '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': 'DAI',
+  '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1': 'DAI',
 
   // Avalanche
   '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7': 'AVAX',
@@ -1318,6 +1318,90 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
   }, [btcPrices, ethPrices, glpData, feesData])
 
   return [glpPerformanceChartData]
+}
+
+export function useTokenStats({ 
+  from = FIRST_DATE_TS,
+  to = NOW_TS,
+  period = 'daily',
+  chainName = "arbitrum" 
+} = {}) {
+
+  const getTokenStatsFragment = ({skip = 0} = {}) => `
+    tokenStats(
+      first: 1000,
+      skip: ${skip},
+      orderBy: timestamp,
+      orderDirection: desc,
+      where: { period: ${period}, timestamp_gte: ${from}, timestamp_lte: ${to} }
+    ) {
+      poolAmountUsd
+      timestamp
+      token
+    }
+  `
+
+  // Request more than 1000 records to retrieve maximum stats for period
+  const query = `{
+    a: ${getTokenStatsFragment()}
+    b: ${getTokenStatsFragment({skip: 1000})},
+    c: ${getTokenStatsFragment({skip: 2000})},
+    d: ${getTokenStatsFragment({skip: 3000})},
+    e: ${getTokenStatsFragment({skip: 4000})},
+    f: ${getTokenStatsFragment({skip: 5000})},
+  }`
+
+  const [graphData, loading, error] = useGraph(query, { chainName })
+
+  const data = useMemo(() => {
+    if (loading || !graphData) {
+      return null;
+    }
+
+    const fullData = Object.values(graphData).reduce((memo, records) => {
+      memo.push(...records);
+      return memo;
+    }, []);
+
+    const retrievedTokens = new Set();
+
+    const timestampGroups = fullData.reduce((memo, item) => {
+      const {timestamp, token, ...stats} = item;
+
+      const symbol = tokenSymbols[token] || token;
+
+      retrievedTokens.add(symbol);
+
+      memo[timestamp] = memo[timestamp || 0] || {};
+
+      memo[timestamp][symbol] = {
+        poolAmountUsd: parseInt(stats.poolAmountUsd) / 1e30,
+      };
+
+      return memo;
+    }, {});
+
+    const poolAmountUsdRecords = [];
+
+    Object.entries(timestampGroups).forEach(([timestamp, dataItem]) => {
+        const poolAmountUsdRecord = Object.entries(dataItem).reduce((memo, [token, stats]) => {
+            memo.total += stats.poolAmountUsd;
+            memo[token] = stats.poolAmountUsd;
+            memo.timestamp = timestamp;
+
+            return memo;
+        }, {total: 0});
+
+        poolAmountUsdRecords.push(poolAmountUsdRecord);
+    })
+
+    return {
+      poolAmountUsd: poolAmountUsdRecords,
+      tokenSymbols: Array.from(retrievedTokens),
+    };
+  }, [graphData, loading])
+
+  return [data, loading, error]
 }
 
 export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {

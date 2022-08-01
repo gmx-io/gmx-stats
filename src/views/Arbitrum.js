@@ -66,6 +66,7 @@ import {
   useLastSubgraphBlock,
   useLastBlock
 } from '../dataProvider'
+import PoolAmountChart from '../components/PoolAmountChart';
 
 const NOW = Math.floor(Date.now() / 1000)
 
@@ -83,6 +84,7 @@ function Arbitrum(props) {
   const params = { from, to, groupPeriod }
 
   const [fundingRateData, fundingRateLoading] = useFundingRateData(params)
+
   const [volumeData, volumeLoading] = useVolumeDataFromServer(params)
   const [totalVolume] = useTotalVolumeFromServer()
   const totalVolumeDelta = useMemo(() => {
@@ -293,6 +295,13 @@ function Arbitrum(props) {
               </LineChart>
             </ResponsiveContainer>
           </ChartWrapper>
+        </div>
+        <div className="chart-cell">
+          <PoolAmountChart 
+            from={from}
+            to={to}
+            syncId="syncGlp"
+          />
         </div>
         <div className="chart-cell">
           <ChartWrapper

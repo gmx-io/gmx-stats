@@ -62,6 +62,7 @@ import {
   useLastSubgraphBlock,
   useLastBlock
 } from '../dataProvider'
+import PoolAmountChart from '../components/PoolAmountChart';
 
 const NOW = Math.floor(Date.now() / 1000)
 
@@ -184,7 +185,7 @@ function Avalanche(props) {
             <p className={cx('page-description', { warning: isObsolete })}>
               {isObsolete && "Data is obsolete. "}
               Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
-              &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
+              &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`} rel="noreferrer">{lastSubgraphBlock.number}</a>
             </p>
           }
         </div>
@@ -297,6 +298,14 @@ function Avalanche(props) {
               </LineChart>
             </ResponsiveContainer>
           </ChartWrapper>
+        </div>
+        <div className="chart-cell">
+          <PoolAmountChart 
+            from={from}
+            to={to}
+            chainName={params.chainName}
+            syncId="syncGlp"
+          />
         </div>
         <div className="chart-cell">
           <ChartWrapper
