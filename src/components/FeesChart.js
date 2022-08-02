@@ -60,6 +60,7 @@ export default function FeesChart(props) {
         csvFields={csvFields}
         data={formattedData}
         controls={controls}
+        viewState={viewState}
         togglePercentView={togglePercentView}
       >
         <ResponsiveContainer width="100%" height={chartHeight}>

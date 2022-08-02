@@ -28,28 +28,32 @@ export default function ChartWrapper(props) {
     togglePercentView
   } = props
 
-  return <div>
-    {controls && (
-      <div className='chart-controls'>
-        {controls.convertToPercents && 
-          <div 
-              className={cx({'chart-control-checkbox': true, active: viewState.isPercentsView})}
-              onClick={togglePercentView}
-          >
-              %
-          </div>
-        }
-    </div>
-    )}
-    <h3>
-      {title}
-      <CsvLink
-        fields={csvFields}
-        name={title}
-        data={data}
-      />
-    </h3>
-    {loading && <RiLoader5Fill size="3em" className="loader" />}
-    {props.children}
-  </div>
+  return (
+   <>
+    <div className='chart-header'>
+      <h3>
+        {title}
+        <CsvLink
+          fields={csvFields}
+          name={title}
+          data={data}
+        />
+      </h3>
+      {controls && (
+        <div className='chart-controls'>
+          {controls.convertToPercents && 
+            <div 
+                className={cx({'chart-control-checkbox': true, active: viewState.isPercentsView})}
+                onClick={togglePercentView}
+            >
+                %
+            </div>
+          }
+        </div>
+      )}
+      </div>
+      {loading && <RiLoader5Fill size="3em" className="loader" />}
+      {props.children}
+    </>
+  )
 }
