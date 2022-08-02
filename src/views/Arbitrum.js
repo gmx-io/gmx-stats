@@ -19,7 +19,8 @@ import {
   YAXIS_WIDTH,
   COLORS,
   GREEN,
-  RED
+  RED,
+  convertToPercents
 } from '../helpers'
 
 import {
@@ -271,10 +272,6 @@ function Arbitrum(props) {
             loading={feesLoading}
             chartHeight={CHART_HEIGHT}
             yaxisWidth={YAXIS_WIDTH}
-            xaxisTickFormatter={tooltipLabelFormatter}
-            yaxisTickFormatter={yaxisFormatter}
-            tooltipLabelFormatter={tooltipLabelFormatter}
-            tooltipFormatter={tooltipFormatter}
           />
         </div>
         <div className="chart-cell">
@@ -524,7 +521,10 @@ function Arbitrum(props) {
               loading={tradersLoading}
               title="Open Interest"
               data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
-              yaxisDataKey="openInterest"
+              controls={{
+                convertToPercents: convertToPercents
+              }}
+              yaxisDataKey="all"
               items={[{ key: 'shortOpenInterest', name: 'Short', color: "#f93333" }, { key: 'longOpenInterest', name: 'Long', color: '#22c761' }]}
               type="Bar"
             />

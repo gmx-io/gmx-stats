@@ -1,3 +1,4 @@
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   LineChart,
   BarChart,
@@ -32,8 +33,9 @@ import {
   COLORS,
   COINCOLORS
 } from '../helpers'
+import { useChartViewState } from '../hooks/useChartViewState';
 
-import ChartWrapper from './ChartWrapper'
+import ChartWrapper from './ChartWrapper';
 
 export default function GenericChart(props) {
   const {
@@ -45,19 +47,27 @@ export default function GenericChart(props) {
     yaxisWidth = YAXIS_WIDTH,
     yaxisDataKey = 'all',
     yaxisScale,
-    yaxisTickFormatter = yaxisFormatter,
+    yaxisTickFormatter,
     yaxisDomain = [0, 'auto'],
     xaxisDataKey = 'timestamp',
     xaxisTickFormatter = tooltipLabelFormatter_,
-    tooltipFormatter = tooltipFormatter_,
+    tooltipFormatter,
     tooltipLabelFormatter = tooltipLabelFormatter_,
     items,
     type = 'Bar',
     syncId,
     children,
     rightYaxisDataKey,
-    isCoinChart
+    controls = {},
   } = props
+
+  const {
+    viewState,
+    togglePercentView,
+    formattedData,
+    yaxisFormatter: defaultYaxisTickFormatter,
+    tooltipFormatter: defaultTooltipFormatter
+  } = useChartViewState({controls, data});
 
   let ChartComponent
 
@@ -70,10 +80,6 @@ export default function GenericChart(props) {
   } else {
     ChartComponent = ComposedChart
   }
-
-  // Previous update
-  // fill: item.color || (isCoinChart ? COINCOLORS[i % COINCOLORS.length] : COLORS[i % COLORS.length]),
-  // stroke: item.color || (isCoinChart ? COINCOLORS[i % COINCOLORS.length] : COLORS[i % COLORS.length]),
 
   const htmlItems = (items || []).map((item, i) => {
     const props = {
@@ -103,32 +109,48 @@ export default function GenericChart(props) {
 
   const csvFields = items.map(item => ({ key: item.key, name: item.name }))
 
-  return <ChartWrapper title={title} loading={loading} data={data} csvFields={csvFields}>
-    <ResponsiveContainer width="100%" height={height}>
-      {React.createElement(ChartComponent, { data, syncId }, [
-        <CartesianGrid strokeDasharray="10 10" key="a" />,
-        <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} key="b" />,
-        <YAxis scale={yaxisScale} domain={yaxisDomain} dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} key="c" />,
-        (
-          rightYaxisDataKey ?
-            <YAxis dataKey={rightYaxisDataKey} tickFormatter={yaxisTickFormatter} orientation="right" yAxisId="right" key="c2" />
-            : null
-        ),
-        <Tooltip
-          formatter={tooltipFormatter}
-          labelFormatter={tooltipLabelFormatter}
-          contentStyle={{ textAlign: 'left' }}
-          key="d"
-        />,
-        <Legend key="e" />,
-        ...htmlItems,
-        children
-      ])}
-    </ResponsiveContainer>
-    {description && (
-      <div className="chart-description">
-        {description}
-      </div>
-    )}
-  </ChartWrapper>
+  return (
+    <ChartWrapper 
+      title={title}
+      loading={loading}
+      data={formattedData}
+      csvFields={csvFields}
+      viewState={viewState}
+      controls={controls}
+      togglePercentView={togglePercentView}
+    >
+        <ResponsiveContainer width="100%" height={height}>
+          {React.createElement(ChartComponent, { data: formattedData, syncId }, [
+            <CartesianGrid strokeDasharray="10 10" key="a" />,
+            <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} key="b" />,
+            <YAxis 
+              scale={yaxisScale}
+              domain={yaxisDomain}
+              dataKey={yaxisDataKey}
+              tickFormatter={yaxisTickFormatter || defaultYaxisTickFormatter}
+              key="c"
+            />,
+            (
+              rightYaxisDataKey ?
+                <YAxis dataKey={rightYaxisDataKey} tickFormatter={yaxisTickFormatter} orientation="right" yAxisId="right" key="c2" />
+                : null
+            ),
+            <Tooltip
+              formatter={tooltipFormatter || defaultTooltipFormatter}
+              labelFormatter={tooltipLabelFormatter}
+              contentStyle={{ textAlign: 'left' }}
+              key="d"
+            />,
+            <Legend key="e" />,
+            ...htmlItems,
+            children
+          ])}
+        </ResponsiveContainer>
+      {description && (
+        <div className="chart-description">
+          {description}
+        </div>
+      )}
+    </ChartWrapper>
+  )
 }

@@ -19,7 +19,8 @@ import {
   YAXIS_WIDTH,
   COLORS,
   GREEN,
-  RED
+  RED,
+  convertToPercents
 } from '../helpers'
 
 import {
@@ -262,10 +263,6 @@ function Avalanche(props) {
             loading={volumeLoading}
             chartHeight={CHART_HEIGHT}
             yaxisWidth={YAXIS_WIDTH}
-            xaxisTickFormatter={tooltipLabelFormatter}
-            yaxisTickFormatter={yaxisFormatter}
-            tooltipLabelFormatter={tooltipLabelFormatter}
-            tooltipFormatter={tooltipFormatter}
           />
         </div>
         <div className="chart-cell">
@@ -275,9 +272,7 @@ function Avalanche(props) {
             chartHeight={CHART_HEIGHT}
             yaxisWidth={YAXIS_WIDTH}
             xaxisTickFormatter={tooltipLabelFormatter}
-            yaxisTickFormatter={yaxisFormatter}
             tooltipLabelFormatter={tooltipLabelFormatter}
-            tooltipFormatter={tooltipFormatter}
           />
         </div>
         <div className="chart-cell">
@@ -458,7 +453,10 @@ function Avalanche(props) {
               loading={tradersLoading}
               title="Open Interest"
               data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
-              yaxisDataKey="openInterest"
+              controls={{
+                convertToPercents: convertToPercents
+              }}
+              yaxisDataKey="all"
               items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: GREEN }]}
               type="Bar"
             />

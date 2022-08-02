@@ -1385,12 +1385,12 @@ export function useTokenStats({
 
     Object.entries(timestampGroups).forEach(([timestamp, dataItem]) => {
         const poolAmountUsdRecord = Object.entries(dataItem).reduce((memo, [token, stats]) => {
-            memo.total += stats.poolAmountUsd;
+            memo.all += stats.poolAmountUsd;
             memo[token] = stats.poolAmountUsd;
             memo.timestamp = timestamp;
 
             return memo;
-        }, {total: 0});
+        }, {all: 0});
 
         poolAmountUsdRecords.push(poolAmountUsdRecord);
     })

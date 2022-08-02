@@ -26,7 +26,8 @@ export const COLORS = [
   '#6464ff',
   'purple',
   'darkgreen',
-  RED
+  RED,
+  '#ffaf01',
 ]
 
 export const COINCOLORS = [
@@ -218,6 +219,47 @@ export const tooltipFormatter = (value, name, item) => {
     return value.toFixed(2)
   }
   return formatNumber(value, { currency: true })
+}
+
+export const convertToPercents = (data, {ignoreKeys = [], totalKey = 'all'} = {}) => {
+  // Not used in percentage evaluation
+  const allIgnoredKeys = ignoreKeys.push(totalKey);
+
+  return data.map(item => {
+      const {
+          timestamp,
+          ...stats
+      } = item;
+
+      let total = item[totalKey];
+
+      if (Number.isNaN(total)) {
+        // Calculate total from actual data if totalKey is not specified
+        total = Object.entries(stats).reduce((acc, [key, value]) => {
+          if (!allIgnoredKeys.includes(key)) {
+            acc += value;
+          }
+  
+          return acc;
+        }, 0)
+      }
+      
+      const formattedStats = Object.entries(stats).reduce((acc, [token, value]) => {
+          if (!ignoreKeys.includes(token)) {
+            acc[token] = (value / total) * 100;
+          } else {
+            acc[token] = value
+          }
+          
+          return acc;
+      }, {})
+
+      return {
+          ...formattedStats,
+          [totalKey]: 100,
+          timestamp
+      }
+  })
 }
 
 export const tooltipLabelFormatterUnits = (label, args) => {
