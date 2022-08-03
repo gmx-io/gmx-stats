@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   LineChart,
   BarChart,
@@ -46,6 +47,8 @@ export default function GenericChart(props) {
     yaxisDataKey = 'all',
     yaxisScale,
     yaxisTickFormatter = yaxisFormatter,
+    // {threshold: number}
+    truncateYThreshold,
     yaxisDomain = [0, 'auto'],
     xaxisDataKey = 'timestamp',
     xaxisTickFormatter = tooltipLabelFormatter_,
@@ -70,6 +73,20 @@ export default function GenericChart(props) {
   } else {
     ChartComponent = ComposedChart
   }
+
+  const truncatedYDomain = useMemo(() => {
+    if (Number.isNaN(truncateYThreshold) || !data) {
+      return null;
+    }
+
+    if (Math.max(...data.map(item => item[yaxisDataKey])) > truncateYThreshold) {
+      // Bug in recharts: dataMax number values applies via function syntax only
+      // eslint-disable-next-line no-unused-vars
+      return [yaxisDomain[0], _ => truncateYThreshold]
+    }
+
+    return null
+  }, [data, truncateYThreshold, yaxisDomain?.join('-')]);
 
   // Previous update
   // fill: item.color || (isCoinChart ? COINCOLORS[i % COINCOLORS.length] : COLORS[i % COLORS.length]),
@@ -108,7 +125,7 @@ export default function GenericChart(props) {
       {React.createElement(ChartComponent, { data, syncId }, [
         <CartesianGrid strokeDasharray="10 10" key="a" />,
         <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} key="b" />,
-        <YAxis scale={yaxisScale} domain={yaxisDomain} dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} key="c" />,
+        <YAxis scale={yaxisScale} domain={truncatedYDomain || yaxisDomain} dataKey={yaxisDataKey} tickFormatter={yaxisTickFormatter} key="c" />,
         (
           rightYaxisDataKey ?
             <YAxis dataKey={rightYaxisDataKey} tickFormatter={yaxisTickFormatter} orientation="right" yAxisId="right" key="c2" />

@@ -577,8 +577,7 @@ function Arbitrum(props) {
             loading={usersLoading}
             title="Unique Users"
             data={usersData}
-            yaxisScale="log"
-            yaxisDomain={['auto', 'auto']}
+            truncateYThreshold={4500}
             yaxisDataKey="uniqueSum"
             yaxisTickFormatter={yaxisFormatterNumber}
             tooltipFormatter={tooltipFormatterNumber}
@@ -597,8 +596,7 @@ function Arbitrum(props) {
             loading={usersLoading}
             title="New Users"
             data={usersData?.map(item => ({ ...item, all: item.newCount }))}
-            yaxisScale="log"
-            yaxisDomain={['auto', 'auto']}
+            truncateYThreshold={3000}
             yaxisDataKey="newCount"
             rightYaxisDataKey="uniqueCountCumulative"
             yaxisTickFormatter={yaxisFormatterNumber}
@@ -619,8 +617,7 @@ function Arbitrum(props) {
               loading={usersLoading}
               title="New vs. Existing Users"
               data={usersData?.map(item => ({ ...item, all: item.uniqueCount }))}
-              yaxisScale="log"
-              yaxisDomain={['auto', 'auto']}
+              truncateYThreshold={4000}
               yaxisDataKey="uniqueCount"
               rightYaxisDataKey="oldPercent"
               yaxisTickFormatter={yaxisFormatterNumber}
@@ -640,10 +637,9 @@ function Arbitrum(props) {
             loading={usersLoading}
             title="User Actions"
             data={(usersData || []).map(item => ({ ...item, all: item.actionCount }))}
+            truncateYThreshold={16000}
             yaxisDataKey="actionCount"
             yaxisTickFormatter={yaxisFormatterNumber}
-            yaxisScale="log"
-            yaxisDomain={['auto', 'auto']}
             tooltipFormatter={tooltipFormatterNumber}
             tooltipLabelFormatter={tooltipLabelFormatterUnits}
             items={[{ key: 'actionSwapCount', name: 'Swaps' }, { key: 'actionMarginCount', name: 'Margin trading' }, { key: 'actionMintBurnCount', name: 'Mint & Burn GLP' }]}
