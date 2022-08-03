@@ -617,6 +617,7 @@ a, a:active, a:visited {
 .App.dark .react-dropdown-select {
   border: 1px solid #FFFFFF14!important;
   background-color: #16182E;
+  width: 200px;
 }
 
 .date-range-items {
