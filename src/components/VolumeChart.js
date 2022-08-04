@@ -13,8 +13,16 @@ import {
 import ChartWrapper from './ChartWrapper'
 
 import {
-  COLORS
+  COLORS, 
+  convertToPercents,
+  tooltipFormatter,
+  tooltipLabelFormatter,
+  yaxisFormatter,
 } from '../helpers'
+import { useChartViewState } from '../hooks/useChartViewState';
+
+const convertToPercentsHandler = (data) =>
+  convertToPercents(data, {ignoreKeys: ['cumulative', 'movingAverageAll'], totalKey: 'all'})
 
 export default function VolumeChart(props) {
   const {
@@ -22,10 +30,6 @@ export default function VolumeChart(props) {
     loading,
     chartHeight,
     yaxisWidth,
-    xaxisTickFormatter,
-    yaxisTickFormatter,
-    tooltipFormatter,
-    tooltipLabelFormatter
   } = props
 
   const csvFields = [
@@ -35,28 +39,66 @@ export default function VolumeChart(props) {
     {key: 'burn', name: 'Burn GLP'},
     {key: 'liquidation', name: 'Liquidation'},
     {key: 'cumulative', name: 'Cumulative'}
-  ]
+  ];
 
-  return <ChartWrapper title="Volume" loading={loading} csvFields={csvFields} data={data}>
-    <ResponsiveContainer width="100%" height={chartHeight}>
-      <ComposedChart data={data} syncId="syncA">
-        <CartesianGrid strokeDasharray="10 10" />
-        <XAxis dataKey="timestamp" tickFormatter={xaxisTickFormatter} minTickGap={30} />
-        <YAxis dataKey="all" interval="preserveStartEnd" tickCount={7} tickFormatter={yaxisTickFormatter} width={yaxisWidth} />
-        <YAxis dataKey="cumulative" orientation="right" yAxisId="right" tickFormatter={yaxisTickFormatter} width={yaxisWidth} />
-        <Tooltip
-          formatter={tooltipFormatter}
-          labelFormatter={tooltipLabelFormatter}
-          contentStyle={{ textAlign: 'left' }}
-        />
-        <Legend />
-        <Bar isAnimationActive={false} type="monotone" dataKey="swap" stackId="a" name="Swap" fill={COLORS[0]} />
-        <Bar isAnimationActive={false} type="monotone" dataKey="mint" stackId="a" name="Mint GLP" fill={COLORS[1]} />
-        <Bar isAnimationActive={false} type="monotone" dataKey="burn" stackId="a" name="Burn GLP" fill={COLORS[2]} />
-        <Bar isAnimationActive={false} type="monotone" dataKey="liquidation" stackId="a" name="Liquidation" fill={COLORS[3]} />
-        <Bar isAnimationActive={false} type="monotone" dataKey="margin" stackId="a" name="Margin trading" fill={COLORS[4]} />
-        <Line isAnimationActive={false} type="monotone" dot={false} strokeWidth={3} stroke={COLORS[0]} dataKey="cumulative" yAxisId="right" name="Cumulative" />
-      </ComposedChart>
-    </ResponsiveContainer>
-  </ChartWrapper>
+  const controls = {
+    convertToPercents: convertToPercentsHandler,
+  }
+
+  const {
+    viewState,
+    togglePercentView,
+    formattedData,
+    ...viewSettings
+  } = useChartViewState({controls, data});
+
+  return (
+    <ChartWrapper 
+      title="Volume"
+      loading={loading}
+      csvFields={csvFields}
+      data={formattedData}
+      controls={controls}
+      viewState={viewState}
+      togglePercentView={togglePercentView}
+    >
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <ComposedChart data={formattedData} syncId="syncA">
+          <CartesianGrid strokeDasharray="10 10" />
+          <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
+          <YAxis 
+            dataKey="all"
+            interval="preserveStartEnd"
+            tickCount={viewState.isPercentsView ? undefined : 7} 
+            tickFormatter={viewSettings.yaxisTickFormatter}
+            width={yaxisWidth} 
+          />
+
+          <YAxis dataKey="cumulative" orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={yaxisWidth} />
+
+          <Tooltip
+            formatter={(value, name) => {
+              if (name === 'Cumulative') {
+                return tooltipFormatter(value)
+              } 
+
+              return viewSettings.tooltipFormatter(value)
+            }}
+            labelFormatter={tooltipLabelFormatter}
+            contentStyle={{ textAlign: 'left' }}
+          />
+
+          <Legend />
+
+          <Bar isAnimationActive={false} type="monotone" dataKey="swap" stackId="a" name="Swap" fill={COLORS[0]} />
+          <Bar isAnimationActive={false} type="monotone" dataKey="mint" stackId="a" name="Mint GLP" fill={COLORS[1]} />
+          <Bar isAnimationActive={false} type="monotone" dataKey="burn" stackId="a" name="Burn GLP" fill={COLORS[2]} />
+          <Bar isAnimationActive={false} type="monotone" dataKey="liquidation" stackId="a" name="Liquidation" fill={COLORS[3]} />
+          <Bar isAnimationActive={false} type="monotone" dataKey="margin" stackId="a" name="Margin trading" fill={COLORS[4]} />
+          <Line isAnimationActive={false} type="monotone" dot={false} strokeWidth={3} stroke={COLORS[12]} dataKey="cumulative" yAxisId="right" name="Cumulative" />
+
+        </ComposedChart>
+      </ResponsiveContainer>
+    </ChartWrapper>
+  )
 }

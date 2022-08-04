@@ -19,6 +19,8 @@ module.exports = {
         "react"
     ],
     "rules": {
+        // Not used
+        "react/react-in-jsx-scope": 'off',
     },
     "settings": {
         "react": {

@@ -214,11 +214,14 @@ label + input {
   opacity: 1;
 }
 
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
 .chart-controls {
     display: flex;
-    position: absolute;
-    top: 0px;
-    right: 5px;
 }
 
 .chart-control-checkbox {
