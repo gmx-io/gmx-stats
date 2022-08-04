@@ -55,7 +55,7 @@ export default function GenericChart(props) {
     viewState,
     togglePercentView,
     formattedData,
-    yaxisFormatter: defaultYaxisTickFormatter,
+    yaxisTickFormatter: defaultYaxisTickFormatter,
     tooltipFormatter: defaultTooltipFormatter
   } = useChartViewState({controls, data});
 
@@ -72,7 +72,7 @@ export default function GenericChart(props) {
   }
 
   const truncatedYDomain = useMemo(() => {
-    if (Number.isNaN(truncateYThreshold) || !data) {
+    if ((typeof truncateYThreshold !== 'number') || !data) {
       return null;
     }
 

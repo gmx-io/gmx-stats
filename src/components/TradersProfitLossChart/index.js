@@ -1,7 +1,16 @@
 import React from 'react'
-import { Area, Bar, CartesianGrid, ComposedChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { 
-    convertToPercents,
+    Area,
+    Bar,
+    CartesianGrid,
+    ComposedChart,
+    Legend,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis
+} from 'recharts';
+import { 
     tooltipLabelFormatter,
     yaxisFormatter,
  } from '../../helpers';
@@ -24,7 +33,7 @@ const convertToPercentsHandler = (data) => {
 };
 
 
-export default function TradersChart({
+export default function TradersProfitLossChart({
     syncId,
     tradersData,
     loading,
@@ -34,8 +43,6 @@ export default function TradersChart({
     const controls = {
         convertToPercents: convertToPercentsHandler,
     }
-
-    console.log(tradersData?.data)
 
     const {
         viewState,
@@ -48,17 +55,26 @@ export default function TradersChart({
         <ChartWrapper
             title="Traders Profit vs. Loss"
             loading={loading}
-            data={tradersData?.data}
+            data={formattedData}
             csvFields={[{ key: 'profit' }, { key: 'loss' }, { key: 'profitCumulative' }, { key: 'lossCumulative' }]}
             controls={controls}
             togglePercentView={togglePercentView}
             viewState={viewState}
       >
         <ResponsiveContainer width="100%" syncId={syncId} height={chartHeight}>
-          <ComposedChart data={tradersData?.data} barGap={0}>
+          <ComposedChart data={formattedData} barGap={0} >
             <CartesianGrid strokeDasharray="10 10" />
             <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-            {/* <YAxis dataKey="all" tickFormatter={viewSettings.yaxisTickFormatter} width={yaxisWidth} /> */}
+            {viewState.isPercentsView
+                ? <YAxis dataKey="all" tickFormatter={viewSettings.yaxisTickFormatter} width={yaxisWidth} />
+                : (
+                    <YAxis 
+                        domain={[-tradersData?.stats.maxProfitLoss * 1.05, tradersData?.stats.maxProfitLoss * 1.05]}
+                        tickFormatter={viewSettings.yaxisTickFormatter}
+                        width={yaxisWidth}
+                    />
+                )
+            }
             <YAxis domain={[-tradersData?.stats.maxProfitLoss * 1.05, tradersData?.stats.maxProfitLoss * 1.05]} tickFormatter={viewSettings.yaxisTickFormatter} width={yaxisWidth} />
             <YAxis domain={[-tradersData?.stats.maxCurrentCumulativeProfitLoss * 1.1, tradersData?.stats.maxCurrentCumulativeProfitLoss * 1.1]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={yaxisWidth} />
             <Tooltip
@@ -67,12 +83,26 @@ export default function TradersChart({
               contentStyle={{ textAlign: 'left' }}
             />
             <Legend />
-            <Area yAxisId="right" type="monotone" stroke={0} fill="#22c761" fillOpacity="0.4" dataKey="currentProfitCumulative" name="Cumulative Profit" />
-            <Area yAxisId="right" type="monotone" stroke={0} fill="#f93333" fillOpacity="0.4" dataKey="currentLossCumulative" name="Cumulative Loss" />
-            {/* <Bar type="monotone" fill="#22c761" dot={false} dataKey="profit" name="Profit" />
-            <Bar type="monotone" fill="#f93333" dot={false} dataKey="loss" name="Loss" /> */}
-            <Bar type="monotone" stackId="a" fill="#22c761" dot={true} dataKey="profit" name="Profit" />
-            <Bar type="monotone" stackId="a" fill="#f93333" dot={true} dataKey="loss" name="Loss" />
+            {!viewState.isPercentsView && (
+                <>
+                    <Area yAxisId="right" type="monotone" stroke={0} fill="#22c761" fillOpacity="0.4" dataKey="currentProfitCumulative" name="Cumulative Profit" isAnimationActive={false} />
+                    <Area yAxisId="right" type="monotone" stroke={0} fill="#f93333" fillOpacity="0.4" dataKey="currentLossCumulative" name="Cumulative Loss" isAnimationActive={false} />
+                </>
+            )}
+            {viewState.isPercentsView
+                ? (
+                    <>
+                        <Bar type="monotone" stackId="b" fill="#f93333" dot={true} dataKey="loss" name="Loss" isAnimationActive={false} />
+                        <Bar type="monotone" stackId="b" fill="#22c761" dot={true} dataKey="profit" name="Profit" isAnimationActive={false} />
+                    </>
+                  )
+                : (
+                    <>
+                        <Bar type="monotone" fill="#f93333" dot={true} dataKey="loss" name="Loss" isAnimationActive={false} />
+                        <Bar type="monotone" fill="#22c761" dot={true} dataKey="profit" name="Profit" isAnimationActive={false} />
+                    </>
+                  )
+            }
           </ComposedChart>
         </ResponsiveContainer>
         <div className="chart-description">

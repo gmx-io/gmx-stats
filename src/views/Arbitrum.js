@@ -68,6 +68,7 @@ import {
   useLastBlock
 } from '../dataProvider'
 import PoolAmountChart from '../components/PoolAmountChart';
+import TradersProfitLossChart from '../components/TradersProfitLossChart';
 
 const NOW = Math.floor(Date.now() / 1000)
 
@@ -486,35 +487,13 @@ function Arbitrum(props) {
           </ChartWrapper>
         </div>
         <div className="chart-cell">
-          <ChartWrapper
-            title="Traders Profit vs. Loss"
+          <TradersProfitLossChart 
+            syncId="tradersId"
             loading={tradersLoading}
-            data={tradersData?.data}
-            csvFields={[{ key: 'profit' }, { key: 'loss' }, { key: 'profitCumulative' }, { key: 'lossCumulative' }]}
-          >
-            <ResponsiveContainer width="100%" syncId="tradersId" height={CHART_HEIGHT}>
-              <ComposedChart data={tradersData?.data} barGap={0}>
-                <CartesianGrid strokeDasharray="10 10" />
-                <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis domain={[-tradersData?.stats.maxProfitLoss * 1.05, tradersData?.stats.maxProfitLoss * 1.05]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
-                <YAxis domain={[-tradersData?.stats.maxCurrentCumulativeProfitLoss * 1.1, tradersData?.stats.maxCurrentCumulativeProfitLoss * 1.1]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
-                <Tooltip
-                  formatter={tooltipFormatter}
-                  labelFormatter={tooltipLabelFormatter}
-                  contentStyle={{ textAlign: 'left' }}
-                />
-                <Legend />
-                <Area yAxisId="right" type="monotone" stroke={0} fill="#22c761" fillOpacity="0.4" dataKey="currentProfitCumulative" name="Cumulative Profit" />
-                <Area yAxisId="right" type="monotone" stroke={0} fill="#f93333" fillOpacity="0.4" dataKey="currentLossCumulative" name="Cumulative Loss" />
-                <Bar type="monotone" fill="#22c761" dot={false} dataKey="profit" name="Profit" />
-                <Bar type="monotone" fill="#f93333" dot={false} dataKey="loss" name="Loss" />
-              </ComposedChart>
-            </ResponsiveContainer>
-            <div className="chart-description">
-              <p>Considers settled (closed) positions</p>
-              <p>Fees are not factored into PnL</p>
-            </div>
-          </ChartWrapper>
+            tradersData={tradersData}
+            yaxisWidth={YAXIS_WIDTH}
+            chartHeight={CHART_HEIGHT}
+          />
         </div>
         <div className="chart-cell">
            <GenericChart
