@@ -482,7 +482,7 @@ function Avalanche(props) {
               loading={usersLoading}
               title="Unique Users"
               data={usersData}
-              truncateYThreshold={4500}
+              truncateYThreshold={6500}
               yaxisDataKey="uniqueSum"
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
@@ -501,7 +501,7 @@ function Avalanche(props) {
             loading={usersLoading}
             title="New Users"
             data={usersData?.map(item => ({ ...item, all: item.newCount }))}
-            truncateYThreshold={3000}
+            truncateYThreshold={6000}
             yaxisDataKey="newCount"
             rightYaxisDataKey="uniqueCountCumulative"
             yaxisTickFormatter={yaxisFormatterNumber}
