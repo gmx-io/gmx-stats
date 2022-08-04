@@ -221,7 +221,7 @@ export const tooltipFormatter = (value, name, item) => {
   return formatNumber(value, { currency: true })
 }
 
-export const convertToPercents = (data, {ignoreKeys = [], totalKey} = {}) => {
+export const convertToPercents = (data, {ignoreKeys = [], totalKey = 'all'} = {}) => {
   // Not used in percentage evaluation
   const allIgnoredKeys = ignoreKeys.concat(totalKey);
 
