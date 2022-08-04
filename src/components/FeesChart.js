@@ -16,7 +16,7 @@ import ChartWrapper from './ChartWrapper'
 import {
   COLORS, 
   convertToPercents,
-  tooltipFormatterPercent,
+  tooltipFormatter,
   tooltipLabelFormatter,
   yaxisFormatter,
 } from '../helpers'
@@ -79,7 +79,13 @@ export default function FeesChart(props) {
             <YAxis dataKey="cumulative" orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={yaxisWidth} />
 
             <Tooltip
-              formatter={viewSettings.tooltipFormatter}
+              formatter={(value, name) => {
+                if (name === 'Cumulative') {
+                  return tooltipFormatter(value)
+                } 
+
+                return viewSettings.tooltipFormatter(value)
+              }}
               labelFormatter={tooltipLabelFormatter}
               contentStyle={{ textAlign: 'left' }}
             />
