@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, {useMemo} from 'react';
 import {
   LineChart,
   BarChart,
@@ -10,28 +10,17 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  LabelList,
-  ReferenceLine,
   Area,
   AreaChart,
   ComposedChart,
-  Cell,
-  PieChart,
-  Pie
 } from 'recharts';
 
 import {
-  yaxisFormatterNumber,
-  yaxisFormatterPercent,
-  yaxisFormatter,
   tooltipLabelFormatter as tooltipLabelFormatter_,
   tooltipFormatter as tooltipFormatter_,
-  tooltipFormatterNumber,
-  tooltipFormatterPercent,
   CHART_HEIGHT,
   YAXIS_WIDTH,
   COLORS,
-  COINCOLORS
 } from '../helpers'
 import { useChartViewState } from '../hooks/useChartViewState';
 
@@ -47,6 +36,7 @@ export default function GenericChart(props) {
     yaxisWidth = YAXIS_WIDTH,
     yaxisDataKey = 'all',
     yaxisScale,
+    truncateYThreshold,
     yaxisTickFormatter,
     yaxisDomain = [0, 'auto'],
     xaxisDataKey = 'timestamp',
@@ -80,6 +70,20 @@ export default function GenericChart(props) {
   } else {
     ChartComponent = ComposedChart
   }
+
+  const truncatedYDomain = useMemo(() => {
+    if (Number.isNaN(truncateYThreshold) || !data) {
+      return null;
+    }
+
+    if (Math.max(...data.map(item => item[yaxisDataKey])) > truncateYThreshold) {
+      // Bug in recharts: dataMax number values applies via function syntax only
+      // eslint-disable-next-line no-unused-vars
+      return [yaxisDomain[0], _ => truncateYThreshold]
+    }
+
+    return null
+  }, [data, truncateYThreshold, yaxisDomain?.join('-')]);
 
   const htmlItems = (items || []).map((item, i) => {
     const props = {
@@ -125,7 +129,7 @@ export default function GenericChart(props) {
             <XAxis dataKey={xaxisDataKey} tickFormatter={xaxisTickFormatter} minTickGap={30} key="b" />,
             <YAxis 
               scale={yaxisScale}
-              domain={yaxisDomain}
+              domain={truncatedYDomain || yaxisDomain}
               dataKey={yaxisDataKey}
               tickFormatter={yaxisTickFormatter || defaultYaxisTickFormatter}
               key="c"
