@@ -221,9 +221,9 @@ export const tooltipFormatter = (value, name, item) => {
   return formatNumber(value, { currency: true })
 }
 
-export const convertToPercents = (data, {ignoreKeys = [], totalKey = 'all'} = {}) => {
+export const convertToPercents = (data, {ignoreKeys = [], totalKey} = {}) => {
   // Not used in percentage evaluation
-  const allIgnoredKeys = ignoreKeys.push(totalKey);
+  const allIgnoredKeys = ignoreKeys.concat(totalKey);
 
   return data.map(item => {
       const {
@@ -233,7 +233,7 @@ export const convertToPercents = (data, {ignoreKeys = [], totalKey = 'all'} = {}
 
       let total = item[totalKey];
 
-      if (Number.isNaN(total)) {
+      if (typeof total !== 'number') {
         // Calculate total from actual data if totalKey is not specified
         total = Object.entries(stats).reduce((acc, [key, value]) => {
           if (!allIgnoredKeys.includes(key)) {
@@ -245,7 +245,7 @@ export const convertToPercents = (data, {ignoreKeys = [], totalKey = 'all'} = {}
       }
       
       const formattedStats = Object.entries(stats).reduce((acc, [token, value]) => {
-          if (!ignoreKeys.includes(token)) {
+          if (!allIgnoredKeys.includes(token)) {
             acc[token] = (value / total) * 100;
           } else {
             acc[token] = value
