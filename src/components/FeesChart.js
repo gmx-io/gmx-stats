@@ -79,6 +79,7 @@ export default function FeesChart(props) {
             <YAxis dataKey="cumulative" orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={yaxisWidth} />
 
             <Tooltip
+              payload={{unit: '%'}}
               formatter={(value, name) => {
                 if (name === 'Cumulative') {
                   return tooltipFormatter(value)
@@ -91,11 +92,11 @@ export default function FeesChart(props) {
             />
 
             <Legend />
-            <Bar isAnimationActive={false} type="monotone" dataKey="swap" stackId="a" name="Swap" fill={COLORS[0]} />
-            <Bar isAnimationActive={false} type="monotone" dataKey="mint" stackId="a" name="Mint GLP" fill={COLORS[1]} />
-            <Bar isAnimationActive={false} type="monotone" dataKey="burn" stackId="a" name="Burn GLP" fill={COLORS[2]} />
-            <Bar isAnimationActive={false} type="monotone" dataKey="liquidation" stackId="a" name="Liquidation" fill={COLORS[3]} />
-            <Bar isAnimationActive={false} type="monotone" dataKey="margin" stackId="a" name="Margin trading" fill={COLORS[4]} />
+            <Bar unit={viewSettings.itemsUnit} isAnimationActive={false} type="monotone" dataKey="swap" stackId="a" name="Swap" fill={COLORS[0]} />
+            <Bar unit={viewSettings.itemsUnit} isAnimationActive={false} type="monotone" dataKey="mint" stackId="a" name="Mint GLP" fill={COLORS[1]} />
+            <Bar unit={viewSettings.itemsUnit} isAnimationActive={false} type="monotone" dataKey="burn" stackId="a" name="Burn GLP" fill={COLORS[2]} />
+            <Bar unit={viewSettings.itemsUnit} isAnimationActive={false} type="monotone" dataKey="liquidation" stackId="a" name="Liquidation" fill={COLORS[3]} />
+            <Bar unit={viewSettings.itemsUnit} isAnimationActive={false} type="monotone" dataKey="margin" stackId="a" name="Margin trading" fill={COLORS[4]} />
             <Line isAnimationActive={false} type="monotone" strokeWidth={3} dot={false} stroke={COLORS[12]} dataKey="cumulative" yAxisId="right" name="Cumulative" />
           </ComposedChart>
         </ResponsiveContainer>

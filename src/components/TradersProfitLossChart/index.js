@@ -85,15 +85,15 @@ export default function TradersProfitLossChart({
             <Legend />
             {!viewState.isPercentsView && (
                 <>
-                    <Area yAxisId="right" type="monotone" stroke={0} fill="#22c761" fillOpacity="0.4" dataKey="currentProfitCumulative" name="Cumulative Profit" isAnimationActive={false} />
                     <Area yAxisId="right" type="monotone" stroke={0} fill="#f93333" fillOpacity="0.4" dataKey="currentLossCumulative" name="Cumulative Loss" isAnimationActive={false} />
+                    <Area yAxisId="right" type="monotone" stroke={0} fill="#22c761" fillOpacity="0.4" dataKey="currentProfitCumulative" name="Cumulative Profit" isAnimationActive={false} />
                 </>
             )}
             {viewState.isPercentsView
                 ? (
                     <>
-                        <Bar type="monotone" stackId="b" fill="#f93333" dot={true} dataKey="loss" name="Loss" isAnimationActive={false} />
-                        <Bar type="monotone" stackId="b" fill="#22c761" dot={true} dataKey="profit" name="Profit" isAnimationActive={false} />
+                        <Bar unit={viewSettings.itemsUnit} type="monotone" stackId="b" fill="#f93333" dot={true} dataKey="loss" name="Loss" isAnimationActive={false} />
+                        <Bar unit={viewSettings.itemsUnit} type="monotone" stackId="b" fill="#22c761" dot={true} dataKey="profit" name="Profit" isAnimationActive={false} />
                     </>
                   )
                 : (

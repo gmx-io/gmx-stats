@@ -56,7 +56,8 @@ export default function GenericChart(props) {
     togglePercentView,
     formattedData,
     yaxisTickFormatter: defaultYaxisTickFormatter,
-    tooltipFormatter: defaultTooltipFormatter
+    tooltipFormatter: defaultTooltipFormatter,
+    itemsUnit: defaultItemUnit,
   } = useChartViewState({controls, data});
 
   let ChartComponent
@@ -95,7 +96,7 @@ export default function GenericChart(props) {
       stroke: item.color || COLORS[i % COLORS.length],
       dot: item.dot || false,
       key: 'item-' + i,
-      unit: item.unit,
+      unit: item.unit || defaultItemUnit,
       strokeWidth: item.strokeWidth,
       yAxisId: item.yAxisId
     }

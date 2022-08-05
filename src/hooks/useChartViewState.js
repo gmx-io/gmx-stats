@@ -35,6 +35,10 @@ export function useChartViewState({
         togglePercentView,
         formattedData,
 
+        itemsUnit: viewState.isPercentsView 
+            ? '%' 
+            : undefined,
+
         yaxisTickFormatter: viewState.isPercentsView 
             ? yaxisFormatterPercent 
             : yaxisFormatter,
