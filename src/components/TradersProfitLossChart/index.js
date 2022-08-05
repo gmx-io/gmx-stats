@@ -11,6 +11,7 @@ import {
     YAxis
 } from 'recharts';
 import { 
+    tooltipFormatter,
     tooltipLabelFormatter,
     yaxisFormatter,
  } from '../../helpers';
@@ -78,7 +79,7 @@ export default function TradersProfitLossChart({
             <YAxis domain={[-tradersData?.stats.maxProfitLoss * 1.05, tradersData?.stats.maxProfitLoss * 1.05]} tickFormatter={viewSettings.yaxisTickFormatter} width={yaxisWidth} />
             <YAxis domain={[-tradersData?.stats.maxCurrentCumulativeProfitLoss * 1.1, tradersData?.stats.maxCurrentCumulativeProfitLoss * 1.1]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={yaxisWidth} />
             <Tooltip
-              formatter={viewSettings.tooltipFormatter}
+              formatter={tooltipFormatter}
               labelFormatter={tooltipLabelFormatter}
               contentStyle={{ textAlign: 'left' }}
             />
