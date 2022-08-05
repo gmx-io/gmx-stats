@@ -41,7 +41,7 @@ export default function GenericChart(props) {
     yaxisDomain = [0, 'auto'],
     xaxisDataKey = 'timestamp',
     xaxisTickFormatter = tooltipLabelFormatter_,
-    tooltipFormatter,
+    tooltipFormatter = tooltipFormatter_,
     tooltipLabelFormatter = tooltipLabelFormatter_,
     items,
     type = 'Bar',
@@ -56,7 +56,6 @@ export default function GenericChart(props) {
     togglePercentView,
     formattedData,
     yaxisTickFormatter: defaultYaxisTickFormatter,
-    tooltipFormatter: defaultTooltipFormatter,
     itemsUnit: defaultItemUnit,
   } = useChartViewState({controls, data});
 
@@ -141,7 +140,7 @@ export default function GenericChart(props) {
                 : null
             ),
             <Tooltip
-              formatter={tooltipFormatter || defaultTooltipFormatter}
+              formatter={tooltipFormatter}
               labelFormatter={tooltipLabelFormatter}
               contentStyle={{ textAlign: 'left' }}
               key="d"

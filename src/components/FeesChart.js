@@ -79,14 +79,7 @@ export default function FeesChart(props) {
             <YAxis dataKey="cumulative" orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={yaxisWidth} />
 
             <Tooltip
-              payload={{unit: '%'}}
-              formatter={(value, name) => {
-                if (name === 'Cumulative') {
-                  return tooltipFormatter(value)
-                } 
-
-                return viewSettings.tooltipFormatter(value)
-              }}
+              formatter={tooltipFormatter}
               labelFormatter={tooltipLabelFormatter}
               contentStyle={{ textAlign: 'left' }}
             />
