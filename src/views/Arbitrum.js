@@ -446,8 +446,8 @@ function Arbitrum(props) {
             data={tradersData?.data}
             csvFields={[{ key: 'pnl', name: 'Net PnL' }, { key: 'pnlCumulative', name: 'Cumulative PnL' }]}
           >
-            <ResponsiveContainer width="100%" syncId="tradersId" height={CHART_HEIGHT}>
-              <ComposedChart data={tradersData?.data}>
+            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+              <ComposedChart data={tradersData?.data} syncId="tradersId">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
                 <YAxis

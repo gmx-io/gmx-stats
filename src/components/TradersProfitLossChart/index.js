@@ -61,8 +61,8 @@ export default function TradersProfitLossChart({
             togglePercentView={togglePercentView}
             viewState={viewState}
       >
-        <ResponsiveContainer width="100%" syncId={syncId} height={chartHeight}>
-          <ComposedChart data={formattedData} barGap={0} >
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <ComposedChart data={formattedData} barGap={0} syncId={syncId}>
             <CartesianGrid strokeDasharray="10 10" />
             <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
             {viewState.isPercentsView
