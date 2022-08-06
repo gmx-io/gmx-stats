@@ -24,7 +24,6 @@
 
 body {
   font-size: 0.9rem;
-  /* background: #f6f9ff; */
   margin: 0;
   padding: 0;
   font-family: RelativeMono, sans-serif;
@@ -96,7 +95,6 @@ label + input {
 .chart-description {
   margin: 1rem 0 0;
   max-width: 600px;
-  /* color: #A0A3C4; */
 }
 
 .App.dark .chart-description {
@@ -216,6 +214,54 @@ label + input {
   opacity: 1;
 }
 
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.chart-controls {
+    display: flex;
+}
+
+.chart-control-checkbox {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 8px;
+  padding: 8px 7px;
+  color: #666;
+  font-weight: bold;
+  background: #eee;
+  border-radius: 4px;
+  transition: background-color .1s, color .1s;
+  font-size: 14px;
+}
+
+.chart-control-checkbox:hover {
+  color: #000;
+}
+
+.chart-control-checkbox.active {
+  background-color: #609ade;
+  color: #fff;
+}
+
+.App.dark .chart-control-checkbox {
+  background: #333;
+  color: #aaa;
+}
+
+.App.dark .chart-control-checkbox:hover {
+  color: #fff;
+}
+
+.App.dark .chart-control-checkbox.active {
+  background: #609ade;
+  color: #fff;
+}
+
 .form input[type="date"],
 .form input[type="text"] {
   border: 1px solid #aaa;
@@ -305,7 +351,6 @@ a, a:active, a:visited {
 .nav-link {
   letter-spacing: 0.47px;
   color: #A0A3C4;
-  /* color: #000; */
   text-decoration: none;
   padding: 0.5rem 1rem;
   display: inline-block;
@@ -449,8 +494,7 @@ a, a:active, a:visited {
 
 .App-header-drawer .App-header-menu-icon {
   color: white;
-  margin: unset;
-  font-size: 2rem;
+  font-size: 1.3rem;
 }
 
 .App-header-drawer .App-header-link-main {
@@ -463,7 +507,6 @@ a, a:active, a:visited {
   display: flex;
   align-items: center;
   z-index: 3;
-  padding-left: 1rem;
   padding-right: 1rem;
 }
 
@@ -515,7 +558,207 @@ a, a:active, a:visited {
   right: 0;
 }
 
+.date-range-selector-wrapper > div {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.react-dropdown-select-dropdown {
+  position: absolute;
+  top: 43px;
+  right: 0px;
+  left: unset!important;
+  border: 1px solid #ccc;
+  width: 348px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 0 10px 0 rgb(0 0 0 / 20%);
+  overflow: auto;
+  z-index: 9;
+  max-height: 475px!important;
+  width: 270px!important;
+}
+
+.App.dark .react-dropdown-select-dropdown {
+  background-color: #101124!important;
+  border: 1px solid #FFFFFF14!important;
+}
+
+.react-dropdown-select {
+  border: 1px solid #e6e6f7!important;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  width: 100%;
+  border-radius: 2px;
+  padding: 2px 5px;
+  flex-direction: row;
+  direction: ltr;
+  align-items: center;
+  cursor: pointer;
+  min-height: 36px;
+  pointer-events: all;
+  max-width: fit-content;
+  min-width: 215px!important;
+  background-color: white;
+  padding-left: 1rem!important;
+  padding-right: 1rem!important;
+}
+
+.react-dropdown-select-dropdown-handle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+}
+
+.App.dark .react-dropdown-select {
+  border: 1px solid #FFFFFF14!important;
+  background-color: #16182E;
+  width: 200px;
+}
+
+.date-range-items {
+  overflow: auto;
+  min-height: 10px;
+  max-height: 200px;
+}
+
+.date-range-item {
+  display: flex;
+  margin: 0.5rem;
+  padding: 0.5rem;
+  align-items: baseline;
+}
+
+.date-range-item__label {
+  color: #A0A3C4;
+}
+
+.date-range-item.selected .date-range-item__label,
+.date-range-item:hover .date-range-item__label {
+  color: #444;
+}
+
+.App.dark .date-range-item__label {
+  color: #A0A3C4;
+}
+
+.App.dark .date-range-item.selected .date-range-item__label,
+.App.dark .date-range-item:hover .date-range-item__label {
+  color: white;
+}
+
+.date-range-custom {
+  color: #000;
+  margin: 0.5rem;
+  text-align: center;
+}
+
+.react-dropdown-select-content {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.chart-cell.mobile {
+  display: none;
+}
+
+.date-range-selector-wrapper .rdrDay {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+}
+
+.date-range-selector-wrapper .rdrMonth {
+  width: 240px;
+}
+
+.date-range-selector-wrapper .rdrMonthAndYearPickers select {
+  padding: 10px;
+  color: black;
+}
+
+.App.dark .date-range-selector-wrapper .rdrMonthAndYearPickers select {
+  color: white;
+  background: #16182E;
+}
+
+.date-range-selector-wrapper .rdrNextPrevButton {
+  padding: 0;
+}
+
+.date-range-selector-wrapper .rdrCalendarWrapper {
+  background-color: #EEE;
+}
+
+.App.dark .date-range-selector-wrapper .rdrCalendarWrapper {
+  background-color: #16182E;
+}
+
+.date-range-selector-wrapper .rdrWeekDay {
+  color: black;
+}
+
+.App.dark .date-range-selector-wrapper .rdrWeekDay {
+  color: white;
+}
+
+.date-range-selector-wrapper .rdrDayNumber span {
+  color: black;
+}
+
+.App.dark .date-range-selector-wrapper .rdrDayNumber span {
+  color: white;
+}
+
+.date-range-selector-wrapper .rdrDayToday .rdrDayNumber span:after {
+  bottom: 1px;
+}
+
+.rdrDayPassive {
+  opacity: 0.5;
+}
+
+.page-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.page-title-section h1 {
+  margin: 0;
+}
+
+.page-description {
+  margin: 0;
+}
+
+@media (max-width: 1033px) {
+  .App-header-link-main img {
+    height: 1.3125rem;
+  }
+}
+
 @media all and (max-width: 600px) {
+  .page-title-section {
+    display: flex;
+    justify-content: unset;
+    align-items: unset;
+    flex-direction: column;
+  }
+
+  .page-title-section .form {
+    margin-top: 1rem;
+  }
+
   .chart-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -526,10 +769,14 @@ a, a:active, a:visited {
     grid-column-end: unset!important;
   }
 
+  .chart-cell.mobile {
+    display: block;
+  }
+
   .App-header-menu-icon-block {
     display: flex;
     align-items: center;
-    margin-right: 0.5rem;
+    margin-right: 4px;
   }
 
   .nav-left {
@@ -543,5 +790,15 @@ a, a:active, a:visited {
 
   .nav-left .nav-link {
     display: none;
+  }
+
+  .react-dropdown-select {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 450px) {
+  .App-header-menu-icon {
+    margin: 4px 5px!important;
   }
 }

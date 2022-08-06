@@ -136,7 +136,7 @@ export const tokenDecimals = {
   "0xf97f4df75117a78c1a5a0dbb814af92458539fb4": 18, // LINK
   "0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a": 18, // MIM
   "0x17fc002b466eec40dae837fc4be5c67993ddbd6f": 18, // FRAX
-  "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1": 18, // DAI
+  "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1": 18, // DAI
 }
 
 export const tokenSymbols = {
@@ -149,7 +149,7 @@ export const tokenSymbols = {
   '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 'USDT',
   '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a': 'MIM',
   '0x17fc002b466eec40dae837fc4be5c67993ddbd6f': 'FRAX',
-  '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': 'DAI',
+  '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1': 'DAI',
 
   // Avalanche
   '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7': 'AVAX',
@@ -206,7 +206,7 @@ const defaultFetcher = url => fetch(url).then(res => res.json())
 export function useRequest(url, defaultValue, fetcher = defaultFetcher) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState()
-  const [data, setData] = useState(defaultValue) 
+  const [data, setData] = useState(defaultValue)
 
   useEffect(async () => {
     try {
@@ -263,7 +263,7 @@ export function useCoingeckoPrices(symbol, { from = FIRST_DATE_TS } = {}) {
 
 function getImpermanentLoss(change) {
   return 2 * Math.sqrt(change) / (1 + change) - 1
-} 
+}
 
 function getChainSubgraph(chainName) {
   return chainName === "arbitrum" ? "gmx-io/gmx-stats" : "gmx-io/gmx-avalanche-stats"
@@ -417,7 +417,7 @@ export function useGambitPoolStats({ from, to, groupPeriod }) {
   const ret = useMemo(() => {
     if (!data) {
        return null
-    } 
+    }
     let ret = data.poolStats.map(item => {
       return Object.entries(item).reduce((memo, [key, value]) => {
         if (key === 'id') memo.timestamp = value
@@ -464,14 +464,14 @@ export function useLastSubgraphBlock(chainName = "arbitrum") {
       block {
         number
       }
-    } 
+    }
   }`, { chainName })
   const [block, setBlock] = useState(null)
 
   useEffect(() => {
     if (!data) {
       return
-    } 
+    }
 
     providers[chainName].getBlock(data._meta.block.number).then(block => {
       setBlock(block)
@@ -516,13 +516,16 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
   }, [feesData])
 
   let ret = null
+  let currentPnlCumulative = 0;
+  let currentProfitCumulative = 0;
+  let currentLossCumulative = 0;
   const data = closedPositionsData ? sortBy(closedPositionsData.tradingStats, i => i.timestamp).map(dataItem => {
     const longOpenInterest = dataItem.longOpenInterest / 1e30
     const shortOpenInterest = dataItem.shortOpenInterest / 1e30
     const openInterest = longOpenInterest + shortOpenInterest
 
-    const fees = (marginFeesByTs[dataItem.timestamp]?.fees || 0)
-    const feesCumulative = (marginFeesByTs[dataItem.timestamp]?.feesCumulative || 0)
+    // const fees = (marginFeesByTs[dataItem.timestamp]?.fees || 0)
+    // const feesCumulative = (marginFeesByTs[dataItem.timestamp]?.feesCumulative || 0)
 
     const profit = dataItem.profit / 1e30
     const loss = dataItem.loss / 1e30
@@ -530,6 +533,9 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
     const lossCumulative = dataItem.lossCumulative / 1e30
     const pnlCumulative = profitCumulative - lossCumulative
     const pnl = profit - loss
+    currentProfitCumulative += profit
+    currentLossCumulative -= loss
+    currentPnlCumulative += pnl
     return {
       longOpenInterest,
       shortOpenInterest,
@@ -540,7 +546,10 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
       lossCumulative: -lossCumulative,
       pnl,
       pnlCumulative,
-      timestamp: dataItem.timestamp
+      timestamp: dataItem.timestamp,
+      currentPnlCumulative,
+      currentLossCumulative,
+      currentProfitCumulative
     }
   }) : null
 
@@ -551,25 +560,28 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
 
     const maxPnl = maxBy(data, item => item.pnl).pnl
     const minPnl = minBy(data, item => item.pnl).pnl
-    const maxCumulativePnl = maxBy(data, item => item.pnlCumulative).pnlCumulative
-    const minCumulativePnl = minBy(data, item => item.pnlCumulative).pnlCumulative
+    const maxCurrentCumulativePnl = maxBy(data, item => item.currentPnlCumulative).currentPnlCumulative
+    const minCurrentCumulativePnl = minBy(data, item => item.currentPnlCumulative).currentPnlCumulative
 
-    const profitCumulative = data[data.length - 1].profitCumulative
-    const lossCumulative = data[data.length - 1].lossCumulative
+    const currentProfitCumulative = data[data.length - 1].currentProfitCumulative
+    const currentLossCumulative = data[data.length - 1].currentLossCumulative
     const stats = {
       maxProfit,
       maxLoss,
       maxProfitLoss,
-      profitCumulative,
-      lossCumulative,
-      maxCumulativeProfitLoss: Math.max(profitCumulative, -lossCumulative),
+      currentProfitCumulative,
+      currentLossCumulative,
+      maxCurrentCumulativeProfitLoss: Math.max(currentProfitCumulative, -currentLossCumulative),
 
-      maxAbsOfPnlAndCumulativePnl: Math.max(
+      maxAbsPnl: Math.max(
         Math.abs(maxPnl),
-        Math.abs(maxCumulativePnl),
         Math.abs(minPnl),
-        Math.abs(minCumulativePnl)
       ),
+      maxAbsCumulativePnl: Math.max(
+        Math.abs(maxCurrentCumulativePnl),
+        Math.abs(minCurrentCumulativePnl)
+      ),
+      
     }
 
     ret = {
@@ -646,7 +658,7 @@ export function useSwapSources({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
             }
             return memo
           }, {})
-        } 
+        }
 
         retItem.all = all
 
@@ -683,9 +695,29 @@ function getServerHostname(chainName) {
   return 'gmx-server-mainnet.uw.r.appspot.com'
 }
 
+export function useVolumeDataRequest(url, defaultValue, from, to, fetcher = defaultFetcher) {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState()
+  const [data, setData] = useState(defaultValue)
+
+  useEffect(async () => {
+    try {
+      setLoading(true)
+      const data = await fetcher(url)
+      setData(data)
+    } catch (ex) {
+      console.error(ex)
+      setError(ex)
+    }
+    setLoading(false)
+  }, [url, from, to])
+
+  return [data, loading, error]
+}
+
 export function useVolumeDataFromServer({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {
   const PROPS = 'margin liquidation swap mint burn'.split(' ')
-  const [data, loading] = useRequest(`https://${getServerHostname(chainName)}/daily_volume`, null, async url => {
+  const [data, loading] = useVolumeDataRequest(`https://${getServerHostname(chainName)}/daily_volume`, null, from, to, async url => {
     let after
     const ret = []
     while (true) {
@@ -702,34 +734,34 @@ export function useVolumeDataFromServer({ from = FIRST_DATE_TS, to = NOW_TS, cha
   })
 
   const ret = useMemo(() => {
-     if (!data) {
-       return null
-     } 
+    if (!data) {
+      return null
+    }
 
-     const tmp = data.reduce((memo, item) => {
-        const timestamp = item.data.timestamp
-        if (timestamp < from || timestamp > to) {
-          return memo
-        }
-
-        let type
-        if (item.data.action === 'Swap') {
-          type = 'swap'
-        } else if (item.data.action === 'SellUSDG') {
-          type = 'burn'
-        } else if (item.data.action === 'BuyUSDG') {
-          type = 'mint'
-        } else if (item.data.action.includes('LiquidatePosition')) {
-          type = 'liquidation'
-        } else {
-          type = 'margin'
-        }
-        const volume = Number(item.data.volume) / 1e30
-        memo[timestamp] = memo[timestamp] || {}
-        memo[timestamp][type] = memo[timestamp][type] || 0
-        memo[timestamp][type] += volume
+    const tmp = data.reduce((memo, item) => {
+      const timestamp = item.data.timestamp
+      if (timestamp < from || timestamp > to) {
         return memo
-     }, {})
+      }
+
+      let type
+      if (item.data.action === 'Swap') {
+        type = 'swap'
+      } else if (item.data.action === 'SellUSDG') {
+        type = 'burn'
+      } else if (item.data.action === 'BuyUSDG') {
+        type = 'mint'
+      } else if (item.data.action.includes('LiquidatePosition')) {
+        type = 'liquidation'
+      } else {
+        type = 'margin'
+      }
+      const volume = Number(item.data.volume) / 1e30
+      memo[timestamp] = memo[timestamp] || {}
+      memo[timestamp][type] = memo[timestamp][type] || 0
+      memo[timestamp][type] += volume
+      return memo
+    }, {})
 
     let cumulative = 0
     const cumulativeByTs = {}
@@ -787,6 +819,7 @@ export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "a
   const [graphData, loading, error] = useGraph(query, { chainName })
 
   const prevUniqueCountCumulative = {}
+  let cumulativeNewUserCount = 0;
   const data = graphData ? sortBy(graphData.userStats, 'timestamp').map(item => {
     const newCountData = ['', 'Swap', 'Margin', 'MintBurn'].reduce((memo, type) => {
       memo[`new${type}Count`] = prevUniqueCountCumulative[type]
@@ -795,6 +828,7 @@ export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "a
       prevUniqueCountCumulative[type] = item[`unique${type}CountCumulative`]
       return memo
     }, {})
+    cumulativeNewUserCount += newCountData.newCount;
     const oldCount = item.uniqueCount - newCountData.newCount
     const oldPercent = (oldCount / item.uniqueCount * 100).toFixed(1)
     return {
@@ -802,6 +836,7 @@ export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "a
       uniqueSum: item.uniqueSwapCount + item.uniqueMarginCount + item.uniqueMintBurnCount,
       oldCount,
       oldPercent,
+      cumulativeNewUserCount,
       ...newCountData,
       ...item
     }
@@ -1059,7 +1094,7 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
     }
 
     const getTimestamp = item => item.timestamp || parseInt(item[timestampProp])
-    
+
     let prevGlpSupply
     let prevAum
 
@@ -1165,7 +1200,7 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
     let indexBtcCount = GLP_START_PRICE * BTC_WEIGHT / btcFirstPrice
     let indexEthCount = GLP_START_PRICE * ETH_WEIGHT / ethFirstPrice
     let indexAvaxCount = GLP_START_PRICE * AVAX_WEIGHT / avaxFirstPrice
-    let indexStableCount = GLP_START_PRICE * STABLE_WEIGHT 
+    let indexStableCount = GLP_START_PRICE * STABLE_WEIGHT
 
     const lpBtcCount = GLP_START_PRICE * 0.5 / btcFirstPrice
     const lpEthCount = GLP_START_PRICE * 0.5 / ethFirstPrice
@@ -1198,13 +1233,13 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
         + indexAvaxCount * avaxPrice
         + indexStableCount
       )
-      
+
       // rebalance each day. can rebalance each X days
       if (i % 1 == 0) {
         indexBtcCount = syntheticPrice * BTC_WEIGHT / btcPrice
         indexEthCount = syntheticPrice * ETH_WEIGHT / ethPrice
         indexAvaxCount = syntheticPrice * AVAX_WEIGHT / avaxPrice
-        indexStableCount = syntheticPrice * STABLE_WEIGHT 
+        indexStableCount = syntheticPrice * STABLE_WEIGHT
       }
 
       const lpBtcPrice = (lpBtcCount * btcPrice + GLP_START_PRICE / 2) * (1 + getImpermanentLoss(btcPrice / btcFirstPrice))
@@ -1250,12 +1285,12 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
         glpPlusFees,
         glpPlusDistributedUsd,
         glpPlusDistributedEth,
-        
+
         indexBtcCount,
         indexEthCount,
         indexAvaxCount,
         indexStableCount,
-        
+
         BTC_WEIGHT,
         ETH_WEIGHT,
         AVAX_WEIGHT,
@@ -1283,6 +1318,90 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
   }, [btcPrices, ethPrices, glpData, feesData])
 
   return [glpPerformanceChartData]
+}
+
+export function useTokenStats({ 
+  from = FIRST_DATE_TS,
+  to = NOW_TS,
+  period = 'daily',
+  chainName = "arbitrum" 
+} = {}) {
+
+  const getTokenStatsFragment = ({skip = 0} = {}) => `
+    tokenStats(
+      first: 1000,
+      skip: ${skip},
+      orderBy: timestamp,
+      orderDirection: desc,
+      where: { period: ${period}, timestamp_gte: ${from}, timestamp_lte: ${to} }
+    ) {
+      poolAmountUsd
+      timestamp
+      token
+    }
+  `
+
+  // Request more than 1000 records to retrieve maximum stats for period
+  const query = `{
+    a: ${getTokenStatsFragment()}
+    b: ${getTokenStatsFragment({skip: 1000})},
+    c: ${getTokenStatsFragment({skip: 2000})},
+    d: ${getTokenStatsFragment({skip: 3000})},
+    e: ${getTokenStatsFragment({skip: 4000})},
+    f: ${getTokenStatsFragment({skip: 5000})},
+  }`
+
+  const [graphData, loading, error] = useGraph(query, { chainName })
+
+  const data = useMemo(() => {
+    if (loading || !graphData) {
+      return null;
+    }
+
+    const fullData = Object.values(graphData).reduce((memo, records) => {
+      memo.push(...records);
+      return memo;
+    }, []);
+
+    const retrievedTokens = new Set();
+
+    const timestampGroups = fullData.reduce((memo, item) => {
+      const {timestamp, token, ...stats} = item;
+
+      const symbol = tokenSymbols[token] || token;
+
+      retrievedTokens.add(symbol);
+
+      memo[timestamp] = memo[timestamp || 0] || {};
+
+      memo[timestamp][symbol] = {
+        poolAmountUsd: parseInt(stats.poolAmountUsd) / 1e30,
+      };
+
+      return memo;
+    }, {});
+
+    const poolAmountUsdRecords = [];
+
+    Object.entries(timestampGroups).forEach(([timestamp, dataItem]) => {
+        const poolAmountUsdRecord = Object.entries(dataItem).reduce((memo, [token, stats]) => {
+            memo.all += stats.poolAmountUsd;
+            memo[token] = stats.poolAmountUsd;
+            memo.timestamp = timestamp;
+
+            return memo;
+        }, {all: 0});
+
+        poolAmountUsdRecords.push(poolAmountUsdRecord);
+    })
+
+    return {
+      poolAmountUsd: poolAmountUsdRecords,
+      tokenSymbols: Array.from(retrievedTokens),
+    };
+  }, [graphData, loading])
+
+  return [data, loading, error]
 }
 
 export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arbitrum" } = {}) {

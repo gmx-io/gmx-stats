@@ -19,7 +19,8 @@ import {
   YAXIS_WIDTH,
   COLORS,
   GREEN,
-  RED
+  RED,
+  convertToPercents
 } from '../helpers'
 
 import {
@@ -48,15 +49,12 @@ import ChartWrapper from '../components/ChartWrapper'
 import VolumeChart from '../components/VolumeChart'
 import FeesChart from '../components/FeesChart'
 import GenericChart from '../components/GenericChart'
+import DateRangeSelect from '../components/DateRangeSelect'
 
 import {
   useVolumeData,
-  useTotalVolumeFromServer,
-  useVolumeDataFromServer,
   useFeesData,
   useGlpData,
-  useAumPerformanceData,
-  useCoingeckoPrices,
   useGlpPerformanceData,
   useTradersData,
   useSwapSources,
@@ -65,90 +63,86 @@ import {
   useLastSubgraphBlock,
   useLastBlock
 } from '../dataProvider'
+import PoolAmountChart from '../components/PoolAmountChart';
+import TradersProfitLossChart from '../components/TradersProfitLossChart';
 
-const { BigNumber } = ethers
-const { formatUnits} = ethers.utils
 const NOW = Math.floor(Date.now() / 1000)
 
-function dateToValue(date) {
-  return date.toISOString().slice(0, 10)
-}
-
 function Avalanche(props) {
-  const [fromValue, setFromValue] = useState("2022-01-06")
-  const [toValue, setToValue] = useState()
-
-  const setDateRange = useCallback(range => {
-    setFromValue(dateToValue(new Date(Date.now() - range * 1000)))
-    setToValue(undefined)
-  }, [setFromValue, setToValue])
+  const [dataRange, setDataRange] = useState({ fromValue: moment().subtract(3, 'month').toDate(), toValue: null })
 
   const { mode } = props
 
-  const from = fromValue ? +new Date(fromValue) / 1000 : undefined
-  const to = toValue ? +new Date(toValue) / 1000 : NOW
+  const from = dataRange.fromValue ? Math.floor(+new Date(dataRange.fromValue) / 1000) : undefined
+  const to = dataRange.toValue ? Math.floor(+new Date(dataRange.toValue) / 1000) : NOW
 
   const params = { from, to, chainName: 'avalanche' }
 
   const [fundingRateData, fundingRateLoading] = useFundingRateData(params)
 
   const [volumeData, volumeLoading] = useVolumeData(params)
+  const [totalVolumeData, totalVolumeLoading] = useVolumeData({ chainName: 'avalanche' })
+  // const [volumeData, volumeLoading] = useVolumeDataFromServer(params)
   // const [totalVolume] = useTotalVolumeFromServer()
   const [totalVolume, totalVolumeDelta] = useMemo(() => {
-    if (!volumeData) {
+    if (!totalVolumeData) {
       return []
     }
-    const total = volumeData[volumeData.length - 1]?.cumulative
-    const delta = total - volumeData[volumeData.length - 2]?.cumulative
+    const total = totalVolumeData[totalVolumeData.length - 1]?.cumulative
+    const delta = total - totalVolumeData[totalVolumeData.length - 2]?.cumulative
     return [total, delta]
-  }, [volumeData])
+  }, [totalVolumeData])
 
   const [feesData, feesLoading] = useFeesData(params)
+  const [totalFeesData, totalFeesLoading] = useFeesData({ chainName: 'avalanche' })
   const [totalFees, totalFeesDelta] = useMemo(() => {
-    if (!feesData) {
+    if (!totalFeesData) {
       return []
     }
-    const total = feesData[feesData.length - 1]?.cumulative
-    const delta = total - feesData[feesData.length - 2]?.cumulative
+    const total = totalFeesData[totalFeesData.length - 1]?.cumulative
+    const delta = total - totalFeesData[totalFeesData.length - 2]?.cumulative
     return [total, delta]
-  }, [feesData])
+  }, [totalFeesData])
 
   const [glpData, glpLoading] = useGlpData(params)
+  const [totalGlpData, totalGlpLoading] = useGlpData({ chainName: 'avalanche' })
   const [totalAum, totalAumDelta] = useMemo(() => {
-    if (!glpData) {
+    if (!totalGlpData) {
       return []
     }
-    const total = glpData[glpData.length - 1]?.aum
-    const delta = total - glpData[glpData.length - 2]?.aum
+    const total = totalGlpData[totalGlpData.length - 1]?.aum
+    const delta = total - totalGlpData[totalGlpData.length - 2]?.aum
     return [total, delta]
-  }, [glpData])
+  }, [totalGlpData])
 
   // const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData(params)
   const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, params)
 
   const [tradersData, tradersLoading] = useTradersData(params)
+  const [totalTradersData, totalTradersLoading] = useTradersData({ chainName: 'avalanche' })
   const [openInterest, openInterestDelta] = useMemo(() => {
-    if (!tradersData) {
+    if (!totalTradersData) {
       return []
     }
-    const total = tradersData.data[tradersData.data.length - 1]?.openInterest
-    const delta = total - tradersData.data[tradersData.data.length - 2]?.openInterest
+    const total = totalTradersData.data[totalTradersData.data.length - 1]?.openInterest
+    const delta = total - totalTradersData.data[totalTradersData.data.length - 2]?.openInterest
     return [total, delta]
-  }, [tradersData])
+  }, [totalTradersData])
 
   const [usersData, usersLoading] = useUsersData(params)
+  const [totalUsersData, totalUsersLoading] = useUsersData({ chainName: 'avalanche' })
   const [totalUsers, totalUsersDelta] = useMemo(() => {
-    if (!usersData) {
+    if (!totalUsersData) {
       return [null, null]
     }
-    const total = usersData[usersData.length - 1]?.uniqueCountCumulative
-    const prevTotal = usersData[usersData.length - 2]?.uniqueCountCumulative
+    const total = totalUsersData[totalUsersData.length - 1]?.uniqueCountCumulative
+    const prevTotal = totalUsersData[totalUsersData.length - 2]?.uniqueCountCumulative
     const delta = total && prevTotal ? total - prevTotal : null
     return [
       total,
       delta
     ]
-  }, [usersData])
+  }, [totalUsersData])
 
   const [swapSources, swapSourcesLoading] = useSwapSources(params)
   const swapSourcesKeys = Object.keys((swapSources || []).reduce((memo, el) => {
@@ -164,52 +158,79 @@ function Avalanche(props) {
 
   const isObsolete = lastSubgraphBlock && lastBlock && lastBlock.timestamp - lastSubgraphBlock.timestamp > 3600
 
+  const onDateRangeChange = (dates) => {
+    const [start, end] = dates;
+    setDataRange({ fromValue: start, toValue: end })
+  };
+
+  const dateRangeOptions = [{
+    label: "Last Month",
+    id: 1
+  }, {
+    label: "Last 2 Months",
+    id: 2,
+    isDefault: true,
+  }, {
+    label: "Last 3 Months",
+    id: 3,
+  }, {
+    label: "All time",
+    id: 4
+  }]
+
   return (
     <div className="Home">
-      <h1>Analytics / Avalanche</h1>
-      {lastSubgraphBlock && lastBlock &&
-        <p className={isObsolete ? 'warning' : ''} style={{ marginTop: '-1rem' }}>
-          {isObsolete && "Data is obsolete. "}
-          Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
-          &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`}>{lastSubgraphBlock.number}</a>
-        </p>
-      }
+      <div className="page-title-section">
+        <div className="page-title-block">
+          <h1>Analytics / Avalanche</h1>
+          {lastSubgraphBlock && lastBlock &&
+            <p className={cx('page-description', { warning: isObsolete })}>
+              {isObsolete && "Data is obsolete. "}
+              Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
+              &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`} rel="noreferrer">{lastSubgraphBlock.number}</a>
+            </p>
+          }
+        </div>
+        <div className="form">
+          <DateRangeSelect options={dateRangeOptions} startDate={dataRange.fromValue} endDate={dataRange.toValue} onChange={onDateRangeChange} />
+        </div>
+      </div>
       <div className="chart-grid">
         <div className="chart-cell stats">
           {totalVolume ? <>
             <div className="total-stat-label">Total Volume</div>
             <div className="total-stat-value">
-              {formatNumber(totalVolume, {currency: true})}
+              {formatNumber(totalVolume, { currency: true })}
               {!!totalVolumeDelta &&
-                <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalVolumeDelta, {currency: true, compact: true})}</span>
+                <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalVolumeDelta, { currency: true, compact: true })}</span>
               }
             </div>
           </> : null}
-          {volumeLoading && <RiLoader5Fill size="3em" className="loader" />}
+          {totalVolumeLoading && <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {totalFees ? <>
             <div className="total-stat-label">Total Fees</div>
             <div className="total-stat-value">
-              {formatNumber(totalFees, {currency: true})}
+              {formatNumber(totalFees, { currency: true })}
               {!!totalFeesDelta &&
-                <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalFeesDelta, {currency: true, compact: true})}</span>
+                <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(totalFeesDelta, { currency: true, compact: true })}</span>
               }
             </div>
           </> : null}
-          {feesLoading && <RiLoader5Fill size="3em" className="loader" />}
+          {totalFeesLoading && <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {totalAum ? <>
             <div className="total-stat-label">GLP Pool</div>
             <div className="total-stat-value">
-              {formatNumber(totalAum, {currency: true})}
+              {formatNumber(totalAum, { currency: true })}
               {!!totalAumDelta &&
-                <span className={cx("total-stat-delta", (totalAumDelta > 0 ? 'plus' : 'minus'))} title="Change since previous day">{totalAumDelta > 0 ? '+' : ''}{formatNumber(totalAumDelta, {currency: true, compact: true})}</span>
+                <span className={cx("total-stat-delta", (totalAumDelta > 0 ? 'plus' : 'minus'))} title="Change since previous day">{totalAumDelta > 0 ? '+' : ''}{formatNumber(totalAumDelta, { currency: true, compact: true })}</span>
               }
             </div>
           </> : null}
-          {glpLoading && <RiLoader5Fill size="3em" className="loader" />}
+          {totalGlpLoading && <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {totalUsers && <>
@@ -221,21 +242,21 @@ function Avalanche(props) {
               }
             </div>
           </>}
-          {usersLoading && <RiLoader5Fill size="3em" className="loader" />}
+          {totalUsersLoading && <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell stats">
           {openInterest ? <>
             <div className="total-stat-label">Open Interest</div>
             <div className="total-stat-value">
-              {formatNumber(openInterest, {currency: true})}
+              {formatNumber(openInterest, { currency: true })}
               {!!openInterestDelta &&
                 <span className={cx("total-stat-delta", (openInterestDelta > 0 ? 'plus' : 'minus'))} title="Change since previous day">
-                  {openInterestDelta > 0 ? '+' : ''}{formatNumber(openInterestDelta, {currency: true, compact: true})}
+                  {openInterestDelta > 0 ? '+' : ''}{formatNumber(openInterestDelta, { currency: true, compact: true })}
                 </span>
               }
             </div>
           </> : null}
-          {tradersLoading && <RiLoader5Fill size="3em" className="loader" />}
+          {totalTradersLoading && <RiLoader5Fill size="3em" className="loader" />}
         </div>
         <div className="chart-cell">
           <VolumeChart
@@ -243,10 +264,6 @@ function Avalanche(props) {
             loading={volumeLoading}
             chartHeight={CHART_HEIGHT}
             yaxisWidth={YAXIS_WIDTH}
-            xaxisTickFormatter={tooltipLabelFormatter}
-            yaxisTickFormatter={yaxisFormatter}
-            tooltipLabelFormatter={tooltipLabelFormatter}
-            tooltipFormatter={tooltipFormatter}
           />
         </div>
         <div className="chart-cell">
@@ -256,13 +273,11 @@ function Avalanche(props) {
             chartHeight={CHART_HEIGHT}
             yaxisWidth={YAXIS_WIDTH}
             xaxisTickFormatter={tooltipLabelFormatter}
-            yaxisTickFormatter={yaxisFormatter}
             tooltipLabelFormatter={tooltipLabelFormatter}
-            tooltipFormatter={tooltipFormatter}
           />
         </div>
         <div className="chart-cell">
-          <ChartWrapper title="AUM & Glp Supply" loading={glpLoading} data={glpData} csvFields={[{key: 'aum'}, {key: 'glpSupply'}]}>
+          <ChartWrapper title="AUM & Glp Supply" loading={glpLoading} data={glpData} csvFields={[{ key: 'aum' }, { key: 'glpSupply' }]}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
               <LineChart data={glpData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
@@ -281,6 +296,14 @@ function Avalanche(props) {
           </ChartWrapper>
         </div>
         <div className="chart-cell">
+          <PoolAmountChart 
+            from={from}
+            to={to}
+            chainName={params.chainName}
+            syncId="syncGlp"
+          />
+        </div>
+        <div className="chart-cell">
           <ChartWrapper
             title="Glp Performance"
             loading={glpLoading}
@@ -291,7 +314,7 @@ function Avalanche(props) {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[90, 200]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="performanceLpAvaxCollectedFees" domain={[80, 180]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
@@ -318,7 +341,7 @@ function Avalanche(props) {
             title="Glp Price Comparison"
             loading={glpLoading}
             data={glpPerformanceData}
-            csvFields={[{key: 'syntheticPrice'}, {key: 'glpPrice'}, {key: 'glpPlusFees'}, {key: 'lpBtcPrice'}, {key: 'lpEthPrice'}]}
+            csvFields={[{ key: 'syntheticPrice' }, { key: 'glpPrice' }, { key: 'glpPlusFees' }, { key: 'lpBtcPrice' }, { key: 'lpEthPrice' }]}
           >
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
               <LineChart data={glpPerformanceData} syncId="syncGlp">
@@ -353,25 +376,40 @@ function Avalanche(props) {
             title="Traders Net PnL"
             loading={tradersLoading}
             data={tradersData?.data}
-            csvFields={[{key: 'pnl', name: 'Net PnL'}, {key: 'pnlCumulative', name: 'Cumulative PnL'}]}
+            csvFields={[{ key: 'pnl', name: 'Net PnL' }, { key: 'pnlCumulative', name: 'Cumulative PnL' }]}
           >
-            <ResponsiveContainer width="100%" syncId="tradersId" height={CHART_HEIGHT}>
-              <ComposedChart data={tradersData?.data}>
+            <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+              <ComposedChart data={tradersData?.data} syncId="tradersId">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis domain={[-tradersData?.stats.maxAbsOfPnlAndCumulativePnl * 1.05, tradersData?.stats.maxAbsOfPnlAndCumulativePnl * 1.05]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
+                <YAxis
+                  domain={[-tradersData?.stats.maxAbsCumulativePnl * 1.05, tradersData?.stats.maxAbsCumulativePnl * 1.05]}
+                  orientation="right"
+                  yAxisId="right"
+                  tickFormatter={yaxisFormatter}
+                  width={YAXIS_WIDTH}
+                  tick={{ fill: COLORS[4] }}
+                />
+                <YAxis domain={[-tradersData?.stats.maxAbsPnl * 1.05, tradersData?.stats.maxAbsPnl * 1.05]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatter}
                   labelFormatter={tooltipLabelFormatter}
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Bar type="monotone" fill={ mode == "dark" ? "#FFFFFF" : "#000000"} dot={false} dataKey="pnl" name="Net PnL">
+                <Bar type="monotone" fill={mode == "dark" ? "#FFFFFF" : "#000000"} dot={false} dataKey="pnl" name="Net PnL">
                   {(tradersData?.data || []).map((item, i) => {
-                    return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#22c761' : '#f93333' } />
+                    return <Cell key={`cell-${i}`} fill={item.pnl > 0 ? '#22c761' : '#f93333'} />
                   })}
                 </Bar>
-                <Line type="monotone" strokeWidth={2} stroke={COLORS[4]} dataKey="pnlCumulative" name="Cumulative PnL" />
+                <Line
+                  type="monotone"
+                  strokeWidth={2}
+                  stroke={COLORS[4]}
+                  dataKey="currentPnlCumulative"
+                  name="Cumulative PnL"
+                  yAxisId="right"
+                />
               </ComposedChart>
             </ResponsiveContainer>
             <div className="chart-description">
@@ -381,42 +419,23 @@ function Avalanche(props) {
           </ChartWrapper>
         </div>
         <div className="chart-cell">
-          <ChartWrapper
-            title="Traders Profit vs. Loss"
-            loading={tradersLoading}
-            data={tradersData?.data}
-            csvFields={[{key: 'profit'}, {key: 'loss'}, {key: 'profitCumulative'}, {key: 'lossCumulative'}]}
-          >
-            <ResponsiveContainer width="100%" syncId="tradersId" height={CHART_HEIGHT}>
-              <ComposedChart data={tradersData?.data} barGap={0}>
-                <CartesianGrid strokeDasharray="10 10" />
-                <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis domain={[-tradersData?.stats.maxProfitLoss * 1.05, tradersData?.stats.maxProfitLoss * 1.05]} tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
-                <YAxis domain={[-tradersData?.stats.maxCumulativeProfitLoss * 1.1, tradersData?.stats.maxCumulativeProfitLoss * 1.1]} orientation="right" yAxisId="right" tickFormatter={yaxisFormatter} width={YAXIS_WIDTH} />
-                <Tooltip
-                  formatter={tooltipFormatter}
-                  labelFormatter={tooltipLabelFormatter}
-                  contentStyle={{ textAlign: 'left' }}
-                />
-                <Legend />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#22c761" fillOpacity="0.4" dataKey="profitCumulative" name="Cumulative Profit" />
-                <Area  yAxisId="right" type="monotone" stroke={0} fill="#f93333" fillOpacity="0.4" dataKey="lossCumulative" name="Cumulative Loss" />
-                <Bar type="monotone" fill="#22c761" dot={false} dataKey="profit" name="Profit" />
-                <Bar type="monotone" fill="#f93333" dot={false} dataKey="loss" name="Loss" />
-              </ComposedChart>
-            </ResponsiveContainer>
-            <div className="chart-description">
-              <p>Considers settled (closed) positions</p>
-              <p>Fees are not factored into PnL</p>
-            </div>
-          </ChartWrapper>
+          <TradersProfitLossChart 
+              syncId="tradersId"
+              loading={tradersLoading}
+              tradersData={tradersData}
+              yaxisWidth={YAXIS_WIDTH}
+              chartHeight={CHART_HEIGHT}
+            />
         </div>
         <div className="chart-cell">
            <GenericChart
               loading={tradersLoading}
               title="Open Interest"
               data={tradersData?.data.map(item => ({ all: item.openInterest, ...item }))}
-              yaxisDataKey="openInterest"
+              controls={{
+                convertToPercents: convertToPercents
+              }}
+              yaxisDataKey="all"
               items={[{ key: 'shortOpenInterest', name: 'Short', color: RED }, { key: 'longOpenInterest', name: 'Long', color: GREEN }]}
               type="Bar"
             />
@@ -440,6 +459,7 @@ function Avalanche(props) {
               loading={usersLoading}
               title="Unique Users"
               data={usersData}
+              truncateYThreshold={6500}
               yaxisDataKey="uniqueSum"
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
@@ -453,32 +473,33 @@ function Avalanche(props) {
             />
         </div>
         <div className="chart-cell">
-           <GenericChart
-              syncId="syncGlp"
-              loading={usersLoading}
-              title="New Users"
-              data={usersData?.map(item => ({ ...item, all: item.newCount }))}
-              yaxisDataKey="newCount"
-              rightYaxisDataKey="uniqueCountCumulative"
-              yaxisTickFormatter={yaxisFormatterNumber}
-              tooltipFormatter={tooltipFormatterNumber}
-              tooltipLabelFormatter={tooltipLabelFormatterUnits}
-              items={[
-                { key: 'newSwapCount', name: 'Swap'},
-                { key: 'newMarginCount', name: 'Margin trading'},
-                { key: 'newMintBurnCount', name: 'Mint & Burn'},
-                { key: 'uniqueCountCumulative', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
-              ]}
-              type="Composed"
-            />
+          <GenericChart
+            syncId="syncGlp"
+            loading={usersLoading}
+            title="New Users"
+            data={usersData?.map(item => ({ ...item, all: item.newCount }))}
+            truncateYThreshold={6000}
+            yaxisDataKey="newCount"
+            rightYaxisDataKey="uniqueCountCumulative"
+            yaxisTickFormatter={yaxisFormatterNumber}
+            tooltipFormatter={tooltipFormatterNumber}
+            tooltipLabelFormatter={tooltipLabelFormatterUnits}
+            items={[
+              { key: 'newSwapCount', name: 'Swap' },
+              { key: 'newMarginCount', name: 'Margin trading' },
+              { key: 'newMintBurnCount', name: 'Mint & Burn' },
+              { key: 'cumulativeNewUserCount', name: 'Cumulative', type: 'Line', yAxisId: 'right', strokeWidth: 2, color: COLORS[4] }
+            ]}
+            type="Composed"
+          />
         </div>
         <div className="chart-cell">
-           <GenericChart
-              loading={swapSourcesLoading}
-              title="Swap Sources"
-              data={swapSources}
-              items={swapSourcesKeys.map(key => ({ key }))}
-            />
+          <GenericChart
+            loading={swapSourcesLoading}
+            title="Swap Sources"
+            data={swapSources}
+            items={swapSourcesKeys.map(key => ({ key }))}
+          />
         </div>
       </div>
     </div>
