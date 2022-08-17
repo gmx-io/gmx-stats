@@ -1075,7 +1075,11 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
       first: 1000
       orderBy: ${timestampProp}
       orderDirection: desc
-      where: {period: daily, ${timestampProp}_gte: ${from}, ${timestampProp}_lte: ${to}}
+      where: {
+        period: daily
+        ${timestampProp}_gte: ${from}
+        ${timestampProp}_lte: ${to}
+      }
     ) {
       ${timestampProp}
       aumInUsdg
@@ -1092,8 +1096,6 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
     if (!data) {
       return null
     }
-
-    const getTimestamp = item => item.timestamp || parseInt(item[timestampProp])
 
     let prevGlpSupply
     let prevAum

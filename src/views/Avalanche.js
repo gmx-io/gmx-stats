@@ -14,7 +14,6 @@ import {
   tooltipFormatterNumber,
   tooltipFormatterPercent,
   formatNumber,
-  tsToIsoDate,
   CHART_HEIGHT,
   YAXIS_WIDTH,
   COLORS,
@@ -25,24 +24,16 @@ import {
 
 import {
   LineChart,
-  BarChart,
   Line,
   Bar,
-  Label,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
   ResponsiveContainer,
-  LabelList,
-  ReferenceLine,
-  Area,
-  AreaChart,
   ComposedChart,
-  Cell,
-  PieChart,
-  Pie
+  Cell
 } from 'recharts';
 
 import ChartWrapper from '../components/ChartWrapper'
@@ -69,6 +60,8 @@ import TradersProfitLossChart from '../components/TradersProfitLossChart';
 const NOW = Math.floor(Date.now() / 1000)
 
 function Avalanche(props) {
+  const DEFAULT_GROUP_PERIOD = 86400
+  const [groupPeriod] = useState(DEFAULT_GROUP_PERIOD)
   const [dataRange, setDataRange] = useState({ fromValue: moment().subtract(3, 'month').toDate(), toValue: null })
 
   const { mode } = props
@@ -76,7 +69,7 @@ function Avalanche(props) {
   const from = dataRange.fromValue ? Math.floor(+new Date(dataRange.fromValue) / 1000) : undefined
   const to = dataRange.toValue ? Math.floor(+new Date(dataRange.toValue) / 1000) : NOW
 
-  const params = { from, to, chainName: 'avalanche' }
+  const params = { from, to, groupPeriod, chainName: 'avalanche' }
 
   const [fundingRateData, fundingRateLoading] = useFundingRateData(params)
 
