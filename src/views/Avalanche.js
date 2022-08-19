@@ -146,7 +146,7 @@ function Avalanche(props) {
     return memo
   }, {}))
 
-  const [lastSubgraphBlock] = useLastSubgraphBlock(params.chainName)
+  const [lastSubgraphBlock, , lastSubgraphBlockError] = useLastSubgraphBlock(params.chainName)
   const [lastBlock] = useLastBlock(params.chainName)
 
   const isObsolete = lastSubgraphBlock && lastBlock && lastBlock.timestamp - lastSubgraphBlock.timestamp > 3600
@@ -180,7 +180,13 @@ function Avalanche(props) {
             <p className={cx('page-description', { warning: isObsolete })}>
               {isObsolete && "Data is obsolete. "}
               Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
-              &nbsp;at block <a target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`} rel="noreferrer">{lastSubgraphBlock.number}</a>
+              &nbsp;at block <a rel="noreferrer" target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`} rel="noreferrer">{lastSubgraphBlock.number}</a>
+            </p>
+          }
+          {
+            lastSubgraphBlockError &&
+            <p className="page-description warning">
+              Subgraph data is temporarily unavailable.
             </p>
           }
         </div>
