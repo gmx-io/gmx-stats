@@ -305,145 +305,6 @@ export function useGraph(querySource, { subgraph = null, subgraphUrl = null, cha
   return [data, loading, error]
 }
 
-export function useGambitVolumeData({ from, to }) {
-  const [graphData, loading, error] = useGraph(`{
-    volumeStats(
-      first: 1000,
-      where: { id_gte: ${from}, id_lte: ${to}, period: daily }
-      orderBy: id
-      orderDirection: desc
-    ) {
-      id
-      margin
-      swap
-      liquidation
-      mint
-      burn
-    }
-  }`, {
-    subgraph: 'gmx-io/gmx-bsc-stats'
-  })
-
-  let data
-  if (graphData) {
-    data = sortBy(graphData.volumeStats, item => item.id).map(({ id, margin, swap, liquidation, mint, burn }) => {
-      margin = margin / 1e30
-      swap = swap / 1e30
-      liquidation = liquidation / 1e30
-      mint = mint / 1e30
-      burn = burn / 1e30
-      const all = margin + swap + liquidation + mint + burn
-      return {
-        timestamp: id,
-        all,
-        margin,
-        swap,
-        liquidation,
-        mint,
-        burn
-      }
-    })
-  }
-
-  return [data, loading]
-}
-
-export function useGambitFeesData({ from, to }) {
-  const [graphData, loading, error] = useGraph(`{
-    feeStats(
-      first: 1000,
-      where: { id_gte: ${from}, id_lte: ${to}, period: daily }
-      orderBy: id
-      orderDirection: desc
-    ) {
-      id
-      margin
-      swap
-      mint
-      burn
-      marginCumulative
-      swapCumulative
-      liquidationCumulative
-      mintCumulative
-      burnCumulative
-    }
-  }`, {
-    subgraph: 'gmx-io/gmx-bsc-stats'
-  })
-
-  let data
-  if (graphData) {
-    data = sortBy(graphData.feeStats, item => item.id).map(({ id, margin, swap, mint, burn }) => {
-      margin = margin / 1e30
-      swap = swap / 1e30
-      const liquidation = 0
-      mint = mint / 1e30
-      burn = burn / 1e30
-      const all = margin + swap + mint + burn
-      return {
-        timestamp: id,
-        all,
-        margin,
-        swap,
-        liquidation,
-        mint,
-        burn
-      }
-    })
-  }
-
-  return [data, loading]
-}
-
-export function useGambitPoolStats({ from, to, groupPeriod }) {
-  const [data, loading, error] = useGraph(`{
-    poolStats (
-      first: 1000,
-      where: { id_gte: ${from}, id_lte: ${to} }
-      orderBy: id
-      orderDirection: desc
-    ) {
-      id,
-      usdgSupply,
-      BTC_usd,
-      ETH_usd,
-      BNB_usd,
-      USDC_usd,
-      USDT_usd,
-      BUSD_usd
-    }
-  }`, { subgraph: 'gkrasulya/gambit' })
-
-  const ret = useMemo(() => {
-    if (!data) {
-       return null
-    }
-    let ret = data.poolStats.map(item => {
-      return Object.entries(item).reduce((memo, [key, value]) => {
-        if (key === 'id') memo.timestamp = value
-        else if (key === 'usdgSupply') memo.usdgSupply = value / 1e18
-        else memo[key.substr(0, key.length - 4)] = value / 1e30
-        return memo
-      }, {})
-    })
-
-    ret = chain(ret)
-      .sortBy('timestamp')
-      .groupBy(item => Math.floor(item.timestamp / groupPeriod) * groupPeriod)
-      .map((values, timestamp) => {
-        return {
-          ...values[values.length - 1],
-          timestamp
-        }
-      })
-      .value()
-
-     return fillPeriods(ret, { period: groupPeriod, from, to, interpolate: false, extrapolate: true })
-  }, [data])
-
-  return [ret, loading, error]
-}
-
 export function useLastBlock(chainName = "arbitrum") {
   const [data, setData] = useState()
   const [loading, setLoading] = useState(true)
@@ -488,6 +349,7 @@ export function useTradersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
       orderBy: timestamp
       orderDirection: desc
       where: { period: "daily", timestamp_gte: ${from}, timestamp_lte: ${to} }
+      subgraphError: allow
     ) {
       timestamp
       profit
@@ -601,6 +463,7 @@ function getSwapSourcesFragment(skip = 0, from, to) {
       orderBy: timestamp
       orderDirection: desc
       where: { timestamp_gte: ${from}, timestamp_lte: ${to} }
+      subgraphError: allow
     ) {
       timestamp
       source
@@ -618,7 +481,6 @@ export function useSwapSources({ from = FIRST_DATE_TS, to = NOW_TS, chainName = 
   }`
   const [graphData, loading, error] = useGraph(query, { chainName })
 
-  let total = 0
   let data = useMemo(() => {
     if (!graphData) {
       return null
@@ -720,6 +582,7 @@ export function useVolumeDataFromServer({ from = FIRST_DATE_TS, to = NOW_TS, cha
   const [data, loading] = useVolumeDataRequest(`https://${getServerHostname(chainName)}/daily_volume`, null, from, to, async url => {
     let after
     const ret = []
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const res = await (await fetch(url + (after ? `?after=${after}` : ''))).json()
       if (res.length === 0) return ret
@@ -800,6 +663,7 @@ export function useUsersData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "a
       orderBy: timestamp
       orderDirection: desc
       where: { period: "daily", timestamp_gte: ${from}, timestamp_lte: ${to} }
+      subgraphError: allow
     ) {
       uniqueCount
       uniqueSwapCount
@@ -852,6 +716,7 @@ export function useFundingRateData({ from = FIRST_DATE_TS, to = NOW_TS, chainNam
       orderBy: timestamp,
       orderDirection: desc,
       where: { period: "daily", id_gte: ${from}, id_lte: ${to} }
+      subgraphError: allow
     ) {
       id,
       token,
@@ -909,6 +774,7 @@ export function useVolumeData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "
       orderBy: ${timestampProp},
       orderDirection: desc
       where: { period: daily, ${timestampProp}_gte: ${from}, ${timestampProp}_lte: ${to} }
+      subgraphError: allow
     ) {
       ${timestampProp}
       ${PROPS.join('\n')}
@@ -962,6 +828,7 @@ export function useFeesData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "ar
       orderBy: id
       orderDirection: desc
       where: { period: daily, id_gte: ${from}, id_lte: ${to} }
+      subgraphError: allow
     ) {
       id
       margin
@@ -1080,6 +947,7 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
         ${timestampProp}_gte: ${from}
         ${timestampProp}_lte: ${to}
       }
+      subgraphError: allow
     ) {
       ${timestampProp}
       aumInUsdg
@@ -1336,6 +1204,7 @@ export function useTokenStats({
       orderBy: timestamp,
       orderDirection: desc,
       where: { period: ${period}, timestamp_gte: ${from}, timestamp_lte: ${to} }
+      subgraphError: allow
     ) {
       poolAmountUsd
       timestamp
@@ -1413,6 +1282,7 @@ export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName 
       orderBy: timestamp
       orderDirection: desc
       where: { period: "daily", timestamp_gte: ${from}, timestamp_lte: ${to} }
+      subgraphError: allow
     ) {
       volume
       volumeCumulative

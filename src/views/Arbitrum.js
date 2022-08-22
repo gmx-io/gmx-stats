@@ -152,7 +152,7 @@ function Arbitrum(props) {
     ]
   }, [usersData])
 
-  const [lastSubgraphBlock, _, lastSubgraphBlockError] = useLastSubgraphBlock()
+  const [lastSubgraphBlock, , lastSubgraphBlockError] = useLastSubgraphBlock()
   const [lastBlock] = useLastBlock()
 
   const isObsolete = lastSubgraphBlock && lastBlock && lastBlock.timestamp - lastSubgraphBlock.timestamp > 3600
