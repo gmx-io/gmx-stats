@@ -38,17 +38,18 @@ function getChainId(chainName) {
   return chainId
 }
 
-const DEFAULT_GROUP_PERIOD = 86400
 const NOW_TS = parseInt(Date.now() / 1000)
 const FIRST_DATE_TS = parseInt(+(new Date(2021, 7, 31)) / 1000)
 
-function fillNa(arr, keys) {
+function fillNa(arr) {
   const prevValues = {}
-  if (!keys && arr.length > 0) {
+  let keys
+  if (arr.length > 0) {
     keys = Object.keys(arr[0])
     delete keys.timestamp
     delete keys.id
   }
+
   for (const el of arr) {
     for (const key of keys) {
       if (!el[key]) {
@@ -755,8 +756,8 @@ export function useFundingRateData({ from = FIRST_DATE_TS, to = NOW_TS, chainNam
       group[symbol] = fundingRate
       return memo
     }, {})
-
-    return fillNa(sortBy(Object.values(groups), 'timestamp'), ['ETH', 'USDC', 'USDT', 'BTC', 'LINK', 'UNI', 'MIM'])
+    
+    return fillNa(sortBy(Object.values(groups), 'timestamp'))
   }, [graphData])
 
   return [data, loading, error]
@@ -1012,9 +1013,13 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
         aum = prevAum
       }
       item.glpSupplyChange = prevGlpSupply ? (glpSupply - prevGlpSupply) / prevGlpSupply * 100 : 0
-      if (item.glpSupplyChange > 1000) item.glpSupplyChange = 0
+      if (item.glpSupplyChange > 1000) {
+        item.glpSupplyChange = 0
+      }
       item.aumChange = prevAum ? (aum - prevAum) / prevAum * 100 : 0
-      if (item.aumChange > 1000) item.aumChange = 0
+      if (item.aumChange > 1000) {
+        item.aumChange = 0
+      }
       prevGlpSupply = glpSupply
       prevAum = aum
       return item
@@ -1023,7 +1028,7 @@ export function useGlpData({ from = FIRST_DATE_TS, to = NOW_TS, chainName = "arb
     ret = fillNa(ret)
     return ret
   }, [data])
-
+  
   return [glpChartData, loading, error]
 }
 
@@ -1078,8 +1083,8 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
 
     const ret = []
     let cumulativeFeesPerGlp = 0
-    let cumulativeEsgmxRewardsPerGlp = 0
-    let lastGlpPrice = 0
+    let lastGlpItem
+    let lastFeesItem
 
     let prevEthPrice = 3400
     let prevAvaxPrice = 1000
@@ -1091,11 +1096,16 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
       prevEthPrice = ethPrice
 
       const timestampGroup = parseInt(btcPrices[i].timestamp / 86400) * 86400
-      const glpItem = glpDataById[timestampGroup]
-      const glpPrice = glpItem?.glpPrice ?? lastGlpPrice
-      lastGlpPrice = glpPrice
-      const glpSupply = glpDataById[timestampGroup]?.glpSupply
-      const dailyFees = feesDataById[timestampGroup]?.all
+      const glpItem = glpDataById[timestampGroup] || lastGlpItem
+      lastGlpItem = glpItem
+
+      const glpPrice = glpItem?.glpPrice
+      const glpSupply = glpItem?.glpSupply
+      
+      const feesItem = feesDataById[timestampGroup] || lastFeesItem
+      lastFeesItem = feesItem
+
+      const dailyFees = feesItem?.all
 
       const syntheticPrice = (
         indexBtcCount * btcPrice
@@ -1121,8 +1131,6 @@ export function useGlpPerformanceData(glpData, feesData, { from = FIRST_DATE_TS,
         const GLP_REWARDS_SHARE = timestampGroup >= INCREASED_GLP_REWARDS_TIMESTAMP ? 0.7 : 0.5
         const collectedFeesPerGlp = dailyFees / glpSupply * GLP_REWARDS_SHARE
         cumulativeFeesPerGlp += collectedFeesPerGlp
-
-        cumulativeEsgmxRewardsPerGlp += glpPrice * 0.8 / 365
       }
 
       let glpPlusFees = glpPrice
