@@ -12,7 +12,7 @@ const logger = getLogger('prices')
 const ttlCache = new TtlCache(60, 1000)
 
 const LOAD_NEW_PRICES_LOOP_INTERVAL = IS_PRODUCTION ? 60000 : 5000
-const LOAD_OLD_PRICES_LOOP_INTERVAL = IS_PRODUCTION ? 5000 : 5000
+const LOAD_OLD_PRICES_LOOP_INTERVAL = IS_PRODUCTION ? 15000 : 5000
 const PERIOD_TO_SECONDS = {
   '5m': 60 * 5,
   '15m': 60 * 15,
@@ -216,7 +216,7 @@ async function loadNewPrices(chainId, period) {
   
   const getQuery = () => `{
     priceCandles(
-      first: 50
+      first: 100
       orderBy: timestamp
       orderDirection: desc
       where: { period: "${period}" }
@@ -229,7 +229,7 @@ async function loadNewPrices(chainId, period) {
     try {
       const query = getQuery()
       const start = Date.now()
-      logger.info("requesting prices after %s", period)
+      logger.info("requesting prices for period %s", period)
       const { data } = await graphClient.query({ query: gql(query) })
       logger.info("request done in %sms loaded %s prices", Date.now() - start, data.priceCandles.length)
       latestUpdateTimestamp = Math.floor(Date.now() / 1000)

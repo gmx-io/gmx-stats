@@ -29,7 +29,7 @@ const jsScriptTagsFromAssets = (assets, entrypoint, extra = '') => {
   ).join('') : '' : '';
 };
 
-const { formatUnits} = ethers.utils
+const { formatUnits } = ethers.utils
 
 const logger = getLogger('routes')
 
