@@ -180,7 +180,7 @@ function Avalanche(props) {
             <p className={cx('page-description', { warning: isObsolete })}>
               {isObsolete && "Data is obsolete. "}
               Updated {moment(lastSubgraphBlock.timestamp * 1000).fromNow()}
-              &nbsp;at block <a rel="noreferrer" target="_blank" href={`https://arbiscan.io/block/${lastSubgraphBlock.number}`} rel="noreferrer">{lastSubgraphBlock.number}</a>
+              &nbsp;at block <a rel="noreferrer" target="_blank" href={`https://snowtrace.io/block/${lastSubgraphBlock.number}`} rel="noreferrer">{lastSubgraphBlock.number}</a>
             </p>
           }
           {
