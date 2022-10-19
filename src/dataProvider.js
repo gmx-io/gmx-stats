@@ -1307,7 +1307,9 @@ export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName 
       timestamp
     }
   }`
-  const subgraph = chainName === "arbitrum" ? "gdev8317/gmx-arbitrum-referrals-staging" : "gdev8317/gmx-avalanche-referrals-staging"
+  const subgraph = chainName === "arbitrum"
+    ? "gmx-io/gmx-arbitrum-referrals"
+    : "gmx-io/gmx-avalanche-referrals"
   const [graphData, loading, error] = useGraph(query, { subgraph })
 
   const data = graphData ? sortBy(graphData.globalStats, 'timestamp').map(item => {
