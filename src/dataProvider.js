@@ -173,6 +173,7 @@ const knownSwapSources = {
     '0x87a4088bd721f83b6c2e5102e2fa47022cb1c831': 'GMX', // PositionManager
     '0x7257ac5d0a0aac04aa7ba2ac0a6eb742e332c3fb': 'GMX', // OrderExecutor
     '0x1a0ad27350cccd6f7f168e052100b4960efdb774': 'GMX', // FastPriceFeed
+    '0x11d62807dae812a0f1571243460bf94325f43bb7': 'GM', // Position Executor
     '0x3b6067d4caa8a14c63fdbe6318f27a0bbc9f9237': 'Dodo',
     '0x11111112542d85b3ef69ae05771c2dccff4faa26': '1inch',
     '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean', // OpenOceanExchangeProxy
@@ -186,7 +187,8 @@ const knownSwapSources = {
     '0x226cb17a52709034e2ec6abe0d2f0a9ebcec1059': 'WardenSwap',
     '0x1111111254fb6c44bac0bed2854e76f90643097d': '1inch',
     '0x6d7a3177f3500bea64914642a49d0b5c0a7dae6d': 'deBridge',
-    '0xc30141b657f4216252dc59af2e7cdb9d8792e1b0': 'socket.tech'
+    '0xc30141b657f4216252dc59af2e7cdb9d8792e1b0': 'socket.tech',
+    '0xdd94018f54e565dbfc939f7c44a16e163faab331': 'Odos Router'
   },
   avalanche: {
     '0x4296e307f108b2f583ff2f7b7270ee7831574ae5': 'GMX',
@@ -200,6 +202,8 @@ const knownSwapSources = {
     '0x1111111254fb6c44bac0bed2854e76f90643097d': '1inch',
     '0xdef171fe48cf0115b1d80b88dc8eab59176fee57': 'ParaSwap',
     '0x2ecf2a2e74b19aab2a62312167aff4b78e93b6c5': 'ParaSwap',
+    '0xdef1c0ded9bec7f1a1670819833240f027b25eff': '0x',
+    '0xe547cadbe081749e5b3dc53cb792dfaea2d02fd2': 'GMX' // Position Executor
   }
 }
 
