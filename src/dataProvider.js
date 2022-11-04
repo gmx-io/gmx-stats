@@ -167,13 +167,15 @@ function getTokenDecimals(token) {
 
 const knownSwapSources = {
   arbitrum: {
-    '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX', // Router
-    '0x09f77e8a13de9a35a7231028187e9fd5db8a2acb': 'GMX', // Orderbook
-    '0x98a00666cfcb2ba5a405415c2bf6547c63bf5491': 'GMX', // PositionManager old
-    '0x87a4088bd721f83b6c2e5102e2fa47022cb1c831': 'GMX', // PositionManager
-    '0x7257ac5d0a0aac04aa7ba2ac0a6eb742e332c3fb': 'GMX', // OrderExecutor
-    '0x1a0ad27350cccd6f7f168e052100b4960efdb774': 'GMX', // FastPriceFeed
-    '0x11d62807dae812a0f1571243460bf94325f43bb7': 'GM', // Position Executor
+    '0xabbc5f99639c9b6bcb58544ddf04efa6802f4064': 'GMX Router', // Router
+    '0x09f77e8a13de9a35a7231028187e9fd5db8a2acb': 'GMX OrderBook', // Orderbook
+    '0x98a00666cfcb2ba5a405415c2bf6547c63bf5491': 'GMX PositionManager A', // PositionManager old
+    '0x87a4088bd721f83b6c2e5102e2fa47022cb1c831': 'GMX PositionManager B', // PositionManager
+    '0x75e42e6f01baf1d6022bea862a28774a9f8a4a0c': 'GMX PositionManager C', // PositionManager 12 oct 2022
+    '0xb87a436b93ffe9d75c5cfa7bacfff96430b09868': 'GMX PositionRouter C', // PositionRouter 12 oct 2022
+    '0x7257ac5d0a0aac04aa7ba2ac0a6eb742e332c3fb': 'GMX OrderExecutor', // OrderExecutor
+    '0x1a0ad27350cccd6f7f168e052100b4960efdb774': 'GMX FastPriceFeed A', // FastPriceFeed
+    '0x11d62807dae812a0f1571243460bf94325f43bb7': 'GMX PositionExecutor', // Position Executor
     '0x3b6067d4caa8a14c63fdbe6318f27a0bbc9f9237': 'Dodo',
     '0x11111112542d85b3ef69ae05771c2dccff4faa26': '1inch',
     '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean', // OpenOceanExchangeProxy
@@ -191,10 +193,12 @@ const knownSwapSources = {
     '0xdd94018f54e565dbfc939f7c44a16e163faab331': 'Odos Router'
   },
   avalanche: {
-    '0x4296e307f108b2f583ff2f7b7270ee7831574ae5': 'GMX',
-    '0x5f719c2f1095f7b9fc68a68e35b51194f4b6abe8': 'GMX',
-    '0x7d9d108445f7e59a67da7c16a2ceb08c85b76a35': 'GMX', // FastPriceFeed
-    '0xf2ec2e52c3b5f8b8bd5a3f93945d05628a233216': 'GMX', // PositionManager
+    '0x4296e307f108b2f583ff2f7b7270ee7831574ae5': 'GMX OrderBook',
+    '0x5f719c2f1095f7b9fc68a68e35b51194f4b6abe8': 'GMX Router',
+    '0x7d9d108445f7e59a67da7c16a2ceb08c85b76a35': 'GMX FastPriceFeed', // FastPriceFeed
+    '0xf2ec2e52c3b5f8b8bd5a3f93945d05628a233216': 'GMX PositionManager', // PositionManager
+    '0xa21b83e579f4315951ba658654c371520bdcb866': 'GMX PositionManager C',
+    '0xfff6d276bc37c61a23f06410dce4a400f66420f8': 'GMX PositionRouter C',
     '0xc4729e56b831d74bbc18797e0e17a295fa77488c': 'Yak',
     '0x409e377a7affb1fd3369cfc24880ad58895d1dd9': 'Dodo',
     '0x6352a56caadc4f1e25cd6c75970fa768a3304e64': 'OpenOcean',
@@ -203,7 +207,7 @@ const knownSwapSources = {
     '0xdef171fe48cf0115b1d80b88dc8eab59176fee57': 'ParaSwap',
     '0x2ecf2a2e74b19aab2a62312167aff4b78e93b6c5': 'ParaSwap',
     '0xdef1c0ded9bec7f1a1670819833240f027b25eff': '0x',
-    '0xe547cadbe081749e5b3dc53cb792dfaea2d02fd2': 'GMX' // Position Executor
+    '0xe547cadbe081749e5b3dc53cb792dfaea2d02fd2': 'GMX PositionExecutor' // Position Executor
   }
 }
 
