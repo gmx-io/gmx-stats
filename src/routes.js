@@ -5,7 +5,7 @@ import { renderToString } from 'react-dom/server';
 
 import { createHttpError }  from './utils';
 import { ARBITRUM, AVALANCHE } from './addresses'
-import { getPricesLimit, getLastUpdatedTimestamp, VALID_PERIODS } from './prices'
+import { getPricesLimit, getLastUpdatedTimestamp, VALID_PERIODS, getPricesFromTo } from './prices'
 
 import App from './App';
 import { getLogger } from './helpers'
@@ -71,6 +71,8 @@ export default function routes(app) {
       throw createHttpError(400, `Invalid symbol ${symbol}`)
     }
     const preferableChainId = Number(req.query.preferableChainId)
+    const from = Number(req.query.from)
+    const to = Number(req.query.to)
     const validSources = new Set([ARBITRUM, AVALANCHE])
     if (!validSources.has(preferableChainId)) {
       throw createHttpError(400, `Invalid preferableChainId ${preferableChainId}. Valid options are ${ARBITRUM}, ${AVALANCHE}`)
@@ -78,7 +80,7 @@ export default function routes(app) {
 
     let prices
     try {
-      prices = getPricesLimit(5000, preferableChainId, req.params.symbol, period)
+      prices = from && to &&  getPricesFromTo(from, to, preferableChainId, req.params.symbol, period) : getPricesLimit(5000, preferableChainId, req.params.symbol, period)
     } catch (ex) {
       next(ex)
       return
