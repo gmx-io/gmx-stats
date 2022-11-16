@@ -145,7 +145,7 @@ function putPricesForTokenAndPeriodIntoCache(prices, chainId, token, period, app
 }
 
 function getPriceRange(prices, from, to, inbound = false) {
-  const indexFrom = binSearchPrice(prices, from, inbound)
+  const indexFrom = binSearchPrice(prices, from, inbound) + 1
   const indexTo = binSearchPrice(prices, to, !inbound) + 1
 
   return prices.slice(indexFrom, indexTo)
