@@ -80,7 +80,7 @@ export default function routes(app) {
 
     let prices
     try {
-      prices = from && to &&  getPricesFromTo(from, to, preferableChainId, req.params.symbol, period) : getPricesLimit(5000, preferableChainId, req.params.symbol, period)
+      prices = from && to ? getPricesFromTo(from, to, preferableChainId, req.params.symbol, period) : getPricesLimit(5000, preferableChainId, req.params.symbol, period)
     } catch (ex) {
       next(ex)
       return
