@@ -68,12 +68,14 @@ export default function routes(app) {
     const validSymbols = new Set(['BTC', 'ETH', 'BNB', 'UNI', 'LINK', 'AVAX'])
     const symbol = req.params.symbol
     if (!validSymbols.has(symbol)) {
-      throw createHttpError(400, `Invalid symbol ${symbol}`)
+      next(createHttpError(400, `Invalid symbol ${symbol}`))
+      return
     }
     const preferableChainId = Number(req.query.preferableChainId)
     const validSources = new Set([ARBITRUM, AVALANCHE])
     if (!validSources.has(preferableChainId)) {
-      throw createHttpError(400, `Invalid preferableChainId ${preferableChainId}. Valid options are ${ARBITRUM}, ${AVALANCHE}`)
+      next(createHttpError(400, `Invalid preferableChainId ${preferableChainId}. Valid options are ${ARBITRUM}, ${AVALANCHE}`))
+      return
     }
 
     let prices
@@ -129,7 +131,8 @@ export default function routes(app) {
     next()
   });
 
-  app.use('/api', function (err, req, res) {
+  // eslint-disable-next-line no-unused-vars
+  app.use('/api', function (err, req, res, _) {
     res.set('Content-Type', 'text/plain')
     const statusCode = Number(err.code) || 500
     let response = ''
