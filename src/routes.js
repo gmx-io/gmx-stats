@@ -77,10 +77,23 @@ export default function routes(app) {
       next(createHttpError(400, `Invalid preferableChainId ${preferableChainId}. Valid options are ${ARBITRUM}, ${AVALANCHE}`))
       return
     }
+    
+    const MAX_LIMIT = 5000
+    let limit = 5000
+    if (req.query.limit) {
+      limit = Number(req.query.limit)
+      if (Number.isNaN(limit)) {
+        next(createHttpError(400, `Invalid limit ${req.query.limit}`))
+        return
+      }
+      if (limit > MAX_LIMIT) {
+        limit = MAX_LIMIT 
+      }
+    }
 
     let prices
     try {
-      prices = getPricesLimit(5000, preferableChainId, req.params.symbol, period)
+      prices = getPricesLimit(limit, preferableChainId, req.params.symbol, period)
     } catch (ex) {
       next(ex)
       return
