@@ -11,8 +11,6 @@ export default function useChartDomain(data, dataKeys, percentage = 10) {
     }, []);
   }, [data, dataKeys]);
 
-  console.log({data})
-
   const minValue = useMemo(() => Math.min(...values), [values]);
   const maxValue = useMemo(() => Math.max(...values), [values]);
   const diff = (maxValue - minValue) * (percentage / 100);
