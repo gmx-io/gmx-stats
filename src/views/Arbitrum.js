@@ -121,8 +121,8 @@ function Arbitrum(props) {
   const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData(params)
   const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, params)
 
-  const [minCollectedFees = 80, maxCollectedFees = 180] = useChartDomain(glpPerformanceData, ["performanceLpBtcCollectedFees", "performanceLpEthCollectedFees", "performanceSyntheticCollectedFees"])
-  const [minGlpPrice = 0.4, maxGlpPrice = 1.7] = useChartDomain(glpPerformanceData, ["syntheticPrice", "glpPrice", "glpPlusFees", "lpBtcPrice", "lpEthPrice"])
+  const [minCollectedFees, maxCollectedFees] = useChartDomain(glpPerformanceData, ["performanceLpBtcCollectedFees", "performanceLpEthCollectedFees", "performanceSyntheticCollectedFees"], [80, 180])
+  const [minGlpPrice, maxGlpPrice] = useChartDomain(glpPerformanceData, ["syntheticPrice", "glpPrice", "glpPlusFees", "lpBtcPrice", "lpEthPrice"], [0.4, 1.7])
 
   const [tradersData, tradersLoading] = useTradersData(params)
   const [openInterest, openInterestDelta] = useMemo(() => {

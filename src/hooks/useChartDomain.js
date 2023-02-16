@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-export default function useChartDomain(data, dataKeys, percentage = 10) {
+export default function useChartDomain(data, dataKeys, fallback = [0, 100], percentage = 10) {
   const values = useMemo(() => {
     if (!data || !data.length || !dataKeys || !dataKeys.length) {
       return [];
@@ -16,5 +16,5 @@ export default function useChartDomain(data, dataKeys, percentage = 10) {
   const diff = (maxValue - minValue) * (percentage / 100);
   const domain = [minValue - diff, maxValue + diff];
 
-  return data && data.length && dataKeys && dataKeys.length ? domain : [null, null];
+  return values.length > 0 ? domain : fallback;
 }
