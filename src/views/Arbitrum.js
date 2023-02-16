@@ -124,7 +124,6 @@ function Arbitrum(props) {
   const [minCollectedFees = 80, maxCollectedFees = 180] = useChartDomain(glpPerformanceData, ["performanceLpBtcCollectedFees", "performanceLpEthCollectedFees", "performanceSyntheticCollectedFees"])
   const [minGlpPrice = 0.4, maxGlpPrice = 1.7] = useChartDomain(glpPerformanceData, ["syntheticPrice", "glpPrice", "glpPlusFees", "lpBtcPrice", "lpEthPrice"])
 
-  console.log({minCollectedFees, maxCollectedFees, minGlpPrice, maxGlpPrice})
   const [tradersData, tradersLoading] = useTradersData(params)
   const [openInterest, openInterestDelta] = useMemo(() => {
     if (!tradersData) {
