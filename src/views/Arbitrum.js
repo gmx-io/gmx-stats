@@ -69,6 +69,7 @@ import {
 } from '../dataProvider'
 import PoolAmountChart from '../components/PoolAmountChart';
 import TradersProfitLossChart from '../components/TradersProfitLossChart';
+import useChartDomain from '../hooks/useChartDomain';
 
 const NOW = Math.floor(Date.now() / 1000)
 
@@ -119,6 +120,9 @@ function Arbitrum(props) {
 
   const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData(params)
   const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, params)
+
+  const [minCollectedFees, maxCollectedFees] = useChartDomain(glpPerformanceData, ["performanceLpBtcCollectedFees", "performanceLpEthCollectedFees", "performanceSyntheticCollectedFees"], [80, 180])
+  const [minGlpPrice, maxGlpPrice] = useChartDomain(glpPerformanceData, ["syntheticPrice", "glpPrice", "glpPlusFees", "lpBtcPrice", "lpEthPrice"], [0.4, 1.7])
 
   const [tradersData, tradersLoading] = useTradersData(params)
   const [openInterest, openInterestDelta] = useMemo(() => {
@@ -327,7 +331,7 @@ function Arbitrum(props) {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[80, 180]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="performanceSyntheticCollectedFees" domain={[minCollectedFees, maxCollectedFees]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
@@ -374,7 +378,7 @@ function Arbitrum(props) {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="glpPrice" domain={[0.4, 1.7]} tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="glpPrice" domain={[minGlpPrice, maxGlpPrice]} tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
