@@ -56,6 +56,7 @@ import {
 } from '../dataProvider'
 import PoolAmountChart from '../components/PoolAmountChart';
 import TradersProfitLossChart from '../components/TradersProfitLossChart';
+import useChartDomain from '../hooks/useChartDomain';
 
 const NOW = Math.floor(Date.now() / 1000)
 
@@ -111,6 +112,10 @@ function Avalanche(props) {
   // const [aumPerformanceData, aumPerformanceLoading] = useAumPerformanceData(params)
   const [glpPerformanceData, glpPerformanceLoading] = useGlpPerformanceData(glpData, feesData, params)
 
+  const [minCollectedFees, maxCollectedFees] = useChartDomain(glpPerformanceData, ["performanceLpBtcCollectedFees", "performanceLpEthCollectedFees", "performanceLpAvaxCollectedFees", "performanceSyntheticCollectedFees"], [80, 180])
+  const [minGlpPrice, maxGlpPrice] = useChartDomain(glpPerformanceData, ["syntheticPrice", "glpPrice", "glpPlusFees", "lpBtcPrice", "lpEthPrice", "lpAvaxPrice"], [0.4, 1.7])
+
+console.log({glpPerformanceData})
   const [tradersData, tradersLoading] = useTradersData(params)
   const [totalTradersData, totalTradersLoading] = useTradersData({ chainName: 'avalanche' })
   const [openInterest, openInterestDelta] = useMemo(() => {
@@ -313,7 +318,7 @@ function Avalanche(props) {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="performanceLpAvaxCollectedFees" domain={[80, 180]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="performanceLpAvaxCollectedFees" domain={[minCollectedFees, maxCollectedFees]} unit="%" tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
@@ -346,7 +351,7 @@ function Avalanche(props) {
               <LineChart data={glpPerformanceData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
                 <XAxis dataKey="timestamp" tickFormatter={tooltipLabelFormatter} minTickGap={30} />
-                <YAxis dataKey="glpPrice" domain={[0.3, 1.4]} tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
+                <YAxis dataKey="glpPrice" domain={[minGlpPrice, maxGlpPrice]} tickFormatter={yaxisFormatterNumber} width={YAXIS_WIDTH} />
                 <Tooltip
                   formatter={tooltipFormatterNumber}
                   labelFormatter={tooltipLabelFormatter}
