@@ -9,8 +9,9 @@ const CACHE_TTL = 300
 const ttlCache = new TtlCache(CACHE_TTL, 10)
 
 setInterval(() => {
+  console.log("Updating 24 hour volume cache")
   get24HourVolume(false);
-}, (CACHE_TTL - 15) * 1000);
+}, Math.max(CACHE_TTL - 30, 10) * 1000);
 
 async function get24HourVolumeForChain(chainId) {
   const client = getStatsClient(chainId);
