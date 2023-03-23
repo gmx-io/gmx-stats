@@ -9,7 +9,7 @@ const CACHE_TTL = 300
 const ttlCache = new TtlCache(CACHE_TTL, 10)
 
 setInterval(() => {
-  get24HourVolume();
+  get24HourVolume(false);
 }, (CACHE_TTL - 15) * 1000);
 
 async function get24HourVolumeForChain(chainId) {
@@ -39,9 +39,9 @@ async function get24HourVolumeForChain(chainId) {
   return volume;
 }
 
-export async function get24HourVolume() {
+export async function get24HourVolume(useCache = true) {
   const cached = ttlCache.get('24HourVolume')
-  if (cached) {
+  if (useCache && cached) {
     return cached
   }
   
