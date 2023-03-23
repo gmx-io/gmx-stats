@@ -115,7 +115,6 @@ function Avalanche(props) {
   const [minCollectedFees, maxCollectedFees] = useChartDomain(glpPerformanceData, ["performanceLpBtcCollectedFees", "performanceLpEthCollectedFees", "performanceLpAvaxCollectedFees", "performanceSyntheticCollectedFees"], [80, 180])
   const [minGlpPrice, maxGlpPrice] = useChartDomain(glpPerformanceData, ["syntheticPrice", "glpPrice", "glpPlusFees", "lpBtcPrice", "lpEthPrice", "lpAvaxPrice"], [0.4, 1.7])
 
-console.log({glpPerformanceData})
   const [tradersData, tradersLoading] = useTradersData(params)
   const [totalTradersData, totalTradersLoading] = useTradersData({ chainName: 'avalanche' })
   const [openInterest, openInterestDelta] = useMemo(() => {
