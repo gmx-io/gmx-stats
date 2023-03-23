@@ -19,6 +19,9 @@ class TtlCache {
   }
 
   set(key, value) {
+    if (this._timeouts[key]) {
+      clearTimeout(this._timeouts[key])
+    }
     this._cache[key] = value
 
     const keys = Object.keys(this._cache)
@@ -29,9 +32,6 @@ class TtlCache {
       }
     }
 
-    if (this._timeouts[key]) {
-      clearTimeout(this._timeouts[key])
-    }
     this._timeouts[key] = setTimeout(() => {
       this._logger.debug('delete key %s (ttl)', key)
       delete this._cache[key]
