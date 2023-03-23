@@ -5,7 +5,12 @@ import TtlCache from './ttl-cache'
 import { getStatsClient } from './graph'
 import { ARBITRUM, AVALANCHE } from './addresses'
 
-const ttlCache = new TtlCache(60, 10)
+const CACHE_TTL = 300
+const ttlCache = new TtlCache(CACHE_TTL, 10)
+
+setInterval(() => {
+  get24HourVolume();
+}, (CACHE_TTL - 15) * 1000);
 
 async function get24HourVolumeForChain(chainId) {
   const client = getStatsClient(chainId);
