@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client'
 import { ethers } from 'ethers'
+import { getLogger } from './helpers'
 
 import TtlCache from './ttl-cache'
 import { getStatsClient } from './graph'
@@ -8,10 +9,17 @@ import { ARBITRUM, AVALANCHE } from './addresses'
 const CACHE_TTL = 300
 const ttlCache = new TtlCache(CACHE_TTL, 10)
 
-setInterval(() => {
-  console.log("Updating 24 hour volume cache")
-  get24HourVolume(false);
-}, Math.max(CACHE_TTL - 30, 10) * 1000);
+const logger = getLogger('stats')
+
+setInterval(async () => {
+  try {
+    const start = Date.now()
+    await get24HourVolume(false);
+    logger.info('24h volume updated in %sms', Date.now() - start)
+  } catch (ex) {
+    logger.error(ex)
+  }
+}, CACHE_TTL / 2);
 
 async function get24HourVolumeForChain(chainId) {
   const client = getStatsClient(chainId);
