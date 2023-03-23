@@ -11,7 +11,7 @@ const ttlCache = new TtlCache(CACHE_TTL, 10)
 
 const logger = getLogger('stats')
 
-setInterval(async () => {
+async function updateCache() {
   try {
     const start = Date.now()
     await get24HourVolume(false);
@@ -19,7 +19,10 @@ setInterval(async () => {
   } catch (ex) {
     logger.error(ex)
   }
-}, CACHE_TTL / 2);
+  
+  setTimeout(updateCache, CACHE_TTL / 2 * 1000);
+}
+updateCache();
 
 async function get24HourVolumeForChain(chainId) {
   const client = getStatsClient(chainId);
