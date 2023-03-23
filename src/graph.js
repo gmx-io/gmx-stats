@@ -12,6 +12,27 @@ const apolloOptions = {
   }
 }
 
+const arbitrumStatsClient = new ApolloClient({
+  link: new HttpLink({ uri: 'https://api.thegraph.com/subgraphs/name/gmx-io/gmx-stats', fetch }),
+  cache: new InMemoryCache(),
+  defaultOptions: apolloOptions
+})
+
+const avalancheStatsClient = new ApolloClient({
+  link: new HttpLink({ uri: 'https://api.thegraph.com/subgraphs/name/gmx-io/gmx-avalanche-stats', fetch }),
+  cache: new InMemoryCache(),
+  defaultOptions: apolloOptions
+})
+  
+function getStatsClient(chainId) {
+  if (chainId === ARBITRUM) {
+    return arbitrumStatsClient
+  } else if (chainId === AVALANCHE) {
+    return avalancheStatsClient
+  }
+  throw new Error(`Invalid chainId ${chainId}`)
+}
+
 const arbitrumPricesClient = new ApolloClient({
   link: new HttpLink({ uri: 'https://api.thegraph.com/subgraphs/name/gmx-io/gmx-arbitrum-prices', fetch }),
   cache: new InMemoryCache(),
@@ -35,5 +56,6 @@ function getPricesClient(chainId) {
 }
 
 module.exports = {
-  getPricesClient
+  getPricesClient,
+  getStatsClient
 }

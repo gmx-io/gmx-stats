@@ -6,6 +6,7 @@ import { renderToString } from 'react-dom/server';
 import { createHttpError }  from './utils';
 import { ARBITRUM, AVALANCHE } from './addresses'
 import { getPricesLimit, getLastUpdatedTimestamp, VALID_PERIODS } from './prices'
+import { get24HourVolume } from './stats'
 
 import App from './App';
 import { getLogger } from './helpers'
@@ -57,6 +58,11 @@ export default function routes(app) {
     res.set('Content-Type', 'text/plain')
     res.send(formatUnits(data))
   })
+  
+  app.get('/api/volume/24h', async (req, res, next) => {
+    const volumeData = await get24HourVolume()
+    res.send(volumeData)
+  });
 
   app.get('/api/candles/:symbol', async (req, res, next) => {
     const period = req.query.period?.toLowerCase()
