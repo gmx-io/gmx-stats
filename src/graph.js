@@ -34,13 +34,13 @@ function getStatsClient(chainId) {
 }
 
 const arbitrumPricesClient = new ApolloClient({
-  link: new HttpLink({ uri: 'https://api.thegraph.com/subgraphs/name/gmx-io/gmx-arbitrum-prices', fetch }),
+  link: new HttpLink({ uri: 'https://subgraph.satsuma-prod.com/034a09e5f609/gmx/gmx-arbitrum-prices/api', fetch }),
   cache: new InMemoryCache(),
   defaultOptions: apolloOptions
 })
 
 const avalanchePricesClient = new ApolloClient({
-  link: new HttpLink({ uri: 'https://api.thegraph.com/subgraphs/name/gmx-io/gmx-avalanche-prices', fetch }),
+  link: new HttpLink({ uri: 'https://subgraph.satsuma-prod.com/034a09e5f609/gmx/gmx-avalanche-prices/api', fetch }),
   cache: new InMemoryCache(),
   defaultOptions: apolloOptions
 })

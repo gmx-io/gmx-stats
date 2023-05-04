@@ -10,6 +10,7 @@ class TtlCache {
     this._ttl = ttl
     this._maxKeys = maxKeys
     this._logger = getLogger('routes.TtlCache')
+    this._timeouts = {}
   }
 
   get(key) {
@@ -18,6 +19,9 @@ class TtlCache {
   }
 
   set(key, value) {
+    if (this._timeouts[key]) {
+      clearTimeout(this._timeouts[key])
+    }
     this._cache[key] = value
 
     const keys = Object.keys(this._cache)
@@ -28,7 +32,7 @@ class TtlCache {
       }
     }
 
-    setTimeout(() => {
+    this._timeouts[key] = setTimeout(() => {
       this._logger.debug('delete key %s (ttl)', key)
       delete this._cache[key]
     }, this._ttl * 1000)
