@@ -275,7 +275,7 @@ function getImpermanentLoss(change) {
 }
 
 function getChainSubgraph(chainName) {
-  return chainName === "arbitrum" ? "gmx-io/gmx-stats" : "gmx-io/gmx-avalanche-stats"
+  return chainName === "arbitrum" ? "gmx-stats" : "gmx-avalanche-stats"
 }
 
 export function useGraph(querySource, { subgraph = null, subgraphUrl = null, chainName = "arbitrum" } = {}) {
@@ -285,7 +285,7 @@ export function useGraph(querySource, { subgraph = null, subgraphUrl = null, cha
     if (!subgraph) {
       subgraph = getChainSubgraph(chainName)
     }
-    subgraphUrl = `https://api.thegraph.com/subgraphs/name/${subgraph}`;
+    subgraphUrl = `https://subgraph.satsuma-prod.com/3b2ced13c8d9/gmx/${subgraph}/api`;
   }
 
   const client = new ApolloClient({
@@ -1316,8 +1316,8 @@ export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName 
     }
   }`
   const subgraph = chainName === "arbitrum"
-    ? "gmx-io/gmx-arbitrum-referrals"
-    : "gmx-io/gmx-avalanche-referrals"
+    ? "gmx-arbitrum-referrals"
+    : "gmx-avalanche-referrals"
   const [graphData, loading, error] = useGraph(query, { subgraph })
 
   const data = graphData ? sortBy(graphData.globalStats, 'timestamp').map(item => {

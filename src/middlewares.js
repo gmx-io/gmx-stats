@@ -31,18 +31,15 @@ export function csp(req, res, next) {
     "connect-src": [
       "https://arb1.arbitrum.io",
       "https://api.avax.network",
-      "https://api.thegraph.com",
       "https://gmx-server-mainnet.uw.r.appspot.com",
-      "https://api.coingecko.com"
+      "https://api.coingecko.com",
+      "https://subgraph.satsuma-prod.com"
     ]
   }
   if (!IS_PRODUCTION) {
     csp["default-src"].push("localhost:3114")
     csp["style-src"].push("'unsafe-inline'")
     csp["connect-src"].push("localhost:3114", "ws://localhost:3114")
-  }
-  const cspParts = ''
-  for (const [key, value] of Object.entries(csp)) {
   }
   const cspString = Object.entries(csp).map(([key, value]) => `${key} ${value.join(' ')}`).join('; ')
   res.set("Content-Security-Policy", cspString)

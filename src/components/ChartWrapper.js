@@ -7,11 +7,11 @@ ChartWrapper.propTypes = {
   title: PropTypes.string,
   loading: PropTypes.bool,
   data: PropTypes.arrayOf(PropTypes.any),
-  csvFields: PropTypes.arrayOf(PropTypes.objectOf({key: PropTypes.string, name: PropTypes.string})),
-  controls: PropTypes.objectOf({
+  csvFields: PropTypes.arrayOf(PropTypes.shape({key: PropTypes.string, name: PropTypes.string})),
+  controls: PropTypes.shape({
     convertToPercents: PropTypes.func
   }),
-  viewState: PropTypes.objectOf({
+  viewState: PropTypes.shape({
     isPercentsView: PropTypes.bool,
   }),
   togglePercentView: PropTypes.func,
