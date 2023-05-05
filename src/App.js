@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Route, Switch, NavLink } from 'react-router-dom';
+import { Route, Switch, NavLink, Redirect } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
 import cx from "classnames";
 import Arbitrum from './views/Arbitrum';
@@ -28,7 +28,7 @@ function AppHeaderLinks({ mode, small, clickCloseIcon }) {
         </div>
       }
       <div className="App-header-link-container">
-        <NavLink to="/" exact className="nav-link" activeClassName="active">Arbitrum</NavLink>
+        <NavLink to="/arbitrum" exact className="nav-link" activeClassName="active">Arbitrum</NavLink>
       </div>
       <div className="App-header-link-container">
         <NavLink to="/avalanche" className="nav-link">Avalanche</NavLink>
@@ -93,7 +93,7 @@ const App = () => {
               <a href="https://gmx.io" target="_blank" className="nav-logo">
                 <img width="87" src={mode == 'dark' ? darkLogoIcon : lightLogoIcon} />
               </a>
-              <NavLink to="/" exact className="nav-link" activeClassName="active">Arbitrum</NavLink>
+              <NavLink to="/arbitrum" exact className="nav-link" activeClassName="active">Arbitrum</NavLink>
               <NavLink to="/avalanche" className="nav-link">Avalanche</NavLink>
             </div>
             <div className="nav-right">
@@ -120,7 +120,8 @@ const App = () => {
             }
           </AnimatePresence>
           <div className="content">
-            <Route exact path="/" render={(props) => (
+            <Redirect exact from="/" to="/arbitrum" />
+            <Route exact path="/arbitrum" render={(props) => (
               <Arbitrum {...props} mode={mode} />
             )} />
             <Route exact path="/avalanche" render={(props) => (
