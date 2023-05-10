@@ -120,7 +120,9 @@ const App = () => {
             }
           </AnimatePresence>
           <div className="content">
-            <Redirect exact from="/" to="/arbitrum" />
+            <Route path="/" exact>
+              <Redirect to="/arbitrum" />
+            </Route>
             <Route exact path="/arbitrum" render={(props) => (
               <Arbitrum {...props} mode={mode} />
             )} />

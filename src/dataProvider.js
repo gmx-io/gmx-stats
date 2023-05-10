@@ -1306,8 +1306,8 @@ export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName 
       totalRebateUsdCumulative
       discountUsd
       discountUsdCumulative
-      referrersCount
-      referrersCountCumulative
+      affiliatesCount
+      affiliatesCountCumulative
       referralCodesCount
       referralCodesCountCumulative
       referralsCount
@@ -1330,12 +1330,12 @@ export function useReferralsData({ from = FIRST_DATE_TS, to = NOW_TS, chainName 
       totalRebateUsd,
       totalRebateUsdCumulative: item.totalRebateUsdCumulative / 1e30,
       discountUsd,
-      referrerRebateUsd: totalRebateUsd - discountUsd,
+      affiliateRebateUsd: totalRebateUsd - discountUsd,
       discountUsdCumulative: item.discountUsdCumulative / 1e30,
       referralCodesCount: parseInt(item.referralCodesCount),
       referralCodesCountCumulative: parseInt(item.referralCodesCountCumulative),
-      referrersCount: parseInt(item.referrersCount),
-      referrersCountCumulative: parseInt(item.referrersCountCumulative),
+      affiliatesCount: parseInt(item.affiliatesCount),
+      affiliatesCountCumulative: parseInt(item.affiliatesCountCumulative),
       referralsCount: parseInt(item.referralsCount),
       referralsCountCumulative: parseInt(item.referralsCountCumulative),
     }

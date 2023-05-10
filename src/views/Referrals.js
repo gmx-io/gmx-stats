@@ -6,83 +6,27 @@ import cx from "classnames";
 
 import {
   yaxisFormatterNumber,
-  yaxisFormatterPercent,
-  yaxisFormatter,
-  tooltipLabelFormatter,
   tooltipLabelFormatterUnits,
-  tooltipFormatter,
   tooltipFormatterNumber,
-  tooltipFormatterPercent,
   formatNumber,
-  tsToIsoDate,
-  CHART_HEIGHT,
-  YAXIS_WIDTH,
   COLORS,
-  GREEN,
-  RED
 } from '../helpers'
 
-import {
-  LineChart,
-  BarChart,
-  Line,
-  Bar,
-  Label,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LabelList,
-  ReferenceLine,
-  Area,
-  AreaChart,
-  ComposedChart,
-  Cell,
-  PieChart,
-  Pie
-} from 'recharts';
-
-import ChartWrapper from '../components/ChartWrapper'
-import VolumeChart from '../components/VolumeChart'
-import FeesChart from '../components/FeesChart'
 import GenericChart from '../components/GenericChart'
 
 import {
-  useVolumeData,
-  useTotalVolumeFromServer,
-  useVolumeDataFromServer,
-  useFeesData,
-  useGlpData,
-  useAumPerformanceData,
-  useCoingeckoPrices,
-  useGlpPerformanceData,
-  useTradersData,
-  useSwapSources,
-  useFundingRateData,
   useReferralsData,
   useLastSubgraphBlock,
   useLastBlock
 } from '../dataProvider'
 
-const { BigNumber } = ethers
-const { formatUnits} = ethers.utils
 const NOW = Math.floor(Date.now() / 1000)
 
 function Referrals(props) {
   const DEFAULT_GROUP_PERIOD = 86400
-  const [groupPeriod, setGroupPeriod] = useState(DEFAULT_GROUP_PERIOD)
 
   const [fromValue, setFromValue] = useState()
   const [toValue, setToValue] = useState()
-
-  const { mode } = props
-
-  const setDateRange = useCallback(range => {
-    setFromValue(new Date(Date.now() - range * 1000).toISOString().slice(0, 10))
-    setToValue(undefined)
-  }, [setFromValue, setToValue])
 
   const from = fromValue ? +new Date(fromValue) / 1000 : undefined
   const to = toValue ? +new Date(toValue) / 1000 : NOW
@@ -101,13 +45,13 @@ function Referrals(props) {
     const prevTotalDiscountUsd = referralsData[referralsData.length - 2]?.discountUsdCumulative
     const totalDiscountUsdDelta = totalDiscountUsd && prevTotalDiscountUsd ? totalDiscountUsd - prevTotalDiscountUsd : null
 
-    const totalReferrerRebateUsd = referralsData[referralsData.length - 1]?.discountUsdCumulative
-    const prevTotalReferrerRebateUsd = referralsData[referralsData.length - 2]?.discountUsdCumulative
-    const totalReferrerRebateUsdDelta = totalReferrerRebateUsd && prevTotalReferrerRebateUsd ? totalReferrerRebateUsd - prevTotalReferrerRebateUsd : null
+    const totalAffiliateRebateUsd = referralsData[referralsData.length - 1]?.discountUsdCumulative
+    const prevTotalAffiliateRebateUsd = referralsData[referralsData.length - 2]?.discountUsdCumulative
+    const totalAffiliateRebateUsdDelta = totalAffiliateRebateUsd && prevTotalAffiliateRebateUsd ? totalAffiliateRebateUsd - prevTotalAffiliateRebateUsd : null
 
-    const totalReferrersCount = referralsData[referralsData.length - 1]?.referrersCountCumulative
-    const prevTotalReferrersCount = referralsData[referralsData.length - 2]?.referrersCountCumulative
-    const totalReferrersCountDelta = totalReferrersCount && prevTotalReferrersCount ? totalReferrersCount - prevTotalReferrersCount : null
+    const totalAffiliatesCount = referralsData[referralsData.length - 1]?.affiliatesCountCumulative
+    const prevTotalAffiliatesCount = referralsData[referralsData.length - 2]?.affiliatesCountCumulative
+    const totalAffiliatesCountDelta = totalAffiliatesCount && prevTotalAffiliatesCount ? totalAffiliatesCount - prevTotalAffiliatesCount : null
 
     const totalReferralsCount = referralsData[referralsData.length - 1]?.referralsCountCumulative
     const prevTotalReferralsCount = referralsData[referralsData.length - 2]?.referralsCountCumulative
@@ -118,10 +62,10 @@ function Referrals(props) {
       totalVolumeDelta,
       totalDiscountUsd,
       totalDiscountUsdDelta,
-      totalReferrerRebateUsd,
-      totalReferrerRebateUsdDelta,
-      totalReferrersCount,
-      totalReferrersCountDelta,
+      totalAffiliateRebateUsd,
+      totalAffiliateRebateUsdDelta,
+      totalAffiliatesCount,
+      totalAffiliatesCountDelta,
       totalReferralsCount,
       totalReferralsCountDelta
     }
@@ -176,9 +120,9 @@ function Referrals(props) {
           {stats ? <>
             <div className="total-stat-label">Affiliates Rebates</div>
             <div className="total-stat-value">
-              {formatNumber(stats.totalReferrerRebateUsd, {currency: true})}
-              {stats.totalReferrerRebateUsdDelta &&
-                <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(stats.totalReferrerRebateUsdDelta, {currency: true, compact: true})}</span>
+              {formatNumber(stats.totalAffiliateRebateUsd, {currency: true})}
+              {stats.totalAffiliateRebateUsdDelta &&
+                <span className="total-stat-delta plus" title="Change since previous day">+{formatNumber(stats.totalAffiliateRebateUsdDelta, {currency: true, compact: true})}</span>
               }
             </div>
           </> : <RiLoader5Fill size="3em" className="loader" />}
@@ -187,9 +131,9 @@ function Referrals(props) {
           {stats ? <>
             <div className="total-stat-label">Affiliates Registered</div>
             <div className="total-stat-value">
-              {stats.totalReferrersCount}
-              {stats.totalReferrersCountDelta ?
-                <span className="total-stat-delta plus" title="Change since previous day">+{stats.totalReferrersCountDelta}</span> : null
+              {stats.totalAffiliatesCount}
+              {stats.totalAffiliatesCountDelta ?
+                <span className="total-stat-delta plus" title="Change since previous day">+{stats.totalAffiliatesCountDelta}</span> : null
               }
             </div>
           </> : <RiLoader5Fill size="3em" className="loader" />}
@@ -244,7 +188,7 @@ function Referrals(props) {
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
                 { key: 'discountUsd', name: 'Discount', unit: '$' },
-                { key: 'referrerRebateUsd', name: 'Rebates', unit: '$' }
+                { key: 'affiliateRebateUsd', name: 'Rebates', unit: '$' }
               ]}
               type="Bar"
               description="Rebates go to Affiliates, Discount go to Traders"
@@ -256,16 +200,16 @@ function Referrals(props) {
               loading={referralsLoading}
               title="Registered Affiliates"
               data={referralsData}
-              yaxisDataKey="referrersCount"
-              rightYaxisDataKey="referrersCountCumulative"
+              yaxisDataKey="affiliatesCount"
+              rightYaxisDataKey="affiliatesCountCumulative"
               yaxisTickFormatter={yaxisFormatterNumber}
               tooltipFormatter={tooltipFormatterNumber}
               tooltipLabelFormatter={tooltipLabelFormatterUnits}
               items={[
-                { key: 'referrersCount', type: 'Bar', name: 'Daily'},
+                { key: 'affiliatesCount', type: 'Bar', name: 'Daily'},
                 // { key: 'referralCodesCount', type: 'Bar', name: 'Codes' },
                 {
-                  key: 'referrersCountCumulative',
+                  key: 'affiliatesCountCumulative',
                   strokeWidth: 2,
                   yAxisId: 'right',
                   type: 'Line',
