@@ -280,7 +280,7 @@ function Avalanche(props) {
           />
         </div>
         <div className="chart-cell">
-          <ChartWrapper title="AUM & Glp Supply" loading={glpLoading} data={glpData} csvFields={[{ key: 'aum' }, { key: 'glpSupply' }]}>
+          <ChartWrapper title="GLP AUM & Glp Supply" loading={glpLoading} data={glpData} csvFields={[{ key: 'aum' }, { key: 'glpSupply' }]}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
               <LineChart data={glpData} syncId="syncGlp">
                 <CartesianGrid strokeDasharray="10 10" />
@@ -292,7 +292,7 @@ function Avalanche(props) {
                   contentStyle={{ textAlign: 'left' }}
                 />
                 <Legend />
-                <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="AUM" stroke={COLORS[0]} />
+                <Line isAnimationActive={false} type="monotone" strokeWidth={2} unit="$" dot={false} dataKey="aum" stackId="a" name="GLP AUM" stroke={COLORS[0]} />
                 <Line isAnimationActive={false} type="monotone" strokeWidth={2} dot={false} dataKey="glpSupply" stackId="a" name="Glp Supply" stroke={COLORS[1]} />
               </LineChart>
             </ResponsiveContainer>
