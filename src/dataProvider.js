@@ -131,7 +131,8 @@ export async function queryEarnData(chainName, account) {
 export const tokenDecimals = {
   "0x82af49447d8a07e3bd95bd0d56f35241523fbab1": 18, // WETH
   "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f": 8, // BTC
-  "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8": 6, // USDC
+  "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8": 6, // USDCe
+  "0xaf88d065e77c8cc2239327c5edb3a432268e5831": 6, // USDC
   "0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0": 18, // UNI
   "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9": 6, // USDT
   "0xf97f4df75117a78c1a5a0dbb814af92458539fb4": 18, // LINK
@@ -146,7 +147,8 @@ export const tokenSymbols = {
   '0x82af49447d8a07e3bd95bd0d56f35241523fbab1': 'ETH',
   '0xf97f4df75117a78c1a5a0dbb814af92458539fb4': 'LINK',
   '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0': 'UNI',
-  '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8': 'USDC',
+  '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8': 'USDCe',
+  '0xaf88d065e77c8cc2239327c5edb3a432268e5831': 'USDC',
   '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 'USDT',
   '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a': 'MIM',
   '0x17fc002b466eec40dae837fc4be5c67993ddbd6f': 'FRAX',
