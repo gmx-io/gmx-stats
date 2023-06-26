@@ -277,7 +277,7 @@ function getImpermanentLoss(change) {
 }
 
 function getChainSubgraph(chainName) {
-  return chainName === "arbitrum" ? "gmx-stats" : "gmx-avalanche-stats"
+  return chainName === "arbitrum" ? "gmx-arbitrum-stats" : "gmx-avalanche-stats"
 }
 
 export function useGraph(querySource, { subgraph = null, subgraphUrl = null, chainName = "arbitrum" } = {}) {

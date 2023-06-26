@@ -19,7 +19,7 @@ function getSubgraphUrl(name) {
 }
 
 const arbitrumStatsClient = new ApolloClient({
-  link: new HttpLink({ uri: getSubgraphUrl("gmx-stats"), fetch }),
+  link: new HttpLink({ uri: getSubgraphUrl("gmx-arbitrum-stats"), fetch }),
   cache: new InMemoryCache(),
   defaultOptions: apolloOptions
 })
