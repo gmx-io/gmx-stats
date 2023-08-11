@@ -179,7 +179,8 @@ function Avalanche(props) {
     <div className="Home">
       <div className="page-title-section">
         <div className="page-title-block">
-          <h1>Analytics / Avalanche</h1>
+          <h1>GMX V1 Analytics / Avalanche</h1>
+          <p className={cx('page-description')}>Does not include V2 data</p>
           {lastSubgraphBlock && lastBlock &&
             <p className={cx('page-description', { warning: isObsolete })}>
               {isObsolete && "Data is obsolete. "}
